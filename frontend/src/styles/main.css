@@ -1,0 +1,146 @@
+@import url('./variables.css');
+@import url('./components.css');
+
+/* Typography & Base Styles */
+h1, h2, h3, .btn, .sidebar-item { 
+    font-family: var(--font-primary); 
+}
+
+p, .text-secondary { 
+    font-family: var(--font-secondary); 
+}
+
+.mono { 
+    font-family: var(--font-mono); 
+}
+
+* { 
+    -webkit-font-smoothing: antialiased; 
+    -moz-osx-font-smoothing: grayscale; 
+}
+
+body { 
+    background: var(--background); 
+    color: var(--text-primary); 
+    overflow-x: hidden; 
+}
+
+/* Grid Background */
+.grid-bg { 
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); 
+    background-size: 60px 60px; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; 
+    z-index: -1; 
+}
+
+/* Layout */
+.sidebar { 
+    background: var(--background); 
+    border-right: 1px solid var(--card-border); 
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px); 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    height: 100vh; 
+    width: 260px; 
+    z-index: 100; 
+    transition: transform var(--transition-medium); 
+}
+
+.sidebar.active { 
+    transform: translateX(0); 
+}
+
+.content { 
+    margin-left: 260px; 
+    padding: var(--spacing-xl); 
+    min-height: 100vh; 
+}
+
+/* Typography */
+.metric-value { 
+    font-size: 2.25rem; 
+    font-weight: 700; 
+    color: var(--text-primary); 
+}
+
+.text-positive-value { 
+    color: var(--positive-color); 
+}
+
+.text-negative-value { 
+    color: var(--negative-color); 
+}
+
+/* Chart Styles */
+.chart-container, .chart-container-large { 
+    position: relative; 
+    width: 100%; 
+}
+
+@media (min-width: 1024px) { 
+    .chart-container { 
+        height: 280px; 
+    } 
+    .chart-container-large { 
+        height: 350px; 
+    } 
+}
+
+@media (max-width: 1023px) { 
+    .chart-container { 
+        height: 250px; 
+    } 
+    .chart-container-large { 
+        height: 300px; 
+    } 
+}
+
+/* Animation & Responsive */
+.tab-content { 
+    display: none; 
+}
+
+.tab-content.active { 
+    display: block; 
+    animation: fadeIn var(--transition-slow); 
+}
+
+@keyframes fadeIn { 
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    } 
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    } 
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) { 
+    .sidebar { 
+        transform: translateX(-100%); 
+    } 
+    
+    .content { 
+        margin-left: 0; 
+        padding: var(--spacing-lg); 
+    } 
+    
+    .mobile-menu-button { 
+        display: flex; 
+    } 
+}
+
+/* Empty State Styling */
+.empty-state .btn {
+    margin-top: 1rem;
+}
