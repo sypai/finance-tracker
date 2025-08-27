@@ -1,10 +1,9 @@
-// js/ui.js
+// js/utils/ui.js
 
-// This object will be populated by the initUI function once the DOM is ready.
+// This object is populated by initUI() once the DOM is ready.
 export const elements = {};
 
-// This function finds all DOM elements and stores them in the `elements` object.
-// It should be called once the DOM is fully loaded.
+// Finds and caches all necessary DOM elements.
 export function initUI() {
     elements.sidebarItems = document.querySelectorAll('.sidebar-item');
     elements.tabContents = document.querySelectorAll('.tab-content');
@@ -40,11 +39,11 @@ export function initUI() {
     elements.investmentsChange = document.getElementById('investmentsChange');
 }
 
-// --- All other functions (renderAccounts, updateDashboardMetrics, etc.) remain exactly the same ---
-// (No need to copy them again, they are unchanged)
-
-// js/utils/ui.js
-
+/**
+ * Formats a number into the Indian currency system (Lakhs, Crores).
+ * @param {number} num The number to format.
+ * @returns {string} The formatted currency string.
+ */
 export function formatIndianCurrency(num) {
     const value = Math.abs(num);
     if (value >= 10000000) { // Crores
@@ -53,36 +52,44 @@ export function formatIndianCurrency(num) {
     if (value >= 100000) { // Lakhs
         return `₹${(num / 100000).toFixed(2)}L`;
     }
-    // For values less than 1 lakh, show the full number
-    return `₹${num.toLocaleString('en-IN')}`;
+    // For values less than 1 lakh, show the full number formatted
+    return `₹${num.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
 }
 
+/**
+ * Updates the main dashboard metrics using data from the app state.
+ * @param {object} appState The central state object of the application.
+ */
 export function updateDashboardMetrics(appState) {
     // Calculate the primary values from the state
     const totalNetWorth = appState.accounts.reduce((sum, acc) => sum + acc.balance, 0) + appState.investments.reduce((sum, inv) => sum + inv.value, 0);
     const monthlyExpenses = appState.transactions
-        .filter(t => t.type === 'expense' && t.date.getMonth() === new Date().getMonth())
+        .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === new Date().getMonth())
         .reduce((sum, t) => sum + t.amount, 0);
     const totalInvestments = appState.investments.reduce((sum, inv) => sum + inv.value, 0);
 
-    // Update the element text content with proper formatting
-    elements.netWorthValue.textContent = `₹${totalNetWorth.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    elements.monthlyExpensesValue.textContent = `₹${monthlyExpenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-    elements.investmentsValue.textContent = `₹${totalInvestments.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    // --- FIX APPLIED HERE ---
+    // Update dashboard values using the abbreviation function for display
+    // and the `title` attribute to show the full value on hover.
+
+    elements.netWorthValue.textContent = formatIndianCurrency(totalNetWorth);
+    elements.netWorthValue.title = `₹${totalNetWorth.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+    elements.monthlyExpensesValue.textContent = formatIndianCurrency(monthlyExpenses);
+    elements.monthlyExpensesValue.title = `₹${monthlyExpenses.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
     
-    // This data object makes the code much cleaner and easier to update
+    elements.investmentsValue.textContent = formatIndianCurrency(totalInvestments);
+    elements.investmentsValue.title = `₹${totalInvestments.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+    
+    // This part for percentage change remains the same
     const changeData = {
         netWorth: { value: 8.2, isPositive: true },
-        expenses: { value: 12.1, isPositive: false }, // An increase in expenses is considered negative
+        expenses: { value: 12.1, isPositive: false },
         investments: { value: 18.5, isPositive: true }
     };
 
-    // This reusable helper function builds the HTML for the change indicator
     const updateChangeElement = (element, data) => {
-        // Dynamically set the color class based on whether the change is positive or negative
         element.className = `mt-4 text-sm font-medium flex items-center ${data.isPositive ? 'text-positive-value' : 'text-negative-value'}`;
-        
-        // Dynamically build the SVG and text
         element.innerHTML = `
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
                 ${data.isPositive 
@@ -93,11 +100,12 @@ export function updateDashboardMetrics(appState) {
         `;
     };
 
-    // Call the helper function for each metric
     updateChangeElement(elements.netWorthChange, changeData.netWorth);
     updateChangeElement(elements.monthlyExpensesChange, changeData.expenses);
     updateChangeElement(elements.investmentsChange, changeData.investments);
 }
+
+// --- All other functions (renderAccounts, renderTransactions, etc.) remain unchanged ---
 
 export function renderAccounts(accounts) {
     const accountsContainer = elements.accountList;
@@ -105,7 +113,6 @@ export function renderAccounts(accounts) {
         accountsContainer.innerHTML = `<div class="empty-state card p-8 text-center text-gray-400 col-span-full">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
             <p class="text-lg">No bank accounts added.</p>
-            <p class="text-sm">Click the "Add Account" button to track your finances.</p>
         </div>`;
         return;
     }
@@ -125,6 +132,7 @@ export function renderAccounts(accounts) {
 }
 
 export function renderDashboardInvestmentAccounts(investments) {
+    if (!elements.investmentAccountsList || !elements.investmentsLastUpdated) return;
     const holdingsHtml = investments.map(holding => {
         const changeColor = holding.isPositive ? 'text-positive-value' : 'text-negative-value';
         const changeSign = holding.isPositive ? '+' : '';
@@ -151,7 +159,6 @@ export function renderInvestmentsTab(investments) {
         investmentsContainer.innerHTML = `<div class="empty-state card p-8 text-center text-gray-400 col-span-full">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6M3 4h18a2 2 0 012 2v12a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>
             <p class="text-lg">No investment accounts added.</p>
-            <p class="text-sm">Click the button above to add your first investment account.</p>
         </div>`;
         return;
     }
@@ -175,9 +182,10 @@ export function renderInvestmentsTab(investments) {
 }
 
 export function renderExpenseInsights(expenseCategories) {
+    if (!elements.expenseInsightsList) return;
     const insightsContainer = elements.expenseInsightsList;
     if (expenseCategories.length === 0) {
-         insightsContainer.innerHTML = `<p class="text-gray-400 text-center">No expense data available for insights.</p>`;
+         insightsContainer.innerHTML = `<p class="text-gray-400 text-center">No expense data for insights.</p>`;
          return;
     }
     const insightsHtml = expenseCategories.map(item => `
@@ -205,7 +213,6 @@ export function renderTransactions(transactions, accounts) {
         transactionsContainer.innerHTML = `<div class="empty-state p-8 text-center text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
             <p class="text-lg">No transactions yet.</p>
-            <p class="text-sm">Start by adding your first transaction to see a list here.</p>
         </div>`;
         return;
     }
@@ -213,7 +220,7 @@ export function renderTransactions(transactions, accounts) {
         const account = accounts.find(acc => acc.id === transaction.accountId);
         const amountColor = transaction.type === 'income' ? 'text-positive-value' : 'text-negative-value';
         const amountSign = transaction.type === 'income' ? '+' : '-';
-        const date = transaction.date.toLocaleDateString('en-IN');
+        const date = new Date(transaction.date).toLocaleDateString('en-IN');
         return `
         <div class="flex justify-between items-center py-2 border-b border-white/5 last:border-b-0">
             <div>
@@ -227,11 +234,46 @@ export function renderTransactions(transactions, accounts) {
     transactionsContainer.innerHTML = transactionListHtml;
 }
 
+// Add this new function to your utils/ui.js file
+export function renderExpenseList(expenseCategories) {
+    if (!elements.expenseInsightsList) return;
+    const container = elements.expenseInsightsList;
+
+    // Sort expenses by amount, descending, and take the top 4
+    const topExpenses = [...expenseCategories]
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 4);
+
+    if (topExpenses.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500">No expenses recorded for this month yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = topExpenses.map(item => {
+        // Mock trend data for now. This can be made dynamic later.
+        const trend = { value: 15, isPositive: Math.random() > 0.5 };
+        const trendColor = trend.isPositive ? 'text-positive-value' : 'text-negative-value';
+        const trendArrow = trend.isPositive ? '▼' : '▲';
+
+        return `
+            <div class="flex justify-between items-center text-sm">
+                <p class="font-medium text-gray-300">${item.category}</p>
+                <div class="text-right">
+                    <span class="font-semibold mono text-white">₹${item.amount.toLocaleString('en-IN')}</span>
+                    <span class="${trendColor} ml-2 mono text-xs">${trendArrow} ${trend.value}%</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 export function setActiveTab(tabId, createChartsCallback, appState) {
     elements.sidebarItems.forEach(item => item.classList.toggle('active', item.dataset.tab === tabId));
     elements.tabContents.forEach(content => content.classList.toggle('active', content.id === tabId));
     if (window.innerWidth <= 1024) { document.querySelector('.sidebar').classList.remove('active'); }
-    createChartsCallback(appState);
+    if (createChartsCallback) {
+        createChartsCallback(appState);
+    }
 }
 
 export function toggleModal(modalId, show) {
@@ -245,9 +287,6 @@ export function updateGreeting() {
     const hour = new Date().getHours();
     const name = "Suyash";
     let greetingText = "";
-    
-    const netWorthChange = 8.2;
-    const isSpendingUp = true;
 
     if (hour < 12) {
         greetingText = `Good morning, ${name}.`;
@@ -256,18 +295,8 @@ export function updateGreeting() {
     } else {
         greetingText = `Good evening, ${name}.`;
     }
-
-    let insightText = "";
-    if (netWorthChange > 0) {
-        insightText = "Your financial trajectory is looking strong. Here's a quick summary.";
-    } else if (isSpendingUp) {
-        insightText = "Let's review your spending. Here's this month's financial summary.";
-    } else {
-        insightText = "Here's your financial summary. Stay on top of your goals.";
-    }
-
     elements.greetingTitle.textContent = greetingText;
-    elements.greetingSubtitle.textContent = insightText;
+    elements.greetingSubtitle.textContent = "Welcome back to your financial hub.";
 }
 
 export function updateDateTime() {

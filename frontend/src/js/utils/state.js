@@ -25,7 +25,7 @@ export const appState = {
         { month: 'Apr', value: 225000 },
         { month: 'May', value: 230000 },
         { month: 'Jun', value: 240000 },
-        { month: 'Jul', value: 245000 },
+        { month: 'Jul', value: 145000 },
     ],
     expenseCategories: [
         { category: 'Food & Dining', amount: 8240, insight: 'You spent 15% more this month.' },
