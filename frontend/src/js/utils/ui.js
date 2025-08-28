@@ -216,18 +216,18 @@ function getTransactionsForPeriod(transactions, period = 'month') {
     return transactions.filter(t => new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === currentYear);
 }
 
-// --- UPDATED RENDER FUNCTION ---
-export function renderExpenseList(transactions, period) {
-    if (!elements.expenseInsightsList) return;
-    const container = elements.expenseInsightsList;
+// Replace the renderExpenseList function in your ui.js file
 
-    const filteredExpenses = getTransactionsForPeriod(transactions, period)
-        .filter(t => t.type === 'expense');
+export function renderExpenseList(transactions, period) {
+    const container = elements.expenseInsightsList;
+    const filteredExpenses = getTransactionsForPeriod(transactions, period).filter(t => t.type === 'expense');
 
     if (filteredExpenses.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500">No expenses for this period.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500">No expenses recorded for this period.</p>`;
         return;
     }
+    
+    // --- The rest of the function with the "Smart Summary" logic ---
 
     const totalExpensesInPeriod = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
 
@@ -241,8 +241,7 @@ export function renderExpenseList(transactions, period) {
         .map(([category, amount]) => ({ category, amount }))
         .sort((a, b) => b.amount - a.amount);
 
-    // New Logic: Group smaller categories into "Other"
-    const topN = 3; // Show top 4 categories individually
+    const topN = 3;
     let finalExpenses = [];
     if (sortedExpenses.length > topN) {
         finalExpenses = sortedExpenses.slice(0, topN);
@@ -254,11 +253,14 @@ export function renderExpenseList(transactions, period) {
         finalExpenses = sortedExpenses;
     }
     
-    // New Logic: Generate the Smart Summary
-    const topCategory = finalExpenses[0];
-    const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
-    const summaryHTML = `<p class="text-sm text-gray-400 mb-4">Your top expense category this ${period} was <b>${topCategory.category}</b>, making up <b>${topPercentage}%</b> of the total.</p>`;
-
+    // FIX: Check if finalExpenses has any items before creating the summary
+    let summaryHTML = '';
+    if (finalExpenses.length > 0) {
+        const topCategory = finalExpenses[0];
+        const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+        summaryHTML = `<p class="text-sm text-gray-400 mb-4">Your top expense category this ${period} was <b>${topCategory.category}</b>, making up <b>${topPercentage}%</b> of the total.</p>`;
+    }
+    
     const listHTML = finalExpenses.map(item => {
         const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
         return `
@@ -268,12 +270,70 @@ export function renderExpenseList(transactions, period) {
                     <span class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</span>
                     <span class="text-xs text-gray-500 ml-2 w-10 inline-block text-right">(${percentage}%)</span>
                 </div>
-            </div>
-        `;
+            </div>`;
     }).join('');
 
     container.innerHTML = summaryHTML + listHTML;
 }
+
+// --- UPDATED RENDER FUNCTION ---
+// export function renderExpenseList(transactions, period) {
+//     if (!elements.expenseInsightsList) return;
+//     const container = elements.expenseInsightsList;
+
+//     const filteredExpenses = getTransactionsForPeriod(transactions, period)
+//         .filter(t => t.type === 'expense');
+
+//     if (filteredExpenses.length === 0) {
+//         container.innerHTML = `<p class="text-center text-gray-500">No expenses for this period.</p>`;
+//         return;
+//     }
+
+//     const totalExpensesInPeriod = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
+
+//     const categoryTotals = filteredExpenses.reduce((acc, t) => {
+//         const category = t.description.split(' ')[0];
+//         acc[category] = (acc[category] || 0) + t.amount;
+//         return acc;
+//     }, {});
+
+//     const sortedExpenses = Object.entries(categoryTotals)
+//         .map(([category, amount]) => ({ category, amount }))
+//         .sort((a, b) => b.amount - a.amount);
+
+//     // New Logic: Group smaller categories into "Other"
+//     const topN = 3; // Show top 4 categories individually
+//     let finalExpenses = [];
+//     if (sortedExpenses.length > topN) {
+//         finalExpenses = sortedExpenses.slice(0, topN);
+//         const otherAmount = sortedExpenses.slice(topN).reduce((sum, item) => sum + item.amount, 0);
+//         if (otherAmount > 0) {
+//             finalExpenses.push({ category: 'Other', amount: otherAmount });
+//         }
+//     } else {
+//         finalExpenses = sortedExpenses;
+//     }
+    
+//     // New Logic: Generate the Smart Summary
+//     const topCategory = finalExpenses[0];
+//     const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+//     const summaryHTML = `<p class="text-sm text-gray-400 mb-4">Your top expense category this ${period} was <b>${topCategory.category}</b>, making up <b>${topPercentage}%</b> of the total.</p>`;
+
+//     const listHTML = finalExpenses.map(item => {
+//         const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+//         return `
+//             <div class="flex justify-between items-center text-sm">
+//                 <p class="font-medium text-gray-300">${item.category}</p>
+//                 <div class="text-right">
+//                     <span class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</span>
+//                     <span class="text-xs text-gray-500 ml-2 w-10 inline-block text-right">(${percentage}%)</span>
+//                 </div>
+//             </div>
+//         `;
+//     }).join('');
+
+//     container.innerHTML = summaryHTML + listHTML;
+// }
 
 export function populateAccountDropdown(accounts) {
     const selectHtml = accounts.map(account => 
