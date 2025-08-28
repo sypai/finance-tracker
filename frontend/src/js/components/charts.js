@@ -23,7 +23,7 @@ function getCommonChartOptions(showScales = true, indexAxis = 'x') {
                         if (value === null) return '';
                         return ' ₹' + value.toLocaleString('en-IN');
                     }
-                }
+                },
             }
         },
         onResize: (chart) => { chart.options.animation = false; }
@@ -38,7 +38,17 @@ function getCommonChartOptions(showScales = true, indexAxis = 'x') {
             },
             y: {
                 grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#7F849B', font: { family: 'Manrope', size: 12 } }
+                ticks: {
+                     color: '#7F849B', 
+                     font: { family: 'Manrope', size: 12 },
+                    // This callback formats the axis label
+                    callback: function(value) {
+                        if (value >= 1000) {
+                            return `₹${value / 1000}k`;
+                        }
+                        return `₹${value}`;
+                    }
+                }
             }
         };
     } else {
@@ -47,64 +57,23 @@ function getCommonChartOptions(showScales = true, indexAxis = 'x') {
     return options;
 }
 
+function getTransactionsForPeriod(transactions, period = 'month') {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    if (period === 'year') {
+        return transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
+    }
+    if (period === 'week') {
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return transactions.filter(t => new Date(t.date) >= oneWeekAgo);
+    }
+    // Default to month
+    return transactions.filter(t => new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === currentYear);
+}
+
 export function createCharts(appState) {
     Object.values(Chart.instances).forEach(chart => chart.destroy());
-
-    // --- Expense Analysis (Horizontal Bar Chart) ---
-    const expenseBarCtx = document.getElementById('expenseBarChart')?.getContext('2d');
-    if (expenseBarCtx) {
-        // Sort categories by amount to show the highest spenders, and take the top 5
-        const expenseData = [...appState.expenseCategories]
-            .sort((a, b) => a.amount - b.amount) // Sort ascending for Chart.js horizontal display
-            .slice(-5); 
-        
-        new Chart(expenseBarCtx, {
-            type: 'bar',
-            data: {
-                labels: expenseData.map(d => d.category), // These labels will now be shown on the Y-axis
-                datasets: [{
-                    label: 'Expenses',
-                    data: expenseData.map(d => d.amount),
-                    backgroundColor: context => {
-                        const ctx = context.chart.ctx;
-                        const gradient = ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
-                        gradient.addColorStop(0, 'rgba(186, 186, 244, 0.5)');
-                        gradient.addColorStop(1, '#babaf4');
-                        return gradient;
-                    },
-                    borderColor: '#babaf4',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    barThickness: 16, // Thinner bars
-                    maxBarThickness: 20, // Max thickness to prevent them from becoming too wide
-                    categoryPercentage: 0.8 // Reduces space between bars slightly
-                }]
-            },
-            options: {
-                ...getCommonChartOptions(true, 'y'), // 'y' makes it horizontal
-                scales: {
-                     x: {
-                        beginAtZero: true,
-                        grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
-                        ticks: {
-                            display: true, // Keep ticks (values) on X-axis if desired, otherwise set to false
-                            color: '#7F849B',
-                            font: { family: 'Manrope', size: 10 }
-                        }
-                    },
-                    y: {
-                        grid: { display: false, drawBorder: false }, // No grid lines on Y-axis
-                        ticks: {
-                            display: true, // Display labels on the Y-axis (category names)
-                            color: '#F0F0F5', // Make category labels brighter
-                            font: { family: 'Manrope', size: 12, weight: 'bold' } // Emphasize category labels
-                        }
-                    }
-                }
-            }
-        });
-    }
 
     // --- Investments Growth Chart (Restored) ---
     const investmentsGrowthChartCtx = document.getElementById('investmentsGrowthChart')?.getContext('2d');
@@ -165,4 +134,96 @@ export function createCharts(appState) {
             options: getCommonChartOptions(true)
         });
     }
+
+    // const expenseBarCtx = document.getElementById('expenseBarChart')?.getContext('2d');
+    // if (expenseBarCtx) {
+    //     const filteredTransactions = getTransactionsForPeriod(appState.transactions, appState.activeExpensePeriod);
+    //     const categoryTotals = filteredTransactions
+    //         .filter(t => t.type === 'expense')
+    //         .reduce((acc, t) => {
+    //             const category = t.description.split(' ')[0];
+    //             acc[category] = (acc[category] || 0) + t.amount;
+    //             return acc;
+    //         }, {});
+
+    //     const expenseData = Object.entries(categoryTotals)
+    //         .map(([category, amount]) => ({ category, amount }))
+    //         .sort((a, b) => a.amount - b.amount)
+    //         .slice(-5);
+        
+    //     new Chart(expenseBarCtx, {
+    //         type: 'bar',
+    //         data: {
+    //             labels: expenseData.map(d => d.category),
+    //             datasets: [{
+    //                 data: expenseData.map(d => d.amount),
+    //                 backgroundColor: '#babaf4',
+    //                 borderRadius: 5,
+    //                 barThickness: 12,
+    //             }]
+    //         },
+    //         options: {
+    //             indexAxis: 'y',
+    //             responsive: true,
+    //             maintainAspectRatio: false,
+    //             plugins: { legend: { display: false } },
+    //             scales: {
+    //                  x: { grid: { drawBorder: false, color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } },
+    //                  y: { grid: { display: false, drawBorder: false }, ticks: { color: '#F0F0F5', font: { family: 'Manrope' } } }
+    //             }
+    //         }
+    //     });
+    // }
+
+    const expenseBarCtx = document.getElementById('expenseBarChart')?.getContext('2d');
+    if (expenseBarCtx) {
+        const filteredTransactions = getTransactionsForPeriod(appState.transactions, appState.activeExpensePeriod);
+        const categoryTotals = filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => {
+            const category = t.description.split(' ')[0];
+            acc[category] = (acc[category] || 0) + t.amount;
+            return acc;
+        }, {});
+
+        const sortedExpenses = Object.entries(categoryTotals)
+            .map(([category, amount]) => ({ category, amount }))
+            .sort((a, b) => b.amount - a.amount);
+
+        const topN = 3; // Show top 3
+        let finalChartData = [];
+        if (sortedExpenses.length > topN) {
+            finalChartData = sortedExpenses.slice(0, topN);
+            const otherAmount = sortedExpenses.slice(topN).reduce((sum, item) => sum + item.amount, 0);
+            if (otherAmount > 0) {
+                finalChartData.push({ category: 'Other', amount: otherAmount });
+            }
+        } else {
+            finalChartData = sortedExpenses;
+        }
+
+        finalChartData.sort((a, b) => a.amount - b.amount);
+        
+        new Chart(expenseBarCtx, {
+            type: 'bar',
+            data: {
+                labels: finalChartData.map(d => d.category),
+                datasets: [{
+                    data: finalChartData.map(d => d.amount),
+                    backgroundColor: '#babaf4',
+                    borderRadius: 4,
+                    barThickness: 12,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                     x: { grid: { drawBorder: false, color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } },
+                     y: { grid: { display: false, drawBorder: false }, ticks: { color: '#F0F0F5', font: { family: 'Manrope' } } }
+                }
+            }
+        });
+    }
 }
+

@@ -24,7 +24,6 @@ export function initUI() {
     elements.currentDate = document.getElementById('currentDate');
     elements.investmentAccountsList = document.getElementById('investmentAccountsList');
     elements.investmentsLastUpdated = document.getElementById('investments-last-updated');
-    elements.expenseInsightsList = document.getElementById('expenseInsightsList');
     elements.addInvestmentAccountBtn = document.getElementById('addInvestmentAccountBtn');
     elements.addInvestmentAccountModal = document.getElementById('addInvestmentAccountModal');
     elements.closeAddInvestmentAccountModalBtn = document.getElementById('closeAddInvestmentAccountModalBtn');
@@ -37,6 +36,9 @@ export function initUI() {
     elements.monthlyExpensesChange = document.getElementById('monthlyExpensesChange');
     elements.investmentsValue = document.getElementById('investmentsValue');
     elements.investmentsChange = document.getElementById('investmentsChange');
+    elements.expenseAnalysisTitle = document.getElementById('expenseAnalysisTitle');
+    elements.expenseTimelineTabs = document.getElementById('expenseTimelineTabs');
+    elements.expenseInsightsList = document.getElementById('expenseInsightsList');
 }
 
 /**
@@ -124,7 +126,7 @@ export function renderAccounts(accounts) {
                 <p class="font-bold text-white">${account.name}</p>
                 <p class="text-sm text-gray-400">${account.type}</p>
             </div>
-            <p class="text-2xl font-semibold mono ${balanceColor}">₹${account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
+            <p class="text-2xl font-semibold ${balanceColor}">₹${account.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p>
         </div>
         `;
     }).join('');
@@ -172,7 +174,7 @@ export function renderInvestmentsTab(investments) {
                 <p class="text-sm text-gray-400">${investment.type}</p>
             </div>
             <div class="text-right">
-                <p class="text-2xl font-semibold mono ${valueColor}">₹${investment.value.toLocaleString('en-IN')}</p>
+                <p class="text-2xl font-semibold ${valueColor}">₹${investment.value.toLocaleString('en-IN')}</p>
                 <p class="text-xs ${valueColor}">${changeSign}${investment.change}%</p>
             </div>
         </div>
@@ -181,23 +183,96 @@ export function renderInvestmentsTab(investments) {
     elements.investmentAccountList.innerHTML = investmentListHtml;
 }
 
-export function renderExpenseInsights(expenseCategories) {
-    if (!elements.expenseInsightsList) return;
-    const insightsContainer = elements.expenseInsightsList;
-    if (expenseCategories.length === 0) {
-         insightsContainer.innerHTML = `<p class="text-gray-400 text-center">No expense data for insights.</p>`;
-         return;
+export function updateActiveTimelineTab(period) {
+    elements.expenseTimelineTabs.querySelectorAll('button').forEach(btn => {
+        const isActive = btn.dataset.period === period;
+        btn.classList.toggle('active', isActive);
+        if (isActive) {
+            btn.classList.add('bg-white/10', 'text-white');
+            btn.classList.remove('text-gray-400');
+        } else {
+            btn.classList.remove('bg-white/10', 'text-white');
+            btn.classList.add('text-gray-400');
+        }
+    });
+
+    if (period === 'week') elements.expenseAnalysisTitle.textContent = "This Week's Expenses";
+    else if (period === 'month') elements.expenseAnalysisTitle.textContent = "This Month's Expenses";
+    else elements.expenseAnalysisTitle.textContent = "This Year's Expenses";
+}
+
+function getTransactionsForPeriod(transactions, period = 'month') {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    
+    if (period === 'year') {
+        return transactions.filter(t => new Date(t.date).getFullYear() === currentYear);
     }
-    const insightsHtml = expenseCategories.map(item => `
-        <div class="flex flex-col py-2">
-            <div class="flex justify-between items-center">
-                <h4 class="font-semibold text-white">${item.category}</h4>
-                <p class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</p>
+    if (period === 'week') {
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return transactions.filter(t => new Date(t.date) >= oneWeekAgo);
+    }
+    // Default to month
+    return transactions.filter(t => new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === currentYear);
+}
+
+// --- UPDATED RENDER FUNCTION ---
+export function renderExpenseList(transactions, period) {
+    if (!elements.expenseInsightsList) return;
+    const container = elements.expenseInsightsList;
+
+    const filteredExpenses = getTransactionsForPeriod(transactions, period)
+        .filter(t => t.type === 'expense');
+
+    if (filteredExpenses.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500">No expenses for this period.</p>`;
+        return;
+    }
+
+    const totalExpensesInPeriod = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
+
+    const categoryTotals = filteredExpenses.reduce((acc, t) => {
+        const category = t.description.split(' ')[0];
+        acc[category] = (acc[category] || 0) + t.amount;
+        return acc;
+    }, {});
+
+    const sortedExpenses = Object.entries(categoryTotals)
+        .map(([category, amount]) => ({ category, amount }))
+        .sort((a, b) => b.amount - a.amount);
+
+    // New Logic: Group smaller categories into "Other"
+    const topN = 3; // Show top 4 categories individually
+    let finalExpenses = [];
+    if (sortedExpenses.length > topN) {
+        finalExpenses = sortedExpenses.slice(0, topN);
+        const otherAmount = sortedExpenses.slice(topN).reduce((sum, item) => sum + item.amount, 0);
+        if (otherAmount > 0) {
+            finalExpenses.push({ category: 'Other', amount: otherAmount });
+        }
+    } else {
+        finalExpenses = sortedExpenses;
+    }
+    
+    // New Logic: Generate the Smart Summary
+    const topCategory = finalExpenses[0];
+    const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+    const summaryHTML = `<p class="text-sm text-gray-400 mb-4">Your top expense category this ${period} was <b>${topCategory.category}</b>, making up <b>${topPercentage}%</b> of the total.</p>`;
+
+    const listHTML = finalExpenses.map(item => {
+        const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+        return `
+            <div class="flex justify-between items-center text-sm">
+                <p class="font-medium text-gray-300">${item.category}</p>
+                <div class="text-right">
+                    <span class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</span>
+                    <span class="text-xs text-gray-500 ml-2 w-10 inline-block text-right">(${percentage}%)</span>
+                </div>
             </div>
-            <p class="text-sm text-gray-400">${item.insight}</p>
-        </div>
-    `).join('');
-    insightsContainer.innerHTML = insightsHtml;
+        `;
+    }).join('');
+
+    container.innerHTML = summaryHTML + listHTML;
 }
 
 export function populateAccountDropdown(accounts) {
@@ -232,39 +307,6 @@ export function renderTransactions(transactions, accounts) {
         `;
     }).join('');
     transactionsContainer.innerHTML = transactionListHtml;
-}
-
-// Add this new function to your utils/ui.js file
-export function renderExpenseList(expenseCategories) {
-    if (!elements.expenseInsightsList) return;
-    const container = elements.expenseInsightsList;
-
-    // Sort expenses by amount, descending, and take the top 4
-    const topExpenses = [...expenseCategories]
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 4);
-
-    if (topExpenses.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500">No expenses recorded for this month yet.</p>`;
-        return;
-    }
-
-    container.innerHTML = topExpenses.map(item => {
-        // Mock trend data for now. This can be made dynamic later.
-        const trend = { value: 15, isPositive: Math.random() > 0.5 };
-        const trendColor = trend.isPositive ? 'text-positive-value' : 'text-negative-value';
-        const trendArrow = trend.isPositive ? '▼' : '▲';
-
-        return `
-            <div class="flex justify-between items-center text-sm">
-                <p class="font-medium text-gray-300">${item.category}</p>
-                <div class="text-right">
-                    <span class="font-semibold mono text-white">₹${item.amount.toLocaleString('en-IN')}</span>
-                    <span class="${trendColor} ml-2 mono text-xs">${trendArrow} ${trend.value}%</span>
-                </div>
-            </div>
-        `;
-    }).join('');
 }
 
 export function setActiveTab(tabId, createChartsCallback, appState) {

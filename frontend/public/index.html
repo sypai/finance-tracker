@@ -141,14 +141,19 @@
             
                 <!-- expense breakdown -->
                 <div class="card p-8">
-                    <h3 class="text-xl font-semibold mb-6">Expense Analysis</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="expenseAnalysisTitle" class="text-xl font-semibold">This Month's Expenses</h3>
+                        
+                            <div id="expenseTimelineTabs" class="flex items-center gap-1 p-1 rounded-lg bg-white/5">
+                                <button data-period="week" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white">Week</button>
+                                <button data-period="month" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white">Month</button>
+                                <button data-period="year" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400 hover:text-white">Year</button>
+                            </div>
+                    </div>
+        
+                    <div class="chart-container mb-6"><canvas id="expenseBarChart"></canvas></div>
                     
-                    <div class="chart-container mb-6 border-t border-white/5">
-                        <canvas id="expenseBarChart"></canvas>
-                    </div>
-                
-                    <div id="expenseInsightsList" class="space-y-3 pt-6 border-t border-white/5">
-                    </div>
+                    <div id="expenseInsightsList" class="space-y-3 pt-6 border-t border-white/5"></div>
                 </div>
 
             </div>
