@@ -264,8 +264,8 @@ export function renderExpenseList(transactions, period) {
     const listHTML = finalExpenses.map(item => {
         const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
         return `
-            <div class="flex justify-between items-center text-sm">
-                <p class="font-medium text-gray-300">${item.category}</p>
+            <div class="flex justify-between items-center text-base">
+                <p class="font-xs text-gray-300">${item.category}</p>
                 <div class="text-right">
                     <span class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</span>
                     <span class="text-xs text-gray-500 ml-2 w-10 inline-block text-right">(${percentage}%)</span>
