@@ -2,7 +2,11 @@
 import { elements } from './domElements.js';
 
 export function renderAccountsPage(appState) {
+    const accountListContainer = elements.accountList;
+    const balanceHistoryCard = document.getElementById('balanceHistoryCard');
+    // console.log(appState.accounts)
     if (appState.accounts.length === 0) {
+        // Zero state logic remains the same
         // ZERO STATE: Show the single message and hide the normal view
         elements.accountsNormalView.classList.add('hidden');
         elements.accountsZeroState.classList.remove('hidden');
@@ -15,25 +19,59 @@ export function renderAccountsPage(appState) {
             </div>
         `;
     } else {
-        // NORMAL STATE: Show the normal view and hide the zero state
-        elements.accountsZeroState.classList.add('hidden');
         elements.accountsNormalView.classList.remove('hidden');
-        renderAccountList(appState.accounts);
+        elements.accountsZeroState.classList.add('hidden');
+
+        populateAccountFilter(appState.accounts);
+        updateBalanceHistoryTabs(appState.activeBalancePeriod);
+
+        // NORMAL STATE: Render the list of account cards
+        balanceHistoryCard.classList.remove('hidden');
+        accountListContainer.innerHTML = appState.accounts.map(account => {
+            // Mask all but the last 4 digits of the account number
+            const maskedNumber = account.number ? `•••• ${account.number.slice(-4)}` : '';
+            // Generate a domain for the logo service
+            // const domain = account.name.toLowerCase().replace(/ /g, '').split('.')[0] + '.com';
+            const balanceColor = account.balance >= 0 ? 'text-positive-value' : 'text-negative-value';
+
+            return `
+                <div class="card p-4 flex items-center gap-4 col-span-1">
+                    <div class="flex-grow">
+                        <p class="font-bold text-white">${account.name}</p>
+                        <p class="text-sm text-gray-400">${account.type} ${maskedNumber ? `<span class="text-xs text-gray-500 ml-2">${maskedNumber}</span>` : ''}</p>
+                    </div>
+                    <p class="text-xl font-semibold mono ${balanceColor}">₹${account.balance.toLocaleString('en-IN')}</p>
+                </div>
+            `;
+        }).join('');
+
     }
 }
 
-function renderAccountList(accounts) {
-    // This function now *only* renders the list of account cards
-    elements.accountList.innerHTML = accounts.map(account => {
-        const balanceColor = account.balance >= 0 ? 'text-positive-value' : 'text-negative-value';
-        return `
-            <div class="card p-6 flex justify-between items-center">
-                <div>
-                    <p class="font-bold text-white">${account.name}</p>
-                    <p class="text-sm text-gray-400">${account.type}</p>
-                </div>
-                <p class="text-2xl font-semibold mono ${balanceColor}">₹${account.balance.toLocaleString('en-IN')}</p>
-            </div>
-        `;
-    }).join('');
+function populateAccountFilter(accounts) {
+    if (!elements.accountFilter) return;
+    
+    let optionsHtml = `<option value="all">All Accounts</option>`;
+    optionsHtml += accounts.map(account => 
+        `<option value="${account.id}">${account.name}</option>`
+    ).join('');
+    
+    elements.accountFilter.innerHTML = optionsHtml;
+}
+
+export function updateBalanceHistoryTabs(activePeriod) {
+    if (!elements.balanceHistoryTabs) return;
+
+    elements.balanceHistoryTabs.querySelectorAll('button').forEach(btn => {
+        const isActive = btn.dataset.period === activePeriod;
+        btn.classList.toggle('active', isActive);
+        // Add the same styling logic here
+        if (isActive) {
+            btn.classList.add('bg-white/10', 'text-white');
+            btn.classList.remove('text-gray-400');
+        } else {
+            btn.classList.remove('bg-white/10', 'text-white');
+            btn.classList.add('text-gray-400');
+        }
+    });
 }

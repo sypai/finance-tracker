@@ -38,6 +38,8 @@ const App = {
         updateGreeting();
         updateHeaderButtons(activeTab);
 
+        // console.log(activeTab)
+    
         // Render content based on the active tab
         if (activeTab === 'dashboard') {
             updateDashboardMetrics(appState);
@@ -68,14 +70,16 @@ const App = {
         });
         document.getElementById('addPortfolioForm')?.addEventListener('submit', (e) => this.handlePortfolioSubmit(e));
 
-
         elements.sidebarItems.forEach(item => {
             item.addEventListener('click', () => {
                 setActiveTab(item.dataset.tab);
                 this.render();
             });
         });
+        
         elements.expenseTimelineTabs.addEventListener('click', (event) => this.handleTimelineClick(event));
+
+        elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
 
         // Using a single, powerful event delegation listener for all dynamic content
         document.body.addEventListener('click', (event) => {
@@ -99,6 +103,7 @@ const App = {
             if (event.target.id === 'transactionForm') this.handleTransactionSubmit(event);
             if (event.target.id === 'addAccountForm') this.handleAccountSubmit(event);
             if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
+            if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
         });
     },
 
@@ -149,13 +154,27 @@ const App = {
 
     handleAccountSubmit(event) {
         event.preventDefault();
+        const formData = new FormData(event.target);
+        const name = formData.get('name');
+        const number = formData.get('number');
+    
+        // Check for duplicates
+        const accountExists = appState.accounts.some(acc => acc.name === name && acc.number === number);
+        if (accountExists) {
+            alert('This account already exists.');
+            return;
+        }
+    
         appState.accounts.push({
             id: Date.now(),
-            name: event.target.name.value,
-            type: event.target.type.value,
-            balance: parseFloat(event.target.balance.value),
-            history: []
+            name: name,
+            number: number,
+            type: formData.get('type'),
+            balance: parseFloat(formData.get('balance')),
+            createdAt: new Date(), // Add the creation timestamp
+            history: [{ date: new Date().toISOString().split('T')[0], balance: parseFloat(formData.get('balance')) }]
         });
+        
         toggleModal('addAccountModal', false);
         event.target.reset();
         this.render();
@@ -181,6 +200,15 @@ const App = {
         if (!clickedTab || clickedTab.dataset.period === appState.activeExpensePeriod) return;
         
         appState.activeExpensePeriod = clickedTab.dataset.period;
+        this.render();
+    },
+
+    // NEW handler for the balance history timeline
+    handleBalanceTimelineClick(event) {
+        const clickedTab = event.target.closest('button');
+        if (!clickedTab || clickedTab.dataset.period === appState.activeBalancePeriod) return;
+        
+        appState.activeBalancePeriod = clickedTab.dataset.period;
         this.render();
     },
 };

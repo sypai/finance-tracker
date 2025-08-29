@@ -11,6 +11,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"> 
@@ -225,8 +228,26 @@
                 <div id="accountList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     </div>
                 <div id="balanceHistoryCard" class="card p-8 mt-8">
-                    <h3 class="text-lg font-semibold text-white mb-6">Balance History</h3>
-                    <div class="chart-container chart-container-large">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-white">Balance History</h3>
+                        
+                        <div class="flex items-center gap-4">
+                            <select id="accountFilter" class="form-input w-auto border-gray-700 text-sm">
+                                </select>
+                    
+                            <div id="balanceHistoryTabs" class="flex items-center gap-1 p-1 rounded-lg bg-white/5">
+                                <button data-period="day" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Day</button>
+                                <button data-period="week" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Week</button>
+                                <button data-period="month" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Month</button>
+                                <button data-period="year" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Year</button>
+                                <button data-period="max" class="expense-tab active px-3 py-1 text-sm rounded-md">Max</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+
+                    <div class="chart-container-large">
                         <canvas id="balanceChart"></canvas>
                     </div>
                 </div>
@@ -292,16 +313,37 @@
     </div>
     
     <div id="addAccountModal" class="modal-backdrop">
-        <div class="modal-content card p-8">
+        <div class="modal-content card p-8 w-full max-w-lg">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Add Bank Account</h3>
-                <button id="closeAddAccountModalBtn" class="close-modal-btn text-gray-400 hover:text-white transition-colors text-3xl leading-none">&times;</button>
+                <h3 class="text-xl font-bold">Add a Bank Account</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
             <form id="addAccountForm" class="space-y-4">
-                <div><label for="accountName" class="text-sm text-gray-300 mb-1 block">Bank Name</label><input type="text" id="accountName" name="name" class="form-input" placeholder="e.g., HDFC Bank" required></div>
-                <div><label for="accountType" class="text-sm text-gray-300 mb-1 block">Account Type</label><input type="text" id="accountType" name="type" class="form-input" placeholder="e.g., Savings Account" required></div>
-                <div><label for="initialBalance" class="text-sm text-gray-300 mb-1 block">Current Balance (₹)</label><input type="number" step="0.01" id="initialBalance" name="balance" class="form-input" placeholder="50000" required></div>
-                <div class="pt-4"><button type="submit" class="btn btn-secondary w-full">Save Account</button></div>
+                <div>
+                    <label for="accountName" class="text-sm text-gray-300 mb-1 block">Bank Name</label>
+                    <input type="text" id="accountName" name="name" class="form-input" placeholder="e.g., State Bank of India" required>
+                </div>
+                <div>
+                    <label for="accountNumber" class="text-sm text-gray-300 mb-1 block">Account Number (Optional)</label>
+                    <input type="text" id="accountNumber" name="number" class="form-input" placeholder="Last 4 digits are shown">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="accountType" class="text-sm text-gray-300 mb-1 block">Account Type</label>
+                        <select id="accountType" name="type" class="form-input">
+                            <option>Savings</option>
+                            <option>Credit Card</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="initialBalance" class="text-sm text-gray-300 mb-1 block">Current Balance (₹)</label>
+                        <input type="number" step="0.01" id="initialBalance" name="balance" class="form-input" placeholder="50000" required>
+                    </div>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-secondary w-full">Save Account</button>
+                </div>
             </form>
         </div>
     </div>

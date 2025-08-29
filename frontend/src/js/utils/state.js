@@ -1,30 +1,65 @@
-// src/js/utils/state.js
+// This helper function generates a large, realistic dataset.
+function generateDenseData() {
+    const accounts = [
+        { id: 1, name: 'State Bank of India', type: 'Savings', startingBalance: 50000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        // { id: 2, name: 'HDFC Bank', type: 'Savings', startingBalance: 25000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        // { id: 3, name: 'ICICI Credit Card', type: 'Credit Card', startingBalance: 0, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        // { id: 4, name: 'Axis Bank', type: 'Salary', startingBalance: 100000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        // { id: 5, name: 'Kotak Bank', type: 'Savings', startingBalance: 75000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+    ];
 
+    const transactions = [];
+    const expenseDescriptions = ['Groceries', 'Shopping', 'Swiggy', 'Uber', 'Rent', 'Utilities', 'Amazon', 'Netflix', 'Fuel', 'Dinner'];
+    const incomeDescriptions = ['Salary', 'Freelance', 'Bonus'];
+    
+    // Generate transactions for the last 365 days
+    for (let i = 0; i < 365; i++) {
+        const date = new Date(new Date().setDate(new Date().getDate() - i));
+        const numTransactions = Math.floor(Math.random() * 2) + 2; // 2 or 3 transactions per day
+
+        for (let j = 0; j < numTransactions; j++) {
+            const accountIndex = Math.floor(Math.random() * accounts.length);
+            const accountId = accounts[accountIndex].id;
+            let type, description, amount;
+            
+            // Occasionally generate an income transaction
+            if (Math.random() > 0.95 || (date.getDate() >= 1 && date.getDate() <= 5 && Math.random() > 0.5)) {
+                type = 'income';
+                description = incomeDescriptions[Math.floor(Math.random() * incomeDescriptions.length)];
+                amount = Math.floor(Math.random() * 40000) + 10000;
+            } else {
+                type = 'expense';
+                description = expenseDescriptions[Math.floor(Math.random() * expenseDescriptions.length)];
+                amount = Math.floor(Math.random() * 3000) + 50;
+            }
+
+            transactions.push({ id: Date.now() + i + j, accountId, description, type, amount, date });
+        }
+    }
+    
+    // Calculate final, accurate balances for each account
+    accounts.forEach(account => {
+        const totalChange = transactions
+            .filter(t => t.accountId === account.id)
+            .reduce((sum, t) => sum + (t.type === 'income' ? t.amount : -t.amount), 0);
+        // Add a 'balance' property for the current balance
+        account.balance = account.startingBalance + totalChange;
+    });
+
+    return { accounts, transactions };
+}
+
+// Generate the data
+const { accounts, transactions } = generateDenseData();
+
+// Export the final state object
 export const appState = {
-    accounts: [
-        // { id: 1, name: 'State Bank of India', type: 'Savings Account', balance: 45320.00, history: [{date: '2025-01-01', balance: 42000}, {date: '2025-02-01', balance: 44500}, {date: '2025-03-01', balance: 45320}] },
-        // { id: 2, name: 'HDFC Bank', type: 'Savings Account', balance: 28150.00, history: [{date: '2025-01-01', balance: 25000}, {date: '2025-02-01', balance: 26000}, {date: '2025-03-01', balance: 28150}] },
-        // { id: 3, name: 'Axis Bank', type: 'Credit Card', balance: -9880.00, history: [{date: '2025-01-01', balance: -5000}, {date: '2025-02-01', balance: -8500}, {date: '2025-03-01', balance: -9880}] },
-    ],
-    investments: [
-        // { id: 1, name: 'Zerodha', type: 'Equity & Mutual Funds', value: 185240.00, change: 18.5, isPositive: true },
-        // { id: 2, name: 'Morgan Stanley', type: 'Managed Portfolio', value: 45680.00, change: 12.3, isPositive: true },
-    ],
-    // FIX: Add the new, nested structure for investment accounts
+    accounts,
+    transactions,
+    investments: [],
     investmentAccounts: [], 
-
-    transactions: [
-        // { id: 1, accountId: 1, description: 'Salary Deposit', type: 'income', amount: 75000, date: new Date() },
-        // { id: 2, accountId: 2, description: 'Online Shopping', type: 'expense', amount: 2500, date: new Date() },
-        // { id: 3, accountId: 3, description: 'Electricity Bill', type: 'expense', amount: 3120, date: new Date(new Date().setDate(new Date().getDate() - 10)) },
-        // { id: 4, accountId: 1, description: 'Groceries Store', type: 'expense', amount: 5000, date: new Date(new Date().setDate(new Date().getDate() - 5)) },
-        // { id: 5, accountId: 2, description: 'Freelance Payment', type: 'income', amount: 15000, date: new Date(new Date().setMonth(new Date().getMonth() - 1)) },
-        // { id: 6, accountId: 3, description: 'Dinner with friends', type: 'expense', amount: 1200, date: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
-    ],
-    investmentGrowth: [
-        // { month: 'Jan', value: 200000 }, { month: 'Feb', value: 210000 }, { month: 'Mar', value: 215000 },
-        // { month: 'Apr', value: 225000 }, { month: 'May', value: 230000 }, { month: 'Jun', value: 240000 },
-        // { month: 'Jul', value: 255000 },
-    ],
-    activeExpensePeriod: 'month', // Default to 'month'
+    investmentGrowth: [],
+    
+    activeExpensePeriod: 'month',
+    activeBalancePeriod: 'max',
 };

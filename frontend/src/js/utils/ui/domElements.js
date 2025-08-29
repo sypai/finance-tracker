@@ -59,7 +59,7 @@ export function initUI() {
     elements.addHoldingBtn = document.getElementById('addHoldingBtn');
     elements.holdingsContainer = document.getElementById('holdingsContainer');
     elements.addPortfolioForm = document.getElementById('addPortfolioForm');
-    
+
     // Transaction Tab
     elements.transactionList = document.getElementById('transactionList');
     
@@ -69,4 +69,6 @@ export function initUI() {
     elements.balanceHistoryCard = document.getElementById('balanceHistoryCard');
     elements.accountsNormalView = document.getElementById('accountsNormalView');
     elements.accountsZeroState = document.getElementById('accountsZeroState');
+    elements.balanceHistoryTabs = document.getElementById('balanceHistoryTabs');
+    elements.accountFilter = document.getElementById('accountFilter'); 
 }
