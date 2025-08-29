@@ -1,87 +1,190 @@
-// js/app.js
-
 import { appState } from './utils/state.js';
 import { createCharts } from './components/charts.js';
 import { 
-    initUI, // <-- Import the new function
+    initUI,
     elements, 
     setActiveTab, 
     updateDateTime, 
     updateGreeting, 
-    renderAccounts, 
+    renderAccountsPage, 
     renderTransactions,
-    populateAccountDropdown,
-    renderDashboardInvestmentAccounts,
+    // populateAccountDropdown,
+    renderInvestmentCard,
     renderInvestmentsTab,
     updateDashboardMetrics,
-    updateActiveTimelineTab,
-    renderExpenseList
-} from './utils/ui.js';
-import { setupEventHandlers } from './utils/handlers.js';
+    // updateActiveTimelineTab,
+    renderExpenseAnalysisCard,
+    updateHeaderButtons,
+    toggleModal,
+    showTransactionModal,
+    showPortfolioModal,
+    createHoldingRow
+} from './utils/ui/index.js';
 
 const App = {
     init() {
-        initUI(); // <-- Call it first! This populates the `elements` object.
-        this.loadData();
+        initUI();
         this.bindEvents();
         this.render(); // Initial render
-        updateDateTime();
+        
+        // The clock update only needs to be set up once.
+        updateDateTime(); 
         setInterval(updateDateTime, 1000 * 60);
     },
 
     render() {
-        updateDashboardMetrics(appState);
+        const activeTab = document.querySelector('.sidebar-item.active')?.dataset.tab || 'dashboard';
+
         updateGreeting();
-        renderAccounts(appState.accounts);
-        populateAccountDropdown(appState.accounts);
-        renderTransactions(appState.transactions, appState.accounts);
-        renderDashboardInvestmentAccounts(appState.investments);
-        renderInvestmentsTab(appState.investments);
+        updateHeaderButtons(activeTab);
+
+        // Render content based on the active tab
+        if (activeTab === 'dashboard') {
+            updateDashboardMetrics(appState);
+            renderInvestmentCard(appState);
+            renderExpenseAnalysisCard(appState);
+        } else if (activeTab === 'accounts') {
+            renderAccountsPage(appState);
+        } else if (activeTab === 'investments') {
+            renderInvestmentsTab(appState.investments);
+        } else if (activeTab === 'transactions') {
+            renderTransactions(appState.transactions, appState.accounts);
+        }
+        
         createCharts(appState);
-        updateActiveTimelineTab(appState.activeExpensePeriod);
-        renderExpenseList(appState.transactions, appState.activeExpensePeriod);
     },
 
     bindEvents() {
-        elements.mobileMenuButton.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
+        // Static elements that always exist on the page
+        elements.mobileMenuButton.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
+        
+        elements.addTransactionBtn.addEventListener('click', () => showTransactionModal(appState));
+        
+        elements.addAccountBtn.addEventListener('click', () => toggleModal('addAccountModal', true));
+        
+        elements.addInvestmentBtn.addEventListener('click', () => showPortfolioModal());
+        document.getElementById('addHoldingBtn')?.addEventListener('click', () => {
+            document.getElementById('holdingsContainer').appendChild(createHoldingRow());
         });
+        document.getElementById('addPortfolioForm')?.addEventListener('submit', (e) => this.handlePortfolioSubmit(e));
+
 
         elements.sidebarItems.forEach(item => {
-            item.addEventListener('click', () => setActiveTab(item.dataset.tab, createCharts, appState));
+            item.addEventListener('click', () => {
+                setActiveTab(item.dataset.tab);
+                this.render();
+            });
         });
-
         elements.expenseTimelineTabs.addEventListener('click', (event) => this.handleTimelineClick(event));
 
-        setupEventHandlers(this.render.bind(this));
+        // Using a single, powerful event delegation listener for all dynamic content
+        document.body.addEventListener('click', (event) => {
+            if (event.target.matches('.close-modal-btn')) {
+                event.target.closest('.modal-backdrop').classList.remove('active');
+            }
+            if (event.target.id === 'modalAddAccountBtn') {
+                toggleModal('transactionModal', false);
+                toggleModal('addAccountModal', true);
+            }
+            const tabLink = event.target.dataset.tabLink;
+            if (tabLink) {
+                setActiveTab(tabLink);
+                if (tabLink === 'accounts') toggleModal('addAccountModal', true);
+                if (tabLink === 'investments') toggleModal('addInvestmentAccountModal', true);
+                this.render();
+            }
+        });
+
+        document.body.addEventListener('submit', (event) => {
+            if (event.target.id === 'transactionForm') this.handleTransactionSubmit(event);
+            if (event.target.id === 'addAccountForm') this.handleAccountSubmit(event);
+            if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
+        });
+    },
+
+    // --- ADD THIS NEW HANDLER FUNCTION ---
+    handlePortfolioSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const holdingNames = formData.getAll('holdingName');
+        const holdingValues = formData.getAll('holdingValue');
+
+        const newAccount = {
+            id: Date.now(),
+            name: formData.get('name'),
+            type: formData.get('type'),
+            totalValue: holdingValues.reduce((sum, val) => sum + parseFloat(val), 0),
+            holdings: holdingNames.map((name, index) => ({
+                name: name,
+                value: parseFloat(holdingValues[index])
+            }))
+        };
+        
+        // This is where you would add the newAccount to your appState.investmentAccounts
+        console.log("New Portfolio Account:", newAccount);
+        appState.investmentAccounts.push(newAccount);
+
+        toggleModal('addPortfolioModal', false);
+        this.render(); // Re-render the app to show the new data
+    },
+
+    handleTransactionSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const accountId = parseInt(formData.get('accountId'));
+        const account = appState.accounts.find(acc => acc.id === accountId);
+        if (account) {
+            const amount = parseFloat(formData.get('amount'));
+            const type = formData.get('type');
+            account.balance += type === 'income' ? amount : -amount;
+            appState.transactions.unshift({
+                id: Date.now(), accountId, date: new Date(),
+                description: formData.get('description'), amount, type,
+            });
+        }
+        toggleModal('transactionModal', false);
+        event.target.reset();
+        this.render();
+    },
+
+    handleAccountSubmit(event) {
+        event.preventDefault();
+        appState.accounts.push({
+            id: Date.now(),
+            name: event.target.name.value,
+            type: event.target.type.value,
+            balance: parseFloat(event.target.balance.value),
+            history: []
+        });
+        toggleModal('addAccountModal', false);
+        event.target.reset();
+        this.render();
+    },
+
+    handleInvestmentAccountSubmit(event) {
+        event.preventDefault();
+        appState.investments.push({
+            id: Date.now(),
+            name: event.target.name.value,
+            type: event.target.type.value,
+            value: parseFloat(event.target.value.value),
+            change: 0, isPositive: true
+        });
+        toggleModal('addInvestmentAccountModal', false);
+        event.target.reset();
+        this.render();
     },
 
     handleTimelineClick(event) {
         const clickedTab = event.target.closest('button');
+        // FIX: Correctly reference the state via appState.ui
         if (!clickedTab || clickedTab.dataset.period === appState.activeExpensePeriod) return;
-
-        // The only job of the event handler is to update the state.
-        appState.activeExpensePeriod = clickedTab.dataset.period;
         
-        // Then, we simply re-render the entire app.
+        appState.activeExpensePeriod = clickedTab.dataset.period;
         this.render();
-    },
-
-    loadData() {
-        const today = new Date();
-        appState.transactions = [
-            { description: 'Salary', amount: 95000, type: 'income', date: new Date(new Date().setDate(1)) },
-            { description: 'Groceries', amount: 3200, type: 'expense', date: today },
-            { description: 'Transport', amount: 1500, type: 'expense', date: new Date(today.getTime() - 2 * 86400000) },
-            { description: 'Shopping', amount: 4000, type: 'expense', date: new Date(today.getTime() - 4 * 86400000) },
-            { description: 'Rent', amount: 20000, type: 'expense', date: new Date(new Date().setDate(1))},
-            { description: 'Flight', amount: 12000, type: 'expense', date: new Date(new Date().setMonth(today.getMonth() - 2))},
-            { description: 'Hotel', amount: 18000, type: 'expense', date: new Date(new Date().setFullYear(today.getFullYear() - 1))},
-        ];
     },
 };
 
-// Start the application once the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });

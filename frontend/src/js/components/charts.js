@@ -75,64 +75,132 @@ function getTransactionsForPeriod(transactions, period = 'month') {
 export function createCharts(appState) {
     Object.values(Chart.instances).forEach(chart => chart.destroy());
 
-    // --- Investments Growth Chart (Restored) ---
+    // --- Investments Growth Chart ---
     const investmentsGrowthChartCtx = document.getElementById('investmentsGrowthChart')?.getContext('2d');
-    if (investmentsGrowthChartCtx && appState.investmentGrowth) {
-        new Chart(investmentsGrowthChartCtx, {
-            type: 'line',
-            data: {
-                labels: appState.investmentGrowth.map(d => d.month),
-                datasets: [{
-                    label: 'Portfolio Value',
-                    data: appState.investmentGrowth.map(d => d.value),
-                    borderColor: '#5CF1B2',
-                    backgroundColor: 'rgba(92, 241, 178, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#5CF1B2',
-                    pointBorderColor: '#000000',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                }]
-            },
-            options: getCommonChartOptions(true)
-        });
+    if (investmentsGrowthChartCtx) {
+        // FIX: Only draw the chart if there is data for it
+        if (appState.investmentGrowth && appState.investmentGrowth.length > 0) {
+            new Chart(investmentsGrowthChartCtx, {
+                type: 'line',
+                data: {
+                    labels: appState.investmentGrowth.map(d => d.month),
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: appState.investmentGrowth.map(d => d.value),
+                        borderColor: '#5CF1B2',
+                        backgroundColor: 'rgba(92, 241, 178, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#5CF1B2',
+                        pointBorderColor: '#000000',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                    }]
+                },
+                options: getCommonChartOptions(true)
+            });
+        } else {
+            // If no data, clear the canvas to prevent old charts from showing
+            investmentsGrowthChartCtx.clearRect(0, 0, investmentsGrowthChartCtx.canvas.width, investmentsGrowthChartCtx.canvas.height);
+        }
     }
+    // // --- Investments Growth Chart (Restored) ---
 
-    // --- Balance Chart (Restored) ---
+    // const investmentsGrowthChartCtx = document.getElementById('investmentsGrowthChart')?.getContext('2d');
+    // if (investmentsGrowthChartCtx && appState.investmentGrowth) {
+    //     new Chart(investmentsGrowthChartCtx, {
+    //         type: 'line',
+    //         data: {
+    //             labels: appState.investmentGrowth.map(d => d.month),
+    //             datasets: [{
+    //                 label: 'Portfolio Value',
+    //                 data: appState.investmentGrowth.map(d => d.value),
+    //                 borderColor: '#5CF1B2',
+    //                 backgroundColor: 'rgba(92, 241, 178, 0.2)',
+    //                 borderWidth: 2,
+    //                 tension: 0.4,
+    //                 fill: true,
+    //                 pointBackgroundColor: '#5CF1B2',
+    //                 pointBorderColor: '#000000',
+    //                 pointBorderWidth: 2,
+    //                 pointRadius: 5,
+    //                 pointHoverRadius: 7,
+    //             }]
+    //         },
+    //         options: getCommonChartOptions(true)
+    //     });
+    // }
+
+    // // --- Balance Chart (Restored) ---
+    // const balanceChartCtx = document.getElementById('balanceChart')?.getContext('2d');
+    // if (balanceChartCtx && appState.accounts) {
+    //     const allBalances = appState.accounts.reduce((acc, account) => {
+    //         if (!account.history) return acc;
+    //         const newBalances = account.history.map(h => ({date: h.date, balance: h.balance}));
+    //         return [...acc, ...newBalances];
+    //     }, []);
+
+    //     const sortedBalances = allBalances.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    //     new Chart(balanceChartCtx, {
+    //         type: 'line',
+    //         data: {
+    //             labels: sortedBalances.map(d => new Date(d.date).toLocaleDateString('en-IN', {month: 'short'})),
+    //             datasets: [{
+    //                 label: 'Total Balance',
+    //                 data: sortedBalances.map(d => d.balance),
+    //                 borderColor: '#babaf4',
+    //                 backgroundColor: 'rgba(184, 184, 242, 0.2)',
+    //                 borderWidth: 2,
+    //                 tension: 0.4,
+    //                 fill: true,
+    //                 pointBackgroundColor: '#babaf4',
+    //                 pointBorderColor: '#000000',
+    //                 pointBorderWidth: 2,
+    //                 pointRadius: 5,
+    //                 pointHoverRadius: 7,
+    //             }]
+    //         },
+    //         options: getCommonChartOptions(true)
+    //     });
+    // }
+
+    // --- Balance Chart ---
+    
     const balanceChartCtx = document.getElementById('balanceChart')?.getContext('2d');
-    if (balanceChartCtx && appState.accounts) {
-        const allBalances = appState.accounts.reduce((acc, account) => {
-            if (!account.history) return acc;
-            const newBalances = account.history.map(h => ({date: h.date, balance: h.balance}));
-            return [...acc, ...newBalances];
-        }, []);
+    if (balanceChartCtx) {
+        // FIX: Only draw the chart if there are accounts with history
+        if (appState.accounts && appState.accounts.length > 0) {
+            const allBalances = appState.accounts.reduce((acc, account) => {
+                if (!account.history) return acc;
+                const newBalances = account.history.map(h => ({date: h.date, balance: h.balance}));
+                return [...acc, ...newBalances];
+            }, []);
 
-        const sortedBalances = allBalances.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        new Chart(balanceChartCtx, {
-            type: 'line',
-            data: {
-                labels: sortedBalances.map(d => new Date(d.date).toLocaleDateString('en-IN', {month: 'short'})),
-                datasets: [{
-                    label: 'Total Balance',
-                    data: sortedBalances.map(d => d.balance),
-                    borderColor: '#babaf4',
-                    backgroundColor: 'rgba(184, 184, 242, 0.2)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#babaf4',
-                    pointBorderColor: '#000000',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                }]
-            },
-            options: getCommonChartOptions(true)
-        });
+            if (allBalances.length > 0) {
+                const sortedBalances = allBalances.sort((a, b) => new Date(a.date) - new Date(b.date));
+                new Chart(balanceChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedBalances.map(d => new Date(d.date).toLocaleDateString('en-IN', {month: 'short'})),
+                        datasets: [{
+                            label: 'Total Balance',
+                            data: sortedBalances.map(d => d.balance),
+                            borderColor: '#babaf4',
+                            backgroundColor: 'rgba(184, 184, 242, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                        }]
+                    },
+                    options: getCommonChartOptions(true)
+                });
+            }
+        } else {
+            // If no data, clear the canvas to prevent old axes from showing
+            balanceChartCtx.clearRect(0, 0, balanceChartCtx.canvas.width, balanceChartCtx.canvas.height);
+        }
     }
 
     // const expenseBarCtx = document.getElementById('expenseBarChart')?.getContext('2d');
@@ -202,6 +270,20 @@ export function createCharts(appState) {
 
         finalChartData.sort((a, b) => a.amount - b.amount);
         
+        // If there is no expense data, clear the canvas and show a message
+        if (finalChartData.length === 0) {
+            const canvas = expenseBarCtx.canvas;
+            const ctx = expenseBarCtx;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#7F849B'; // --text-secondary
+            ctx.font = "14px 'Manrope'";
+            ctx.fillText("No expense data for this period", canvas.width / 2, canvas.height / 2);
+            ctx.restore();
+            return; // Stop before trying to create a chart
+        }
+
         new Chart(expenseBarCtx, {
             type: 'bar',
             data: {
