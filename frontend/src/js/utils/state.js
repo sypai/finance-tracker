@@ -2,8 +2,8 @@
 function generateDenseData() {
     const accounts = [
         { id: 1, name: 'State Bank of India', type: 'Savings', startingBalance: 50000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
-        // { id: 2, name: 'HDFC Bank', type: 'Savings', startingBalance: 25000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
-        // { id: 3, name: 'ICICI Credit Card', type: 'Credit Card', startingBalance: 0, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        { id: 2, name: 'HDFC Bank', type: 'Savings', startingBalance: 25000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
+        { id: 3, name: 'ICICI Credit Card', type: 'Credit Card', startingBalance: 0, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
         // { id: 4, name: 'Axis Bank', type: 'Salary', startingBalance: 100000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
         // { id: 5, name: 'Kotak Bank', type: 'Savings', startingBalance: 75000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
     ];
@@ -13,7 +13,7 @@ function generateDenseData() {
     const incomeDescriptions = ['Salary', 'Freelance', 'Bonus'];
     
     // Generate transactions for the last 365 days
-    for (let i = 0; i < 365; i++) {
+    for (let i = 0; i < 30; i++) {
         const date = new Date(new Date().setDate(new Date().getDate() - i));
         const numTransactions = Math.floor(Math.random() * 2) + 2; // 2 or 3 transactions per day
 

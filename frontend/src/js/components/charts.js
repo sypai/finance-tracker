@@ -1,5 +1,4 @@
 // js/charts.js
-
 function getCommonChartOptions(showScales = true, indexAxis = 'x') {
     const options = {
         responsive: true,
@@ -184,48 +183,42 @@ export function createCharts(appState) {
         
         const datasets = prepareBalanceHistoryDatasets(accountsToChart, appState.transactions, selectedPeriod);
 
-        // --- DYNAMIC Y-AXIS LOGIC ---
-        let minBalance = Infinity;
-        let maxBalance = -Infinity;
-        datasets.forEach(ds => {
-            ds.data.forEach(point => {
-                if (point.y < minBalance) minBalance = point.y;
-                if (point.y > maxBalance) maxBalance = point.y;
-            });
-        });
-        
-         // Add a bit of padding to the top and bottom of the data
-        const yPadding = (maxBalance - minBalance) * 0.1; // 10% padding
-        const yAxisMin = minBalance - yPadding;
-        const yAxisMax = maxBalance + yPadding;
-
         new Chart(balanceChartCtx, {
             type: 'line',
             data: { datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
                 plugins: {
-                    legend: { display: datasets.length > 1, position: 'top', align: 'end', labels: { color: '#F0F0F5' } },
-                    // --- TOOLTIP FIX IS HERE ---
+                    crosshair: true, // Enable our custom plugin
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: { color: '#F0F0F5', font: { family: 'Manrope' } }
+                    },
+                    // --- THIS IS THE KEY FIX FOR THE TOOLTIP ---
                     tooltip: {
-                        mode: 'index',
-                        intersect: false,
+                        position: 'nearest',
                         callbacks: {
-                            // This new function formats the title (the date)
                             title: function(tooltipItems) {
                                 const timestamp = tooltipItems[0].parsed.x;
-                                return new Date(timestamp).toLocaleDateString('en-IN', {
-                                    weekday: 'short',
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                });
+                                return new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
                             },
-                            // This function formats each line in the tooltip
                             label: function(context) {
                                 const label = context.dataset.label || '';
-                                const value = context.parsed.y;
+                                const hoveredTimestamp = context.parsed.x;
+                                
+                                // Find the last data point on or before the hovered date
+                                const relevantPoint = [...context.dataset.data]
+                                    .reverse()
+                                    .find(point => point.x <= hoveredTimestamp);
+
+                                const value = relevantPoint ? relevantPoint.y : 0;
                                 return `${label}: ₹${value.toLocaleString('en-IN')}`;
                             }
                         }
@@ -234,24 +227,12 @@ export function createCharts(appState) {
                 scales: {
                     x: {
                         type: 'time',
-                        // --- X-AXIS FIX ---
-                        // Instructs Chart.js to create clean, regular time intervals
-                        time: {
-                            unit: 'month', // Can be 'day', 'week', 'month', 'year'
-                        },
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.1)',
-                            borderDash: [2, 4], // Dashed grid lines
-                        },
+                        time: { unit: 'month' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: { color: '#7F849B' }
                     },
                     y: {
-                        stacked: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.05)',
-                            borderColor: 'rgba(255, 255, 255, 0.1)',
-                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
                         ticks: {
                             color: '#7F849B',
                             callback: (value) => {
@@ -265,8 +246,95 @@ export function createCharts(appState) {
             }
         });
     }
+
+
+} 
+
+function interpolateY(p1, p2, x) {
+    const { x: x1, y: y1 } = p1.getProps(['x', 'y']);
+    const { x: x2, y: y2 } = p2.getProps(['x', 'y']);
+    if (x1 === x2) return y1;
+    return y1 + (y2 - y1) * ((x - x1) / (x2 - x1));
 }
 
+// --- The Final, Advanced Crosshair Plugin ---
+const crosshairPlugin = {
+    id: 'crosshair',
+    afterEvent: (chart, args) => {
+        const { event } = args;
+        if (chart.tooltip?.getActiveElements()?.length) {
+            chart.crosshairPosition = { x: event.x };
+            chart.draw();
+        } else if (chart.crosshairPosition) {
+            delete chart.crosshairPosition;
+            chart.draw();
+        }
+    },
+    afterDraw: chart => {
+        if (chart.crosshairPosition) {
+            const { x } = chart.crosshairPosition;
+            const { ctx, chartArea: { top, bottom, left, right } } = chart; // Get all bounds
+            
+            ctx.save();
+
+            // --- 1. Draw all dashed lines (vertical and horizontal) ---
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+
+            // Draw vertical line
+            ctx.moveTo(x, top);
+            ctx.lineTo(x, bottom);
+
+            // Find interpolated Y for each dataset and draw horizontal lines
+            chart.getSortedVisibleDatasetMetas().forEach(meta => {
+                const points = meta.data;
+                let p1, p2;
+                for (let i = 0; i < points.length - 1; i++) {
+                    if (points[i].x <= x && points[i+1].x >= x) {
+                        p1 = points[i]; p2 = points[i+1]; break;
+                    }
+                }
+                if (p1 && p2) {
+                    const y = interpolateY(p1, p2, x);
+                    ctx.moveTo(left, y);
+                    ctx.lineTo(right, y); // Draw all the way across
+                }
+            });
+            ctx.stroke(); // Stroke all dashed lines at once
+
+            // --- 2. Draw the solid dots on top ---
+            chart.getSortedVisibleDatasetMetas().forEach(meta => {
+                const dataset = meta.controller.getDataset();
+                const points = meta.data;
+                let p1, p2;
+                for (let i = 0; i < points.length - 1; i++) {
+                    if (points[i].x <= x && points[i+1].x >= x) {
+                        p1 = points[i]; p2 = points[i+1]; break;
+                    }
+                }
+                if (p1 && p2) {
+                    const y = interpolateY(p1, p2, x);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = dataset.borderColor;
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#000000';
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+            
+            ctx.restore();
+        }
+    }
+};
+
+// Register the plugin with Chart.js
+Chart.register(crosshairPlugin);
+
+// This helper prepares the time-series data for the balance chart
 function prepareBalanceHistoryDatasets(accounts, transactions, period) {
     const now = new Date();
     let startDate;
@@ -281,11 +349,17 @@ function prepareBalanceHistoryDatasets(accounts, transactions, period) {
             break;
     }
 
+    // --- NEW LOGIC: Find the account with the HIGHEST starting balance ---
+    const topAccount = accounts.reduce((highest, current) => {
+        return current.startingBalance > highest.startingBalance ? current : highest;
+    }, accounts[0] || { startingBalance: -Infinity });
+
     const colors = ['#babaf4', '#5CF1B2', '#FF9B9B', '#FBBF24', '#818CF8'];
 
     return accounts.map((account, index) => {
+        const initialBalance = account.startingBalance;
         const createdAt = new Date(account.createdAt).getTime();
-        let runningBalance = account.startingBalance;
+        let runningBalance = initialBalance;
         const balanceHistory = [{ x: createdAt, y: runningBalance }];
 
         const accountTransactions = transactions
@@ -303,9 +377,24 @@ function prepareBalanceHistoryDatasets(accounts, transactions, period) {
             label: account.name,
             data: filteredHistory,
             borderColor: colors[index % colors.length],
+            // --- THIS IS THE KEY FIX ---
+            // Only fill the top-most account's line
+            fill: account.id === topAccount.id, 
+            // The backgroundColor is now a function to create the gradient
+            backgroundColor: context => {
+                const chart = context.chart;
+                const {ctx, chartArea} = chart;
+                if (!chartArea) {
+                    return null; // Return null if chart area is not defined yet
+                }
+                const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                gradient.addColorStop(0, `${colors[index % colors.length]}4D`); // Semi-transparent at the top
+                gradient.addColorStop(1, `${colors[index % colors.length]}00`); // Fully transparent at the bottom
+                return gradient;
+            },
             tension: 0.4,
-            fill: true, // This is important for area charts
-            backgroundColor: `${colors[index % colors.length]}4D` // Semi-transparent fill
+            pointRadius: 0,
+            pointHoverRadius: 5,
         };
     });
 }

@@ -36,6 +36,10 @@ export function renderAccountsPage(appState) {
 
             return `
                 <div class="card p-4 flex items-center gap-4 col-span-1">
+
+                <button data-delete-account-id="${account.id}" class="absolute top-2 right-2 text-gray-600 hover:text-red-500 transition-colors">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
                     <div class="flex-grow">
                         <p class="font-bold text-white">${account.name}</p>
                         <p class="text-sm text-gray-400">${account.type} ${maskedNumber ? `<span class="text-xs text-gray-500 ml-2">${maskedNumber}</span>` : ''}</p>
