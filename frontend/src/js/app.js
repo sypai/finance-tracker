@@ -6,7 +6,7 @@ import {
     setActiveTab, 
     updateDateTime, 
     updateGreeting, 
-    renderAccountsPage, 
+    renderAccountsPage2, 
     renderTransactions,
     // populateAccountDropdown,
     renderInvestmentCard,
@@ -46,7 +46,7 @@ const App = {
             renderInvestmentCard(appState);
             renderExpenseAnalysisCard(appState);
         } else if (activeTab === 'accounts') {
-            renderAccountsPage(appState);
+            renderAccountsPage2(appState);
         } else if (activeTab === 'investments') {
             renderInvestmentsTab(appState.investments);
         } else if (activeTab === 'transactions') {
@@ -105,6 +105,78 @@ const App = {
             if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
             if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
         });
+
+        // --- THIS IS THE KEY CHANGE ---
+        // A single, powerful event listener for the entire page
+        // --- THIS IS THE KEY CHANGE ---
+        // A single, powerful event listener for the entire page
+        document.body.addEventListener('click', (event) => {
+            const actionsButton = event.target.closest('[data-account-actions-id]');
+            
+            // --- NEW LOGIC FOR THE ACTIONS MODAL ---
+            if (actionsButton) {
+                const accountId = parseInt(actionsButton.dataset.accountActionsId);
+                this.showAccountActions(accountId);
+            }
+            if (event.target.id === 'cancelAccountActionsBtn') {
+                toggleModal('accountActionsModal', false);
+            }
+            if (event.target.id === 'deleteAccountBtn') {
+                const accountId = parseInt(event.target.dataset.accountId);
+                toggleModal('accountActionsModal', false); // Close this modal first
+                this.showDeleteConfirmation(accountId);
+            }
+            if (event.target.id === 'editAccountBtn') {
+                // You would build an "Edit Account" modal flow here
+                console.log('Edit account:', event.target.dataset.accountId);
+                toggleModal('accountActionsModal', false);
+            }
+            // --- End of new logic ---
+
+            // Logic for the delete confirmation modal buttons
+            if (event.target.id === 'cancelDeleteBtn') {
+                toggleModal('deleteConfirmationModal', false);
+            }
+            if (event.target.id === 'confirmDeleteBtn') {
+                const accountId = parseInt(event.target.dataset.accountIdToDelete);
+                this.deleteAccount(accountId);
+            }
+        });
+    },
+
+    showAccountActions(accountId) {
+        const account = appState.accounts.find(acc => acc.id === accountId);
+        if (!account) return;
+
+        // Update modal content
+        document.getElementById('accountActionsTitle').textContent = account.name;
+        document.getElementById('accountActionsDetails').textContent = 
+            `${account.type} • Balance: ₹${account.balance.toLocaleString('en-IN')}`;
+
+        // Store accountId on buttons for event listeners
+        document.getElementById('editAccountBtn').dataset.accountId = accountId;
+        document.getElementById('deleteAccountBtn').dataset.accountId = accountId;
+
+        toggleModal('accountActionsModal', true);
+    },
+
+    showDeleteConfirmation(accountId) {
+        // Store the ID on the button so we know which account to delete
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if(confirmBtn) {
+            confirmBtn.dataset.accountIdToDelete = accountId;
+            toggleModal('deleteConfirmationModal', true);
+        }
+    },
+
+    deleteAccount(accountId) {
+        // Filter out the account to be deleted
+        appState.accounts = appState.accounts.filter(acc => acc.id !== accountId);
+        // Also filter out all transactions associated with that account
+        appState.transactions = appState.transactions.filter(t => t.accountId !== accountId);
+
+        toggleModal('deleteConfirmationModal', false);
+        this.render(); // Re-render the UI to reflect the changes
     },
 
     // --- ADD THIS NEW HANDLER FUNCTION ---

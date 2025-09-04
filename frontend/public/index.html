@@ -222,7 +222,7 @@
         </div>
         
         <!-- ACCOUNTS TAB -->
-        <div id="accounts" class="tab-content">
+        <!-- <div id="accounts" class="tab-content">
 
             <div id="accountsNormalView">
                 <div id="accountList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,6 +247,42 @@
                     </div>
 
 
+                    <div class="chart-container-large">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        
+            <div id="accountsZeroState" class="hidden">
+                </div>
+        
+        </div> -->
+
+        <div id="accounts" class="tab-content">
+            <div id="accountsNormalView">
+                <div class="card">
+                    <div id="accountList" class="divide-y divide-white/10">
+                        </div>
+                </div>
+                
+                <div id="balanceHistoryCard" class="card p-8 mt-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold text-white">Balance History</h3>
+                        
+                        <div class="flex items-center gap-4">
+                            <select id="accountFilter" class="form-input w-auto border-gray-700 text-sm">
+                                </select>
+                    
+                            <div id="balanceHistoryTabs" class="flex items-center gap-1 p-1 rounded-lg bg-white/5">
+                                <button data-period="day" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Day</button>
+                                <button data-period="week" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Week</button>
+                                <button data-period="month" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Month</button>
+                                <button data-period="year" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Year</button>
+                                <button data-period="max" class="expense-tab active px-3 py-1 text-sm rounded-md">Max</button>
+                            </div>
+                        </div>
+                    </div>
+        
                     <div class="chart-container-large">
                         <canvas id="balanceChart"></canvas>
                     </div>
@@ -378,6 +414,41 @@
                     <button type="submit" class="btn btn-primary w-full">Save Portfolio</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="accountActionsModal" class="modal-backdrop">
+        <div class="modal-content card p-6 w-full max-w-sm rounded-lg shadow-xl flex flex-col items-center">
+            <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-6 w-6 text-primary-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+            </div>
+            <h3 id="accountActionsTitle" class="text-xl font-bold text-white mb-1">State Bank of India</h3>
+            <p id="accountActionsDetails" class="text-sm text-gray-400 mb-6">Savings • Balance: ₹1,50,000</p>
+            
+            <div class="w-full space-y-3">
+                <button id="editAccountBtn" class="btn bg-gray-700/50 hover:bg-gray-700 w-full flex items-center justify-center text-white">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    Edit Details
+                </button>
+                <button id="deleteAccountBtn" class="btn bg-red-600/20 text-red-400 hover:bg-red-600/30 w-full flex items-center justify-center">
+                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Delete Account
+                </button>
+                <button id="cancelAccountActionsBtn" class="btn bg-transparent hover:bg-white/5 w-full justify-center mt-3 text-gray-400">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmationModal" class="modal-backdrop">
+        <div class="modal-content card p-8 w-full max-w-md text-center">
+            <h3 class="text-xl font-bold mb-4">Are you sure?</h3>
+            <p class="text-gray-400 mb-6">This will permanently delete the account and all of its associated transactions. This action cannot be undone.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancelDeleteBtn" class="btn bg-white/10 hover:bg-white/20">Cancel</button>
+                <button id="confirmDeleteBtn" class="btn bg-red-600 text-white hover:bg-red-700">Yes, Delete</button>
+            </div>
         </div>
     </div>
 
