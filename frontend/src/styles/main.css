@@ -196,3 +196,52 @@ body {
     padding-top: 0.5rem;
     padding-bottom: 1.25rem;
 }
+
+/* /frontend/src/styles/main.css */
+
+/* --- Responsive Header --- */
+.header-grid {
+    display: grid;
+    grid-template-areas: "info value" "info chevron";
+    grid-template-columns: 1fr auto;
+    align-items: center;
+}
+.header-info { grid-area: info; }
+.header-value { grid-area: value; text-align: right; }
+.header-chevron { grid-area: chevron; display: flex; justify-content: flex-end; padding-top: 0.5rem; }
+
+/* On larger screens, the header becomes a simple flex row */
+@media (min-width: 768px) {
+    .header-grid {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header-value { padding-top: 0; }
+    .header-chevron { padding-top: 0; margin-left: 1rem; }
+}
+
+/* --- Responsive Table vs. Cards --- */
+.desktop-table { display: none; }
+.mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
+
+@media (min-width: 768px) {
+    .desktop-table { display: block; }
+    .mobile-cards { display: none; }
+}
+
+/* --- Desktop Table Group Dividers --- */
+.group-divider {
+    border-right: 1px solid var(--card-border);
+}
+
+/* --- Mobile Card Styling --- */
+.holding-mobile-card {
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    margin-top: 0.75rem;
+}
+.holding-mobile-card:first-child {
+    margin-top: 0;
+}

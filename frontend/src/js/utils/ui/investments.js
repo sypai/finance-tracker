@@ -137,102 +137,9 @@ export function renderInvestmentsTab(appState) {
     }
 }
 
-export function renderHoldingsView2(accounts) {
-    const container = document.getElementById('investmentTabContent');
-    if (!container) return;
+// /frontend/src/js/utils/ui/investments.js
 
-    // --- NEW: Thematic Color Palette Mapping ---
-    const assetColors = {
-        equity: 'accent-primary',
-        mutual_fund: 'accent-secondary',
-        epf: 'accent-neutral',
-        gold: 'accent-subtle',
-        default: 'accent-neutral'
-    };
-
-    container.innerHTML = `
-        <div class="space-y-4">
-            ${accounts.map(account => {
-                const totalCurrentValue = account.holdings.reduce((sum, h) => sum + h.currentValue, 0);
-                const totalBuyValue = account.holdings.reduce((sum, h) => sum + h.buyValue, 0);
-                const totalPandL = totalCurrentValue - totalBuyValue;
-                const pAndLColor = totalPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
-
-                const allocationByType = account.holdings.reduce((acc, holding) => {
-                    const type = holding.type || 'default';
-                    acc[type] = (acc[type] || 0) + holding.currentValue;
-                    return acc;
-                }, {});
-                
-                const dominantAsset = Object.keys(allocationByType).reduce((a, b) => allocationByType[a] > allocationByType[b] ? a : b, 'default');
-                const accentColorClass = assetColors[dominantAsset] || assetColors.default;
-
-                return `
-                <div class="holdings-account-card rounded-lg overflow-hidden ${accentColorClass}" data-account-id="${account.id}">
-                    <div class="holdings-account-header p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="font-medium text-white text-lg">${account.name}</p>
-                                <p class="text-sm text-gray-400 mt-1">${account.type} • ${account.holdings.length} Holdings</p>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <div class="text-right">
-                                    <p class="font-mono text-lg text-white">₹${totalCurrentValue.toLocaleString('en-IN')}</p>
-                                    <p class="font-mono text-sm ${pAndLColor}">
-                                        ${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')}
-                                    </p>
-                                </div>
-                                <svg class="chevron-icon h-5 w-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="holdings-list">
-                        <div class="border-t border-white/10">
-                            <table class="w-full text-sm text-left">
-                                <thead class="text-xs text-gray-500">
-                                    <tr>
-                                        <th class="py-2 px-4 font-normal">INSTRUMENT</th>
-                                        <th class="py-2 px-4 text-right font-normal hidden md:table-cell">QTY.</th>
-                                        <th class="py-2 px-4 text-right font-normal">AVG. COST</th>
-                                        <th class="py-2 px-4 text-right font-normal">LTP</th>
-                                        <th class="py-2 px-4 text-right font-normal">P&L</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${account.holdings.map(holding => {
-                                        const pAndL = holding.currentValue - holding.buyValue;
-                                        const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
-                                        const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
-                                        const unit = holding.grams ? holding.grams : holding.quantity;
-                                        const avgCost = unit > 0 ? holding.buyValue / unit : 0;
-                                        const ltp = unit > 0 ? holding.currentValue / unit : 0;
-
-                                        return `
-                                            <tr class="border-t border-white/5 hover:bg-white/5">
-                                                <td class="p-4 text-white font-medium">${holding.name}</td>
-                                                <td class="p-4 text-right mono text-gray-300 hidden md:table-cell">${unit.toLocaleString('en-IN')}</td>
-                                                <td class="p-4 text-right mono text-gray-300">₹${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                                <td class="p-4 text-right mono text-white">₹${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                                <td class="p-4 text-right mono ${pAndLColor}">
-                                                    <div class="flex flex-col">
-                                                        <span>${pAndL >= 0 ? '+' : ''}₹${pAndL.toLocaleString('en-IN')}</span>
-                                                        <span class="text-xs">(${pAndLPercent.toFixed(2)}%)</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;}).join('')}
-        </div>
-    `;
-}
-
+// This is the core rendering logic for the responsive holdings view.
 export function renderHoldingsView(accounts) {
     const container = document.getElementById('investmentTabContent');
     if (!container) return;
@@ -262,64 +169,90 @@ export function renderHoldingsView(accounts) {
                 const dominantAsset = Object.keys(allocationByType).reduce((a, b) => allocationByType[a] > allocationByType[b] ? a : b, 'default');
                 const accentColorClass = assetColors[dominantAsset] || assetColors.default;
 
+                const holdingsHtml = account.holdings.map(holding => {
+                    const pAndL = holding.currentValue - holding.buyValue;
+                    const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
+                    const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
+                    const unit = holding.grams ? holding.grams : holding.quantity;
+                    const avgCost = unit > 0 ? holding.buyValue / unit : 0;
+                    const ltp = unit > 0 ? holding.currentValue / unit : 0;
+
+                    return {
+                        desktop: `
+                            <tr class="hover:bg-white/5">
+                                <td class="p-4">${holding.name}</td>
+                                <td class="p-4 text-right mono">${unit.toLocaleString('en-IN')}</td>
+                                <td class="p-4 text-right mono">₹${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td class="p-4 text-right mono group-divider">₹${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td class="p-4 text-right mono">₹${holding.buyValue.toLocaleString('en-IN')}</td>
+                                <td class="p-4 text-right mono group-divider">₹${holding.currentValue.toLocaleString('en-IN')}</td>
+                                <td class="p-4 text-right mono ${pAndLColor}">
+                                    <div class="flex flex-col">
+                                        <span>${pAndL >= 0 ? '+' : ''}₹${pAndL.toLocaleString('en-IN')}</span>
+                                        <span class="text-xs">(${pAndLPercent.toFixed(2)}%)</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `,
+                        mobile: `
+                            <div class="holding-mobile-card">
+                                <p class="font-medium text-white mb-3">${holding.name}</p>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <span class="text-gray-400">Qty.</span><span class="mono text-right">${unit.toLocaleString('en-IN')}</span>
+                                    <span class="text-gray-400">Avg. Cost</span><span class="mono text-right">₹${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                    <span class="text-gray-400">LTP</span><span class="mono text-right">₹${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                    <span class="text-gray-400">Invested</span><span class="mono text-right">₹${holding.buyValue.toLocaleString('en-IN')}</span>
+                                    <span class="text-gray-400">Current</span><span class="mono text-right">₹${holding.currentValue.toLocaleString('en-IN')}</span>
+                                    <span class="text-gray-400">P&L</span>
+                                    <span class="mono text-right ${pAndLColor}">
+                                        ${pAndL >= 0 ? '+' : ''}₹${pAndL.toLocaleString('en-IN')} (${pAndLPercent.toFixed(1)}%)
+                                    </span>
+                                </div>
+                            </div>
+                        `
+                    };
+                });
+
                 return `
                 <div class="holdings-account-card rounded-lg overflow-hidden ${accentColorClass}" data-account-id="${account.id}">
                     <div class="holdings-account-header p-5">
-                        <div class="flex justify-between items-center">
-                            <div>
+                        <div class="header-grid">
+                            <div class="header-info">
                                 <p class="font-medium text-white text-lg">${account.name}</p>
                                 <p class="text-sm text-gray-400 mt-1">${account.type} • ${account.holdings.length} Holdings</p>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="text-right">
-                                    <p class="mono text-lg text-white">₹${totalCurrentValue.toLocaleString('en-IN')}</p>
-                                    <p class="mono text-sm ${pAndLColor}">
-                                        ${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')}
-                                    </p>
-                                </div>
-                                <svg class="chevron-icon h-5 w-5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            <div class="header-value">
+                                <p class="mono text-lg text-white">₹${totalCurrentValue.toLocaleString('en-IN')}</p>
+                                <p class="mono text-sm ${pAndLColor}">${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')}</p>
+                            </div>
+                            <div class="header-chevron">
+                                <svg class="chevron-icon h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </div>
                         </div>
                     </div>
                     
                     <div class="holdings-list">
-                        <div class="border-t border-white/10">
-                            <table class="w-full text-sm text-left">
+                        <div class="desktop-table">
+                            <table class="w-full text-sm">
                                 <thead class="text-xs text-gray-500">
                                     <tr>
-                                        <th class="py-2 px-4 font-normal">INSTRUMENT</th>
-                                        <th class="py-2 px-4 text-right font-normal hidden md:table-cell">QTY.</th>
-                                        <th class="py-2 px-4 text-right font-normal">AVG. COST</th>
-                                        <th class="py-2 px-4 text-right font-normal">LTP</th>
-                                        <th class="py-2 px-4 text-right font-normal">P&L</th>
+                                        <th class="p-4 text-left font-normal">Instrument</th>
+                                        <th class="p-4 text-right font-normal">Qty.</th>
+                                        <th class="p-4 text-right font-normal">Avg. Cost</th>
+                                        <th class="p-4 text-right font-normal group-divider">LTP</th>
+                                        <th class="p-4 text-right font-normal">Invested</th>
+                                        <th class="p-4 text-right font-normal group-divider">Current Val</th>
+                                        <th class="p-4 text-right font-normal">P&L</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${account.holdings.map(holding => {
-                                        const pAndL = holding.currentValue - holding.buyValue;
-                                        const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
-                                        const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
-                                        const unit = holding.grams ? holding.grams : holding.quantity;
-                                        const avgCost = unit > 0 ? holding.buyValue / unit : 0;
-                                        const ltp = unit > 0 ? holding.currentValue / unit : 0;
-
-                                        return `
-                                            <tr class="border-t border-white/5 hover:bg-white/5">
-                                                <td class="p-4 text-white font-medium">${holding.name}</td>
-                                                <td class="p-4 text-right mono text-gray-300 hidden md:table-cell">${unit.toLocaleString('en-IN')}</td>
-                                                <td class="p-4 text-right mono text-gray-300">₹${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                                <td class="p-4 text-right mono text-white">₹${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                                <td class="p-4 text-right mono ${pAndLColor}">
-                                                    <div class="flex flex-col">
-                                                        <span>${pAndL >= 0 ? '+' : ''}₹${pAndL.toLocaleString('en-IN')}</span>
-                                                        <span class="text-xs">(${pAndLPercent.toFixed(2)}%)</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
-                                    }).join('')}
+                                <tbody class="divide-y divide-white/10">
+                                    ${holdingsHtml.map(h => h.desktop).join('')}
                                 </tbody>
                             </table>
+                        </div>
+
+                        <div class="mobile-cards">
+                            ${holdingsHtml.map(h => h.mobile).join('')}
                         </div>
                     </div>
                 </div>
