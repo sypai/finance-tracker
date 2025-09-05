@@ -206,7 +206,7 @@
         </div>
 
         <!-- INVESTMENTS TAB -->
-        <div id="investments" class="tab-content">
+        <!-- <div id="investments" class="tab-content">
 
             <div id="investmentsNormalView">
                 <div id="investmentAccountList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -219,45 +219,60 @@
             <div id="investmentsZeroState" class="hidden">
                 </div>
                 
-        </div>
+        </div> -->
         
-        <!-- ACCOUNTS TAB -->
-        <!-- <div id="accounts" class="tab-content">
+        <!-- INVESTMENTS TAB -->
+        <div id="investments" class="tab-content">
 
-            <div id="accountsNormalView">
-                <div id="accountList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- This container holds the normal view -->
+            <div id="investmentsNormalView" class="hidden">
+                <!-- 1. Portfolio Summary (KPIs) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Current Value</h4>
+                        <p id="investmentsCurrentValue" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsMonthChange" class="text-sm mt-2"></p>
                     </div>
-                <div id="balanceHistoryCard" class="card p-8 mt-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-semibold text-white">Balance History</h3>
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Total Invested</h4>
+                        <p id="investmentsTotalInvested" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsInvestedSubtext" class="text-sm mt-2"></p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Total Gain/Loss</h4>
+                        <p id="investmentsTotalGain" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsTotalGainPercent" class="text-sm mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- 2. Interactive Holdings Component -->
+                <div class="card p-4">
+                    <div class="flex justify-between items-center mb-4 pb-4">
+                        <h3 class="px-1 text-xl font-semibold text-white"> Portfolios</h3>
                         
-                        <div class="flex items-center gap-4">
-                            <select id="accountFilter" class="form-input w-auto border-gray-700 text-sm">
-                                </select>
-                    
-                            <div id="balanceHistoryTabs" class="flex items-center gap-1 p-1 rounded-lg bg-white/5">
-                                <button data-period="day" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Day</button>
-                                <button data-period="week" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Week</button>
-                                <button data-period="month" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Month</button>
-                                <button data-period="year" class="expense-tab px-3 py-1 text-sm rounded-md text-gray-400">Year</button>
-                                <button data-period="max" class="expense-tab active px-3 py-1 text-sm rounded-md">Max</button>
-                            </div>
+                        <div id="portfolioView" class="flex items-center gap-1 p-1 rounded-lg bg-white/5">
+                            <button data-tab="holdings" class="investment-tab active px-3 py-3 text-sm rounded-md text-gray-400">Holdings</button>
+                            <button data-tab="allocation" class="investment-tab px-3 py-3 text-sm rounded-md text-gray-400">Allocation</button>
+                            <button data-tab="performance" class="investment-tab px-3 py-3 text-sm rounded-md text-gray-400">Performance</button>
                         </div>
-                        
+
                     </div>
 
-
-                    <div class="chart-container-large">
-                        <canvas id="balanceChart"></canvas>
+                    <!-- Tab Content -->
+                    <div id="investmentTabContent" class="mt-4">
+                        <!-- Collapsible account cards will be rendered here by JS -->
                     </div>
                 </div>
             </div>
-        
-            <div id="accountsZeroState" class="hidden">
-                </div>
-        
-        </div> -->
 
+            <!-- This is the container for the ZERO STATE view -->
+            <div id="investmentsZeroState">
+                <!-- The zero state message will be rendered here by JS -->
+            </div>
+
+        </div>
+
+        <!-- ACCOUNTS TAB -->
         <div id="accounts" class="tab-content">
             <div id="accountsNormalView">
                 <div class="card">
@@ -387,31 +402,42 @@
     <div id="addPortfolioModal" class="modal-backdrop">
         <div class="modal-content card p-8 w-full max-w-lg">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Add a Portfolio</h3>
+                <h3 id="portfolioModalTitle" class="text-xl font-bold">Add a Portfolio</h3>
                 <button class="close-modal-btn text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
             
             <form id="addPortfolioForm" class="space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="portfolioName" class="text-sm text-gray-300 mb-1 block">Account Name</label>
-                        <input type="text" id="portfolioName" name="name" class="form-input" placeholder="e.g., Zerodha" required>
-                    </div>
-                    <div>
-                        <label for="portfolioType" class="text-sm text-gray-300 mb-1 block">Account Type</label>
-                        <input type="text" id="portfolioType" name="type" class="form-input" placeholder="e.g., Brokerage" required>
+                <input type="hidden" name="accountId" id="portfolioAccountId">
+                
+                <div class="border-b border-white/10 pb-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="portfolioName" class="text-sm text-gray-300 mb-1 block">Account Provider</label>
+                            <input type="text" id="portfolioName" name="name" class="form-input" placeholder="e.g., Zerodha" required>
+                        </div>
+                        <div>
+                            <label for="portfolioType" class="text-sm text-gray-300 mb-1 block">Account Type</label>
+                            <select id="portfolioType" name="type" class="form-input">
+                                <option>Brokerage</option>
+                                <option>Retirement (EPF/NPS)</option>
+                                <option>ESOP</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
     
                 <div>
-                    <h4 class="text-md font-semibold text-gray-200 mb-2">Holdings</h4>
-                    <div id="holdingsContainer" class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-md font-semibold text-gray-200">Holdings</h4>
+                        <button type="button" id="addHoldingBtn" class="btn btn-secondary text-xs py-1 px-2">Add Holding</button>
+                    </div>
+                    <div id="holdingsContainer" class="space-y-3 max-h-64 overflow-y-auto pr-2">
                         </div>
-                    <button type="button" id="addHoldingBtn" class="text-sm text-primary-accent mt-3">+ Add another holding</button>
                 </div>
     
-                <div class="pt-4 border-t border-white/10">
-                    <button type="submit" class="btn btn-primary w-full">Save Portfolio</button>
+                <div class="pt-6 border-t border-white/10">
+                    <button type="submit" class="btn btn-primary w-full justify-center">Save Portfolio</button>
                 </div>
             </form>
         </div>

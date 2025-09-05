@@ -247,6 +247,37 @@ export function createCharts(appState) {
         });
     }
 
+        // In your createCharts function in charts.js
+    const allocationChartCtx = document.getElementById('allocationChart')?.getContext('2d');
+    if (allocationChartCtx && appState.investmentAccounts.length > 0) {
+        const allocationData = appState.investmentAccounts
+            .flatMap(acc => acc.holdings)
+            .reduce((acc, holding) => {
+                const type = holding.type || 'Other';
+                acc[type] = (acc[type] || 0) + holding.currentValue;
+                return acc;
+            }, {});
+
+        new Chart(allocationChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(allocationData),
+                datasets: [{
+                    data: Object.values(allocationData),
+                    backgroundColor: ['#babaf4', '#5CF1B2', '#FF9B9B', '#FBBF24'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#F0F0F5' } }
+                }
+            }
+        });
+    }
 
 } 
 

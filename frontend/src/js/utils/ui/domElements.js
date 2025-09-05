@@ -55,7 +55,19 @@ export function initUI() {
     
     elements.investmentPortfolioNormalView = document.getElementById('investmentPortfolioNormalView');
     elements.investmentPortfolioZeroState = document.getElementById('investmentPortfolioZeroState');
-    
+    // --- ADD THESE NEW LINES ---
+    elements.investmentsZeroState = document.getElementById('investmentsZeroState');
+    elements.investmentsNormalView = document.getElementById('investmentsNormalView');
+    elements.investmentsCurrentValue = document.getElementById('investmentsCurrentValue');
+    elements.investmentsTotalInvested = document.getElementById('investmentsTotalInvested');
+    elements.investmentsDayGain = document.getElementById('investmentsDayGain');
+    elements.investmentsTotalGain = document.getElementById('investmentsTotalGain');
+    elements.investmentsMonthChange = document.getElementById('investmentsMonthChange');
+    elements.investmentsTotalGainPercent = document.getElementById('investmentsTotalGainPercent');
+    elements.portfolioView = document.getElementById('portfolioView');
+    elements.investmentTabContent = document.getElementById('investmentTabContent');
+
+
     elements.addHoldingBtn = document.getElementById('addHoldingBtn');
     elements.holdingsContainer = document.getElementById('holdingsContainer');
     elements.addPortfolioForm = document.getElementById('addPortfolioForm');

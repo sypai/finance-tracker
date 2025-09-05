@@ -6,7 +6,7 @@ import {
     setActiveTab, 
     updateDateTime, 
     updateGreeting, 
-    renderAccountsPage2, 
+    renderAccountsPage, 
     renderTransactions,
     // populateAccountDropdown,
     renderInvestmentCard,
@@ -18,7 +18,8 @@ import {
     toggleModal,
     showTransactionModal,
     showPortfolioModal,
-    createHoldingRow
+    createHoldingRow,
+    renderHoldingsView
 } from './utils/ui/index.js';
 
 const App = {
@@ -46,9 +47,9 @@ const App = {
             renderInvestmentCard(appState);
             renderExpenseAnalysisCard(appState);
         } else if (activeTab === 'accounts') {
-            renderAccountsPage2(appState);
+            renderAccountsPage(appState);
         } else if (activeTab === 'investments') {
-            renderInvestmentsTab(appState.investments);
+            renderInvestmentsTab(appState);
         } else if (activeTab === 'transactions') {
             renderTransactions(appState.transactions, appState.accounts);
         }
@@ -77,9 +78,12 @@ const App = {
             });
         });
         
+       
         elements.expenseTimelineTabs.addEventListener('click', (event) => this.handleTimelineClick(event));
 
         elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
+
+        elements.portfolioView.addEventListener('click', (event) => this.handlePortfolioViewClick(event));
 
         // Using a single, powerful event delegation listener for all dynamic content
         document.body.addEventListener('click', (event) => {
@@ -90,11 +94,14 @@ const App = {
                 toggleModal('transactionModal', false);
                 toggleModal('addAccountModal', true);
             }
+            if (event.target.id === 'zeroStateAddPortfolioBtn') {
+                showPortfolioModal(); 
+            }
             const tabLink = event.target.dataset.tabLink;
             if (tabLink) {
                 setActiveTab(tabLink);
                 if (tabLink === 'accounts') toggleModal('addAccountModal', true);
-                if (tabLink === 'investments') toggleModal('addInvestmentAccountModal', true);
+                if (tabLink === 'investments') toggleModal('addPortfolioModal', true);
                 this.render();
             }
         });
@@ -106,8 +113,6 @@ const App = {
             if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
         });
 
-        // --- THIS IS THE KEY CHANGE ---
-        // A single, powerful event listener for the entire page
         // --- THIS IS THE KEY CHANGE ---
         // A single, powerful event listener for the entire page
         document.body.addEventListener('click', (event) => {
@@ -142,6 +147,64 @@ const App = {
                 this.deleteAccount(accountId);
             }
         });
+
+        // --- UPGRADED EVENT LISTENER FOR ACCORDION BEHAVIOR ---
+        const investmentTabContent = document.getElementById('investmentTabContent');
+        if (investmentTabContent) {
+            investmentTabContent.addEventListener('click', (event) => {
+                const header = event.target.closest('.holdings-account-header');
+                if (header) {
+                    const list = header.nextElementSibling;
+                    const currentlyOpen = header.classList.contains('open');
+
+                    // Close all other open items
+                    investmentTabContent.querySelectorAll('.holdings-account-header.open').forEach(openHeader => {
+                        if (openHeader !== header) {
+                            openHeader.classList.remove('open');
+                            openHeader.nextElementSibling.classList.remove('open');
+                        }
+                    });
+
+                    // Toggle the clicked item
+                    if (!currentlyOpen) {
+                        header.classList.add('open');
+                        list.classList.add('open');
+                    } else {
+                        header.classList.remove('open');
+                        list.classList.remove('open');
+                    }
+                }
+            });
+        }
+    },
+
+    // --- RE-ARCHITECTED FUNCTION TO DRIVE THE SLIDING PILL ---
+    updateInvestmentTab(clickedTab) {
+        const tabContainer = document.getElementById('investmentTabsContainer');
+        const indicator = document.getElementById('investmentTabIndicator');
+        if (!tabContainer || !indicator || !clickedTab) return;
+
+        // --- 1. Update Tab Active State (for text color) ---
+        tabContainer.querySelectorAll('.investment-tab').forEach(tab => tab.classList.remove('active'));
+        clickedTab.classList.add('active');
+
+        // --- 2. Animate the Sliding Pill Indicator ---
+        requestAnimationFrame(() => {
+            // Use offsetLeft for precise position within the container
+            indicator.style.width = `${clickedTab.offsetWidth}px`;
+            indicator.style.transform = `translateX(${clickedTab.offsetLeft}px)`;
+        });
+
+        // --- 3. Switch the Content View ---
+        const tabName = clickedTab.dataset.tab;
+        if (tabName === 'holdings') {
+            renderHoldingsView(appState.investmentAccounts);
+        } else if (tabName === 'allocation') {
+            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6"><div class="chart-container h-80"><canvas id="allocationChart"></canvas></div></div>`;
+            createCharts(appState);
+        } else if (tabName === 'performance') {
+            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-gray-400">Performance Chart Coming Soon!</div>`;
+        }
     },
 
     showAccountActions(accountId) {
@@ -283,6 +346,14 @@ const App = {
         appState.activeBalancePeriod = clickedTab.dataset.period;
         this.render();
     },
+
+    handlePortfolioViewClick(event){
+        const clickedTab = event.target.closest('button');
+        if (!clickedTab || clickedTab.dataset.tab === appState.activePortfolioView) return;
+        
+        appState.activePortfolioView = clickedTab.dataset.tab;
+        this.render();
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {

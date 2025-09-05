@@ -144,3 +144,41 @@ body {
 .empty-state .btn {
     margin-top: 1rem;
 }
+
+
+/* Elite Holdings Card Styling */
+.holdings-account-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--card-border);
+    transition: all 0.3s ease;
+}
+
+.holdings-account-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.holdings-account-header {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.holdings-account-header .chevron-icon {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.holdings-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0 1rem; /* No vertical/horizontal padding when closed */
+}
+
+.holdings-list.open {
+    max-height: 1500px; /* A large number to allow for expansion */
+    padding: 0.5rem 1rem 1rem 1rem; /* Add padding when open for spacing */
+}
+
+.open .chevron-icon {
+    transform: rotate(180deg);
+}

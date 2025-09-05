@@ -57,9 +57,78 @@ export const appState = {
     accounts,
     transactions,
     investments: [],
-    investmentAccounts: [], 
+    investmentAccounts: [
+    {
+        id: 1,
+        name: 'Zerodha - Suyash Bajpai',
+        type: 'Brokerage',
+        holdings: [
+            {
+                type: 'equity',
+                name: 'Reliance Industries',
+                ticker: 'RELIANCE',
+                quantity: 50,
+                buyValue: 125000,
+                currentValue: 142500
+            },
+            {
+                type: 'equity',
+                name: 'Tata Consultancy Services',
+                ticker: 'TCS',
+                quantity: 100,
+                buyValue: 330000,
+                currentValue: 385000
+            },
+            {
+                type: 'mutual_fund',
+                name: 'Parag Parikh Flexi Cap',
+                quantity: 250,
+                buyValue: 150000,
+                currentValue: 185000
+            },
+            {
+                type: 'gold',
+                name: 'Sovereign Gold Bond',
+                grams: 20,
+                buyValue: 100000,
+                currentValue: 124000
+            }
+        ]
+    },
+    {
+        id: 2,
+        name: 'EPFO',
+        type: 'Retirement',
+        holdings: [
+            {
+                type: 'epf',
+                name: 'Employee Provident Fund',
+                quantity: 1,
+                buyValue: 400000,
+                currentValue: 485000
+            }
+        ]
+    },
+    {
+        id: 1,
+        name: 'Morgan Stanley @ Work',
+        type: 'ESOP',
+        holdings: [
+            {
+                type: 'equity',
+                name: 'IBM',
+                ticker: 'IBM',
+                quantity: 88,
+                buyValue: 1700000,
+                currentValue: 2500000
+            }
+        ]
+    }
+    ],
+    // investmentAccounts: [],
     investmentGrowth: [],
     
     activeExpensePeriod: 'month',
     activeBalancePeriod: 'max',
+    activePortfolioView: 'holdings',
 };
