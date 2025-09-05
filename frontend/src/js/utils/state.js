@@ -62,6 +62,7 @@ export const appState = {
         id: 1,
         name: 'Zerodha - Suyash Bajpai',
         type: 'Brokerage',
+        provider: 'zerodha',
         holdings: [
             {
                 type: 'equity',

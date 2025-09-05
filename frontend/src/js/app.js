@@ -83,7 +83,7 @@ const App = {
 
         elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
 
-        elements.portfolioView.addEventListener('click', (event) => this.handlePortfolioViewClick(event));
+        // elements.portfolioView.addEventListener('click', (event) => this.handlePortfolioViewClick(event));
 
         // Using a single, powerful event delegation listener for all dynamic content
         document.body.addEventListener('click', (event) => {
@@ -148,6 +148,41 @@ const App = {
             }
         });
 
+        // --- NEW: LOGIC FOR THE LENS SELECTOR DROPDOWN ---
+        const viewSelector = document.getElementById('investmentViewSelector');
+        if (viewSelector) {
+            const btn = document.getElementById('investmentViewBtn');
+            const dropdown = document.getElementById('investmentViewDropdown');
+            const chevron = btn.querySelector('.chevron-icon');
+
+            // Open/close the dropdown
+            btn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdown.classList.toggle('hidden');
+                chevron.classList.toggle('rotate-180');
+            });
+
+            // Handle selecting an option
+            dropdown.addEventListener('click', (event) => {
+                const option = event.target.closest('.investment-view-option');
+                if (option) {
+                    event.preventDefault();
+                    const viewName = option.dataset.tab;
+                    this.updateInvestmentView(viewName);
+                    // No need to manually hide here, the window listener below handles it
+                }
+            });
+        }
+        
+        // --- Add this global listener to close the dropdown when clicking anywhere else ---
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById('investmentViewDropdown');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+                document.querySelector('#investmentViewBtn .chevron-icon').classList.remove('rotate-180');
+            }
+        });
+
         // --- UPGRADED EVENT LISTENER FOR ACCORDION BEHAVIOR ---
         const investmentTabContent = document.getElementById('investmentTabContent');
         if (investmentTabContent) {
@@ -178,31 +213,24 @@ const App = {
         }
     },
 
-    // --- RE-ARCHITECTED FUNCTION TO DRIVE THE SLIDING PILL ---
-    updateInvestmentTab(clickedTab) {
-        const tabContainer = document.getElementById('investmentTabsContainer');
-        const indicator = document.getElementById('investmentTabIndicator');
-        if (!tabContainer || !indicator || !clickedTab) return;
+    // --- NEW FUNCTION to replace updateInvestmentTab ---
+    updateInvestmentView(viewName) {
+        if (!viewName) return;
 
-        // --- 1. Update Tab Active State (for text color) ---
-        tabContainer.querySelectorAll('.investment-tab').forEach(tab => tab.classList.remove('active'));
-        clickedTab.classList.add('active');
+        const currentViewEl = document.getElementById('currentInvestmentView');
+        const viewNameCapitalized = viewName.charAt(0).toUpperCase() + viewName.slice(1);
+        
+        if (currentViewEl) {
+            currentViewEl.textContent = viewNameCapitalized;
+        }
 
-        // --- 2. Animate the Sliding Pill Indicator ---
-        requestAnimationFrame(() => {
-            // Use offsetLeft for precise position within the container
-            indicator.style.width = `${clickedTab.offsetWidth}px`;
-            indicator.style.transform = `translateX(${clickedTab.offsetLeft}px)`;
-        });
-
-        // --- 3. Switch the Content View ---
-        const tabName = clickedTab.dataset.tab;
-        if (tabName === 'holdings') {
+        // --- Render content based on the selected view ---
+        if (viewName === 'holdings') {
             renderHoldingsView(appState.investmentAccounts);
-        } else if (tabName === 'allocation') {
+        } else if (viewName === 'allocation') {
             document.getElementById('investmentTabContent').innerHTML = `<div class="p-6"><div class="chart-container h-80"><canvas id="allocationChart"></canvas></div></div>`;
             createCharts(appState);
-        } else if (tabName === 'performance') {
+        } else if (viewName === 'performance') {
             document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-gray-400">Performance Chart Coming Soon!</div>`;
         }
     },
@@ -347,13 +375,13 @@ const App = {
         this.render();
     },
 
-    handlePortfolioViewClick(event){
-        const clickedTab = event.target.closest('button');
-        if (!clickedTab || clickedTab.dataset.tab === appState.activePortfolioView) return;
+    // handlePortfolioViewClick(event){
+    //     const clickedTab = event.target.closest('button');
+    //     if (!clickedTab || clickedTab.dataset.tab === appState.activePortfolioView) return;
         
-        appState.activePortfolioView = clickedTab.dataset.tab;
-        this.render();
-    }
+    //     appState.activePortfolioView = clickedTab.dataset.tab;
+    //     this.render();
+    // }
 };
 
 document.addEventListener('DOMContentLoaded', () => {

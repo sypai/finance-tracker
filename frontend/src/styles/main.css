@@ -1,6 +1,11 @@
 @import url('./variables.css');
 @import url('./components.css');
 
+.accent-primary { border-left-color: var(--primary-accent); }
+.accent-secondary { border-left-color: var(--secondary-accent); }
+.accent-neutral { border-left-color: var(--text-secondary); }
+.accent-subtle { border-left-color: var(--card-hover-border); }
+
 /* Typography & Base Styles */
 h1, h2, h3, .btn, .sidebar-item { 
     font-family: var(--font-primary); 
@@ -146,39 +151,48 @@ body {
 }
 
 
-/* Elite Holdings Card Styling */
+/* /frontend/src/styles/main.css */
 .holdings-account-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05));
+    /* A more subtle background, closer to the app's true black */
+    background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--card-border);
-    transition: all 0.3s ease;
+    border-left-width: 2px;
+    box-shadow: 0 0 0 0 transparent;
+    transition: transform var(--transition-medium), 
+                border-color var(--transition-medium), 
+                box-shadow var(--transition-medium);
 }
 
 .holdings-account-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-3px);
+    border-color: var(--card-hover-border);
+    /* The background color no longer changes */
+    box-shadow: var(--shadow-sm);
+    border-left-color: inherit;
 }
 
-.holdings-account-header {
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.holdings-account-header .chevron-icon {
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* Enhanced and Synchronized Expand/Collapse Transition */
 .holdings-list {
     max-height: 0;
+    opacity: 0;
     overflow: hidden;
-    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                padding 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 0 1rem; /* No vertical/horizontal padding when closed */
+    /* The padding also needs to be transitioned to prevent a "snap" */
+    padding-top: 0;
+    padding-bottom: 0;
+    /*
+     * THE FIX:
+     * We now use the same duration and a smoother easing curve for all properties.
+     * This ensures the fade-out and collapse happen in perfect harmony.
+    */
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .holdings-list.open {
-    max-height: 1500px; /* A large number to allow for expansion */
-    padding: 0.5rem 1rem 1rem 1rem; /* Add padding when open for spacing */
-}
-
-.open .chevron-icon {
-    transform: rotate(180deg);
+    max-height: 1500px;
+    opacity: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 1.25rem;
 }
