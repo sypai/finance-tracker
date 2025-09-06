@@ -137,9 +137,6 @@ export function renderInvestmentsTab(appState) {
     }
 }
 
-// /frontend/src/js/utils/ui/investments.js
-
-// This is the core rendering logic for the responsive holdings view.
 export function renderHoldingsView(accounts) {
     const container = document.getElementById('investmentTabContent');
     if (!container) return;
@@ -161,7 +158,6 @@ export function renderHoldingsView(accounts) {
                 const pAndLColor = totalPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
                 const accentColorClass = assetColors[Object.keys(account.holdings.reduce((acc, h) => { acc[h.type] = 1; return acc; }, {})).sort()[0]] || assetColors.default;
 
-                // THIS BLOCK WAS MISSING AND IS NOW RESTORED
                 const holdingsHtml = account.holdings.map(holding => {
                     const pAndL = holding.currentValue - holding.buyValue;
                     const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
@@ -173,15 +169,15 @@ export function renderHoldingsView(accounts) {
                     return {
                         desktop: `
                             <tr class="hover:bg-white/5">
-                                <td class="p-4">${holding.name}</td>
+                                <td class="p-4 group-divider">${holding.name}</td>
                                 <td class="p-4 text-right mono">${unit.toLocaleString('en-IN')}</td>
-                                <td class="p-4 text-right mono">₹${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                <td class="p-4 text-right mono group-divider">₹${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-                                <td class="p-4 text-right mono">₹${holding.buyValue.toLocaleString('en-IN')}</td>
-                                <td class="p-4 text-right mono group-divider">₹${holding.currentValue.toLocaleString('en-IN')}</td>
+                                <td class="p-4 text-right mono">${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td class="p-4 text-right mono group-divider">${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                <td class="p-4 text-right mono">${holding.buyValue.toLocaleString('en-IN')}</td>
+                                <td class="p-4 text-right mono group-divider">${holding.currentValue.toLocaleString('en-IN')}</td>
                                 <td class="p-4 text-right mono ${pAndLColor}">
                                     <div class="flex flex-col">
-                                        <span>${pAndL >= 0 ? '+' : ''}₹${pAndL.toLocaleString('en-IN')}</span>
+                                        <span>${pAndL >= 0 ? '+' : ''}${pAndL.toLocaleString('en-IN')}</span>
                                         <span class="text-xs">(${pAndLPercent.toFixed(2)}%)</span>
                                     </div>
                                 </td>
@@ -229,15 +225,15 @@ export function renderHoldingsView(accounts) {
                     
                     <div class="holdings-list">
                         <div class="desktop-table">
-                            <table class="w-full text-sm">
-                                <thead class="text-xs text-gray-500"><tr class="border-b border-white/10">
-                                    <th class="p-4 text-left font-normal">Instrument</th>
+                            <table class="w-full text-base">
+                                <thead class="text-xs text-gray-500"><tr class="border-t border-b border-white/10">
+                                    <th class="p-4 text-left font-normal group-divider">Instrument</th>
                                     <th class="p-4 text-right font-normal">Qty.</th>
-                                    <th class="p-4 text-right font-normal">Avg. Cost</th>
-                                    <th class="p-4 text-right font-normal group-divider">LTP</th>
-                                    <th class="p-4 text-right font-normal">Invested</th>
-                                    <th class="p-4 text-right font-normal group-divider">Current Val</th>
-                                    <th class="p-4 text-right font-normal">P&L</th>
+                                    <th class="p-4 text-right font-normal">Avg. (₹)</th>
+                                    <th class="p-4 text-right font-normal group-divider">LTP (₹)</th>
+                                    <th class="p-4 text-right font-normal">Invested (₹)</th>
+                                    <th class="p-4 text-right font-normal group-divider">Cur. Value (₹)</th>
+                                    <th class="p-4 text-right font-normal">Total P&L (₹)</th>
                                 </tr></thead>
                                 <tbody class="divide-y divide-white/10">
                                     ${holdingsHtml.map(h => h.desktop).join('')}
@@ -253,3 +249,4 @@ export function renderHoldingsView(accounts) {
         </div>
     `;
 }
+

@@ -146,9 +146,6 @@ body {
 }
 
 /* This section is for the Holdings View */
-
-/* /frontend/src/styles/main.css */
-
 /* --- Thematic Accent Border Colors --- */
 .accent-primary { border-left-color: var(--primary-accent); }
 .accent-secondary { border-left-color: var(--secondary-accent); }
@@ -190,6 +187,11 @@ body {
                 padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.holdings-list .mono {
+    font-family: 'Noto Sans Mono', monospace;
+}
+
 .holdings-account-card.open .holdings-list {
     max-height: 1500px;
     opacity: 1;
