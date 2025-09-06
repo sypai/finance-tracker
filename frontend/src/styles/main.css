@@ -146,6 +146,12 @@ body {
     font-family: 'Noto Sans Mono', monospace; /* Your chosen font */
 }
 
+.modal-content {
+    background-color: rgba(20, 20, 20, 0.7); /* Darker, more translucent background */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
 /* Responsive Table/Card Layout for Holdings */
 .desktop-table { display: none; }
 .mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
@@ -180,6 +186,22 @@ tbody td.group-divider {
     color: var(--primary-accent);
 }
 
+/* --- Profile Pop-up Menu --- */
+.profile-menu {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    visibility: hidden;
+    /* Ensure z-index is high enough */
+    z-index: 50; 
+}
+
+.profile-menu.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
 /* --- DEFINITIVE RESPONSIVE OVERRIDES --- */
 @media (max-width: 1024px) {
     body {
@@ -201,4 +223,19 @@ tbody td.group-divider {
     }
     .desktop-table { display: none; }
     .mobile-cards { display: block; }
+
+    .sidebar {
+        /* 1. Add padding to the top to clear the fixed mobile header */
+        padding-top: 4rem; /* Height of the header */
+    }
+
+    .sidebar > .p-4 {
+        /* 2. This targets the profile card's container and pushes it to the bottom */
+        margin-top: auto;
+    }
+
+    #bottom-nav {
+        margin-bottom: 0; /* Make sure it's not overriding anything */
+    }
 }
+

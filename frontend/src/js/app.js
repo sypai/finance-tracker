@@ -225,6 +225,24 @@ const App = {
             this.render();
         };
 
+        // --- CORRECTED logic for the profile modal ---
+        const profileMenuBtn = document.getElementById('profileMenuBtn'); // Target the button specifically
+        const profileModal = document.getElementById('profileModal');
+
+        if (profileMenuBtn && profileModal) {
+            // Open the modal when the button is clicked
+            profileMenuBtn.addEventListener('click', () => {
+                toggleModal('profileModal', true);
+            });
+
+            // Close the modal when clicking the backdrop
+            profileModal.addEventListener('click', (event) => {
+                if (event.target === profileModal) {
+                    toggleModal('profileModal', false);
+                }
+            });
+        }
+        
         // Listen for clicks on sidebar items
         elements.sidebarItems.forEach(item => {
             item.addEventListener('click', () => handleTabClick(item.dataset.tab));
