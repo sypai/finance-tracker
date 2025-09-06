@@ -193,7 +193,7 @@ body {
 }
 
 .holdings-account-card.open .holdings-list {
-    max-height: 1500px;
+    max-height: 5000px; /* Changed from 1500px */
     opacity: 1;
     padding-top: 0.5rem;
     padding-bottom: 1.25rem;
