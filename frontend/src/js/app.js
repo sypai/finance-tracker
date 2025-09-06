@@ -187,27 +187,19 @@ const App = {
         const investmentTabContent = document.getElementById('investmentTabContent');
         if (investmentTabContent) {
             investmentTabContent.addEventListener('click', (event) => {
-                const header = event.target.closest('.holdings-account-header');
-                if (header) {
-                    const list = header.nextElementSibling;
-                    const currentlyOpen = header.classList.contains('open');
+                const card = event.target.closest('.holdings-account-card');
+                if (card) {
+                    const currentlyOpen = card.classList.contains('open');
 
-                    // Close all other open items
-                    investmentTabContent.querySelectorAll('.holdings-account-header.open').forEach(openHeader => {
-                        if (openHeader !== header) {
-                            openHeader.classList.remove('open');
-                            openHeader.nextElementSibling.classList.remove('open');
+                    // Close all other open cards
+                    investmentTabContent.querySelectorAll('.holdings-account-card.open').forEach(openCard => {
+                        if (openCard !== card) {
+                            openCard.classList.remove('open');
                         }
                     });
 
-                    // Toggle the clicked item
-                    if (!currentlyOpen) {
-                        header.classList.add('open');
-                        list.classList.add('open');
-                    } else {
-                        header.classList.remove('open');
-                        list.classList.remove('open');
-                    }
+                    // Toggle the clicked card
+                    card.classList.toggle('open');
                 }
             });
         }

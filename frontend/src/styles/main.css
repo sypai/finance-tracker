@@ -1,11 +1,6 @@
 @import url('./variables.css');
 @import url('./components.css');
 
-.accent-primary { border-left-color: var(--primary-accent); }
-.accent-secondary { border-left-color: var(--secondary-accent); }
-.accent-neutral { border-left-color: var(--text-secondary); }
-.accent-subtle { border-left-color: var(--card-hover-border); }
-
 /* Typography & Base Styles */
 h1, h2, h3, .btn, .sidebar-item { 
     font-family: var(--font-primary); 
@@ -150,78 +145,59 @@ body {
     margin-top: 1rem;
 }
 
+/* This section is for the Holdings View */
 
 /* /frontend/src/styles/main.css */
+
+/* --- Thematic Accent Border Colors --- */
+.accent-primary { border-left-color: var(--primary-accent); }
+.accent-secondary { border-left-color: var(--secondary-accent); }
+.accent-neutral { border-left-color: var(--text-secondary); }
+.accent-subtle { border-left-color: var(--card-hover-border); }
+
+/* --- Main Portfolio Card Styling --- */
 .holdings-account-card {
-    /* A more subtle background, closer to the app's true black */
     background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--card-border);
     border-left-width: 2px;
     box-shadow: 0 0 0 0 transparent;
-    transition: transform var(--transition-medium), 
-                border-color var(--transition-medium), 
-                box-shadow var(--transition-medium);
+    transition: all var(--transition-medium);
 }
-
 .holdings-account-card:hover {
     transform: translateY(-3px);
     border-color: var(--card-hover-border);
-    /* The background color no longer changes */
     box-shadow: var(--shadow-sm);
-    border-left-color: inherit;
+}
+.holdings-account-header {
+    cursor: pointer;
 }
 
-/* Enhanced and Synchronized Expand/Collapse Transition */
+/* --- Accordion Animation & Chevron Rotation --- */
+.chevron-icon {
+    transition: transform var(--transition-medium);
+}
+.holdings-account-card.open .chevron-icon {
+    transform: rotate(180deg);
+}
 .holdings-list {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
-    /* The padding also needs to be transitioned to prevent a "snap" */
     padding-top: 0;
     padding-bottom: 0;
-    /*
-     * THE FIX:
-     * We now use the same duration and a smoother easing curve for all properties.
-     * This ensures the fade-out and collapse happen in perfect harmony.
-    */
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.holdings-list.open {
+.holdings-account-card.open .holdings-list {
     max-height: 1500px;
     opacity: 1;
     padding-top: 0.5rem;
     padding-bottom: 1.25rem;
 }
 
-/* /frontend/src/styles/main.css */
-
-/* --- Responsive Header --- */
-.header-grid {
-    display: grid;
-    grid-template-areas: "info value" "info chevron";
-    grid-template-columns: 1fr auto;
-    align-items: center;
-}
-.header-info { grid-area: info; }
-.header-value { grid-area: value; text-align: right; }
-.header-chevron { grid-area: chevron; display: flex; justify-content: flex-end; padding-top: 0.5rem; }
-
-/* On larger screens, the header becomes a simple flex row */
-@media (min-width: 768px) {
-    .header-grid {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .header-value { padding-top: 0; }
-    .header-chevron { padding-top: 0; margin-left: 1rem; }
-}
-
-/* --- Responsive Table vs. Cards --- */
+/* --- Responsive Layout Visibility --- */
 .desktop-table { display: none; }
 .mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
 
@@ -231,8 +207,12 @@ body {
 }
 
 /* --- Desktop Table Group Dividers --- */
-.group-divider {
+table .group-divider {
     border-right: 1px solid var(--card-border);
+    padding-right: 1rem;
+}
+thead th.group-divider {
+    padding-right: 1rem;
 }
 
 /* --- Mobile Card Styling --- */

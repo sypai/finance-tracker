@@ -159,16 +159,9 @@ export function renderHoldingsView(accounts) {
                 const totalBuyValue = account.holdings.reduce((sum, h) => sum + h.buyValue, 0);
                 const totalPandL = totalCurrentValue - totalBuyValue;
                 const pAndLColor = totalPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
+                const accentColorClass = assetColors[Object.keys(account.holdings.reduce((acc, h) => { acc[h.type] = 1; return acc; }, {})).sort()[0]] || assetColors.default;
 
-                const allocationByType = account.holdings.reduce((acc, holding) => {
-                    const type = holding.type || 'default';
-                    acc[type] = (acc[type] || 0) + holding.currentValue;
-                    return acc;
-                }, {});
-                
-                const dominantAsset = Object.keys(allocationByType).reduce((a, b) => allocationByType[a] > allocationByType[b] ? a : b, 'default');
-                const accentColorClass = assetColors[dominantAsset] || assetColors.default;
-
+                // THIS BLOCK WAS MISSING AND IS NOW RESTORED
                 const holdingsHtml = account.holdings.map(holding => {
                     const pAndL = holding.currentValue - holding.buyValue;
                     const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
@@ -216,17 +209,20 @@ export function renderHoldingsView(accounts) {
                 return `
                 <div class="holdings-account-card rounded-lg overflow-hidden ${accentColorClass}" data-account-id="${account.id}">
                     <div class="holdings-account-header p-5">
-                        <div class="header-grid">
-                            <div class="header-info">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="mb-3 md:mb-0">
                                 <p class="font-medium text-white text-lg">${account.name}</p>
                                 <p class="text-sm text-gray-400 mt-1">${account.type} • ${account.holdings.length} Holdings</p>
                             </div>
-                            <div class="header-value">
-                                <p class="mono text-lg text-white">₹${totalCurrentValue.toLocaleString('en-IN')}</p>
-                                <p class="mono text-sm ${pAndLColor}">${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')}</p>
-                            </div>
-                            <div class="header-chevron">
-                                <svg class="chevron-icon h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            <div class="flex items-center justify-between">
+                                <div class="text-right md:text-left">
+                                    <p class="mono text-lg text-white">
+                                        ₹${totalCurrentValue.toLocaleString('en-IN')}
+                                        <span class="mono text-sm ${pAndLColor} ml-2 md:hidden">(${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')})</span>
+                                    </p>
+                                    <p class="hidden md:block mono text-sm ${pAndLColor} mt-0.5">${totalPandL >= 0 ? '+' : ''}₹${totalPandL.toLocaleString('en-IN')}</p>
+                                </div>
+                                <svg class="chevron-icon h-5 w-5 text-gray-500 ml-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                             </div>
                         </div>
                     </div>
@@ -234,23 +230,20 @@ export function renderHoldingsView(accounts) {
                     <div class="holdings-list">
                         <div class="desktop-table">
                             <table class="w-full text-sm">
-                                <thead class="text-xs text-gray-500">
-                                    <tr>
-                                        <th class="p-4 text-left font-normal">Instrument</th>
-                                        <th class="p-4 text-right font-normal">Qty.</th>
-                                        <th class="p-4 text-right font-normal">Avg. Cost</th>
-                                        <th class="p-4 text-right font-normal group-divider">LTP</th>
-                                        <th class="p-4 text-right font-normal">Invested</th>
-                                        <th class="p-4 text-right font-normal group-divider">Current Val</th>
-                                        <th class="p-4 text-right font-normal">P&L</th>
-                                    </tr>
-                                </thead>
+                                <thead class="text-xs text-gray-500"><tr class="border-b border-white/10">
+                                    <th class="p-4 text-left font-normal">Instrument</th>
+                                    <th class="p-4 text-right font-normal">Qty.</th>
+                                    <th class="p-4 text-right font-normal">Avg. Cost</th>
+                                    <th class="p-4 text-right font-normal group-divider">LTP</th>
+                                    <th class="p-4 text-right font-normal">Invested</th>
+                                    <th class="p-4 text-right font-normal group-divider">Current Val</th>
+                                    <th class="p-4 text-right font-normal">P&L</th>
+                                </tr></thead>
                                 <tbody class="divide-y divide-white/10">
                                     ${holdingsHtml.map(h => h.desktop).join('')}
                                 </tbody>
                             </table>
                         </div>
-
                         <div class="mobile-cards">
                             ${holdingsHtml.map(h => h.mobile).join('')}
                         </div>
