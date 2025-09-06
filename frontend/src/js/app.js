@@ -203,6 +203,67 @@ const App = {
                 }
             });
         }
+
+        // --- (Keep the mobileMenuButton listener as is) ---
+        elements.mobileMenuButton.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active')
+        });
+
+        const handleTabClick = (tabName) => {
+            // Deactivate all navigation items
+            elements.sidebarItems.forEach(item => item.classList.remove('active'));
+            elements.bottomNavItems.forEach(item => item.classList.remove('active'));
+
+            // Activate the correct items in both navs
+            document.querySelector(`.sidebar-item[data-tab="${tabName}"]`)?.classList.add('active');
+            document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add('active');
+
+            // Close sidebar on mobile after selection
+            document.querySelector('.sidebar').classList.remove('active');
+            
+            setActiveTab(tabName);
+            this.render();
+        };
+
+        // Listen for clicks on sidebar items
+        elements.sidebarItems.forEach(item => {
+            item.addEventListener('click', () => handleTabClick(item.dataset.tab));
+        });
+
+        // Listen for clicks on bottom nav items
+        elements.bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => handleTabClick(item.dataset.tab));
+        });
+
+        elements.mobileMenuButton.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+    
+        const updateActiveTab = (tabName) => {
+            // Deactivate all items in both nav systems
+            elements.sidebarItems.forEach(item => item.classList.remove('active'));
+            elements.bottomNavItems.forEach(item => item.classList.remove('active'));
+    
+            // Activate the correct item in both the sidebar and bottom bar
+            document.querySelector(`.sidebar-item[data-tab="${tabName}"]`)?.classList.add('active');
+            document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add('active');
+            
+            // Hide the mobile sidebar after a selection is made
+            document.querySelector('.sidebar').classList.remove('active');
+            
+            setActiveTab(tabName);
+            this.render();
+        };
+    
+        // Listen for clicks on sidebar items
+        elements.sidebarItems.forEach(item => {
+            item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
+        });
+    
+        // Listen for clicks on bottom nav items
+        elements.bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
+        });
     },
 
     // --- NEW FUNCTION to replace updateInvestmentTab ---

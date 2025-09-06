@@ -83,4 +83,6 @@ export function initUI() {
     elements.accountsZeroState = document.getElementById('accountsZeroState');
     elements.balanceHistoryTabs = document.getElementById('balanceHistoryTabs');
     elements.accountFilter = document.getElementById('accountFilter'); 
+
+    elements.bottomNavItems = document.querySelectorAll('#bottom-nav .nav-item');
 }

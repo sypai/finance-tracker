@@ -5,20 +5,16 @@
 h1, h2, h3, .btn, .sidebar-item { 
     font-family: var(--font-primary); 
 }
-
 p, .text-secondary { 
     font-family: var(--font-secondary); 
 }
-
 .mono { 
     font-family: var(--font-mono); 
 }
-
 * { 
     -webkit-font-smoothing: antialiased; 
     -moz-osx-font-smoothing: grayscale; 
 }
-
 body { 
     background: var(--background); 
     color: var(--text-primary); 
@@ -39,7 +35,7 @@ body {
     z-index: -1; 
 }
 
-/* Layout */
+/* Main Layout */
 .sidebar { 
     background: var(--background); 
     border-right: 1px solid var(--card-border); 
@@ -53,28 +49,24 @@ body {
     z-index: 100; 
     transition: transform var(--transition-medium); 
 }
-
 .sidebar.active { 
     transform: translateX(0); 
 }
-
 .content { 
     margin-left: 260px; 
     padding: var(--spacing-xl); 
-    min-height: 100vh; 
+    /* min-height: 100vh; <-- DELETE THIS LINE */
 }
 
-/* Typography */
+/* General Typography */
 .metric-value { 
     font-size: 2.25rem; 
     font-weight: 700; 
     color: var(--text-primary); 
 }
-
 .text-positive-value { 
     color: var(--positive-color); 
 }
-
 .text-negative-value { 
     color: var(--negative-color); 
 }
@@ -84,75 +76,34 @@ body {
     position: relative; 
     width: 100%; 
 }
-
 @media (min-width: 1024px) { 
-    .chart-container { 
-        height: 280px; 
-    } 
-    .chart-container-large { 
-        height: 350px; 
-    } 
+    .chart-container { height: 280px; } 
+    .chart-container-large { height: 350px; } 
 }
-
 @media (max-width: 1023px) { 
-    .chart-container { 
-        height: 250px; 
-    } 
-    .chart-container-large { 
-        height: 300px; 
-    } 
+    .chart-container { height: 250px; } 
+    .chart-container-large { height: 300px; } 
 }
 
-/* Animation & Responsive */
+/* Tab Content Animation */
 .tab-content { 
     display: none; 
 }
-
 .tab-content.active { 
     display: block; 
     animation: fadeIn var(--transition-slow); 
 }
-
 @keyframes fadeIn { 
-    from { 
-        opacity: 0; 
-        transform: translateY(10px); 
-    } 
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    } 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) { 
-    .sidebar { 
-        transform: translateX(-100%); 
-    } 
-    
-    .content { 
-        margin-left: 0; 
-        padding: var(--spacing-lg); 
-    } 
-    
-    .mobile-menu-button { 
-        display: flex; 
-    } 
-}
-
-/* Empty State Styling */
-.empty-state .btn {
-    margin-top: 1rem;
-}
-
-/* This section is for the Holdings View */
-/* --- Thematic Accent Border Colors --- */
+/* --- Holdings View --- */
 .accent-primary { border-left-color: var(--primary-accent); }
 .accent-secondary { border-left-color: var(--secondary-accent); }
 .accent-neutral { border-left-color: var(--text-secondary); }
 .accent-subtle { border-left-color: var(--card-hover-border); }
 
-/* --- Main Portfolio Card Styling --- */
 .holdings-account-card {
     background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--card-border);
@@ -168,8 +119,6 @@ body {
 .holdings-account-header {
     cursor: pointer;
 }
-
-/* --- Accordion Animation & Chevron Rotation --- */
 .chevron-icon {
     transition: transform var(--transition-medium);
 }
@@ -187,37 +136,31 @@ body {
                 padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.holdings-list .mono {
-    font-family: 'Noto Sans Mono', monospace;
-}
-
 .holdings-account-card.open .holdings-list {
-    max-height: 5000px; /* Changed from 1500px */
+    max-height: 5000px;
     opacity: 1;
     padding-top: 0.5rem;
     padding-bottom: 1.25rem;
 }
+.holdings-list .mono {
+    font-family: 'Noto Sans Mono', monospace; /* Your chosen font */
+}
 
-/* --- Responsive Layout Visibility --- */
+/* Responsive Table/Card Layout for Holdings */
 .desktop-table { display: none; }
 .mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
-
 @media (min-width: 768px) {
     .desktop-table { display: block; }
     .mobile-cards { display: none; }
 }
 
-/* --- Desktop Table Group Dividers --- */
 table .group-divider {
     border-right: 1px solid var(--card-border);
+}
+thead th.group-divider,
+tbody td.group-divider {
     padding-right: 1rem;
 }
-thead th.group-divider {
-    padding-right: 1rem;
-}
-
-/* --- Mobile Card Styling --- */
 .holding-mobile-card {
     padding: 1rem;
     background-color: rgba(255, 255, 255, 0.05);
@@ -226,4 +169,43 @@ thead th.group-divider {
 }
 .holding-mobile-card:first-child {
     margin-top: 0;
+}
+
+/* --- Mobile Navigation --- */
+.nav-item {
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+.nav-item.active {
+    color: var(--primary-accent);
+}
+@media (max-width: 1024px) {
+    body {
+        display: grid;
+        /* Create 3 rows: header (auto height), content (takes all remaining space), footer (auto height) */
+        grid-template-rows: auto 1fr auto; 
+        height: 100vh;
+        overflow: hidden; /* The body itself will not scroll */
+    }
+
+    /* Position our fixed elements within the new grid */
+    #mobile-header {
+        position: static; /* No longer needs to be fixed */
+        grid-row: 1;
+    }
+    #bottom-nav {
+        position: static; /* No longer needs to be fixed */
+        grid-row: 3;
+    }
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .content {
+        margin-left: 0;
+        overflow-y: auto; /* This makes the content area the ONLY scrollable part */
+        min-height: 0; /* Removes the old height constraint */
+        padding: var(--spacing-lg); /* Reset to simple padding */
+        grid-row: 2;
+    }
 }
