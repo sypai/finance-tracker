@@ -193,6 +193,7 @@ export function renderHoldingsView(accounts) {
                                     <span class="text-gray-400">Total P&L</span>
                                     <span class="mono text-right ${pAndLColor}">
                                         ${pAndL >= 0 ? '+' : ''}${pAndL.toLocaleString('en-IN')}
+                                        <span class="text-xs ml-1">(${pAndLPercent.toFixed(1)}%)</span>
                                     </span>
                                 </div>
                             </div>
