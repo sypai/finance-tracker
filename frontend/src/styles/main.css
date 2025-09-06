@@ -179,33 +179,26 @@ tbody td.group-divider {
 .nav-item.active {
     color: var(--primary-accent);
 }
+
+/* --- DEFINITIVE RESPONSIVE OVERRIDES --- */
 @media (max-width: 1024px) {
     body {
-        display: grid;
-        /* Create 3 rows: header (auto height), content (takes all remaining space), footer (auto height) */
-        grid-template-rows: auto 1fr auto; 
-        height: 100vh;
-        overflow: hidden; /* The body itself will not scroll */
-    }
-
-    /* Position our fixed elements within the new grid */
-    #mobile-header {
-        position: static; /* No longer needs to be fixed */
-        grid-row: 1;
-    }
-    #bottom-nav {
-        position: static; /* No longer needs to be fixed */
-        grid-row: 3;
+        /* Add padding to the body to create the "safe area" for scrolling */
+        /* 4rem for top bar, 4rem for bottom bar */
+        padding-top: 4rem;
+        padding-bottom: 4rem;
     }
     .sidebar {
         transform: translateX(-100%);
     }
-    
     .content {
         margin-left: 0;
-        overflow-y: auto; /* This makes the content area the ONLY scrollable part */
-        min-height: 0; /* Removes the old height constraint */
         padding: var(--spacing-lg); /* Reset to simple padding */
-        grid-row: 2;
     }
+    /* Hide the original desktop header */
+    main > header {
+        display: none;
+    }
+    .desktop-table { display: none; }
+    .mobile-cards { display: block; }
 }
