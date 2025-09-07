@@ -85,4 +85,6 @@ export function initUI() {
     elements.accountFilter = document.getElementById('accountFilter'); 
 
     elements.bottomNavItems = document.querySelectorAll('#bottom-nav .nav-item');
+
+    elements.sidebarIndicator = document.getElementById('sidebar-indicator');
 }

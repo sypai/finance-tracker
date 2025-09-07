@@ -24,9 +24,9 @@ body {
 /* Grid Background */
 .grid-bg { 
     background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px); 
-    background-size: 60px 60px; 
+        linear-gradient(rgba(255, 255, 255, 0.03) 0.2px, transparent 0.2px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0.2px, transparent 0.2px); 
+    background-size: 15px 15px; 
     position: fixed; 
     top: 0; 
     left: 0; 
@@ -37,7 +37,7 @@ body {
 
 /* Main Layout */
 .sidebar { 
-    background: var(--background); 
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--card-border); 
     backdrop-filter: blur(20px); 
     -webkit-backdrop-filter: blur(20px); 

@@ -27,6 +27,10 @@ const App = {
         initUI();
         this.bindEvents();
         this.render(); // Initial render
+
+        // Initial positioning of the sidebar indicator
+        const initialActiveItem = document.querySelector('.sidebar-item.active');
+        this.moveSidebarIndicator(initialActiveItem);
         
         // The clock update only needs to be set up once.
         updateDateTime(); 
@@ -78,7 +82,6 @@ const App = {
             });
         });
         
-       
         elements.expenseTimelineTabs.addEventListener('click', (event) => this.handleTimelineClick(event));
 
         elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
@@ -225,6 +228,14 @@ const App = {
             this.render();
         };
 
+        elements.sidebarItems.forEach(item => {
+            item.addEventListener('click', () => this.handleTabSwitch(item.dataset.tab));
+        });
+
+        elements.bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => this.handleTabSwitch(item.dataset.tab));
+        });
+
         // --- CORRECTED logic for the profile modal ---
         const profileMenuBtn = document.getElementById('profileMenuBtn'); // Target the button specifically
         const profileModal = document.getElementById('profileModal');
@@ -242,7 +253,7 @@ const App = {
                 }
             });
         }
-        
+
         // Listen for clicks on sidebar items
         elements.sidebarItems.forEach(item => {
             item.addEventListener('click', () => handleTabClick(item.dataset.tab));
@@ -282,6 +293,55 @@ const App = {
         elements.bottomNavItems.forEach(item => {
             item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
         });
+    },
+
+    // NEW: The single source of truth for changing tabs
+    handleTabSwitch(tabName) {
+        if (!tabName) return;
+
+        // Deactivate all items in both nav systems
+        elements.sidebarItems.forEach(item => item.classList.remove('active'));
+        elements.bottomNavItems.forEach(item => item.classList.remove('active'));
+
+        // Activate the correct items in both the sidebar and bottom bar
+        const activeSidebarItem = document.querySelector(`.sidebar-item[data-tab="${tabName}"]`);
+        const activeBottomNavItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+        
+        activeSidebarItem?.classList.add('active');
+        activeBottomNavItem?.classList.add('active');
+        
+        // Move the floating pill indicator
+        this.moveSidebarIndicator(activeSidebarItem);
+        
+        // Hide the mobile sidebar after a selection is made
+        document.querySelector('.sidebar').classList.remove('active');
+        document.querySelector('.overlay')?.classList.remove('active');
+        
+        setActiveTab(tabName);
+        this.render();
+    },
+
+    // NEW: Helper function to move the indicator
+    moveSidebarIndicator(activeItem) {
+        if (!activeItem || !elements.sidebarIndicator) return;
+        
+        const top = activeItem.offsetTop;
+        const height = activeItem.offsetHeight;
+
+        elements.sidebarIndicator.style.transform = `translateY(${top}px)`;
+        elements.sidebarIndicator.style.height = `${height}px`;
+    },
+
+
+    // NEW helper function to move the indicator
+    moveSidebarIndicator(activeItem) {
+        if (!activeItem || !elements.sidebarIndicator) return;
+        
+        const top = activeItem.offsetTop;
+        const height = activeItem.offsetHeight;
+
+        elements.sidebarIndicator.style.transform = `translateY(${top}px)`;
+        elements.sidebarIndicator.style.height = `${height}px`;
     },
 
     // --- NEW FUNCTION to replace updateInvestmentTab ---
