@@ -24,9 +24,9 @@ body {
 /* Grid Background */
 .grid-bg { 
     background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.03) 0.2px, transparent 0.2px), 
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0.2px, transparent 0.2px); 
-    background-size: 15px 15px; 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1.2px, transparent 1.2px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1.2px, transparent 1.2px); 
+    background-size: 45px 45px; 
     position: fixed; 
     top: 0; 
     left: 0; 
@@ -62,7 +62,7 @@ body {
 .metric-value { 
     font-size: 2.25rem; 
     font-weight: 700; 
-    color: var(--text-primary); 
+    color: var(--text-metric); 
 }
 .text-positive-value { 
     color: var(--positive-color); 
@@ -208,7 +208,7 @@ tbody td.group-divider {
         /* Add padding to the body to create the "safe area" for scrolling */
         /* 4rem for top bar, 4rem for bottom bar */
         padding-top: 4rem;
-        padding-bottom: 4rem;
+        padding-bottom: 5rem;
     }
     .sidebar {
         transform: translateX(-100%);

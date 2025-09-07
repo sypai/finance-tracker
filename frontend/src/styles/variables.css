@@ -11,9 +11,9 @@
     --card-hover-bg: rgba(24, 26, 29, 0.8);
     --card-hover-border: rgba(29, 78, 216, 0.4);
     --primary-accent: #1D4ED8;
-    --positive-color: #10B981;
-    --negative-color: #EF4444;
-
+    --positive-color: #34D399;
+    --negative-color: #F87171;
+    --text-metric: #C5CBD3;
     
     /* Spacing */
     --spacing-xs: 4px;
