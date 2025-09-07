@@ -293,6 +293,38 @@ const App = {
         elements.bottomNavItems.forEach(item => {
             item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
         });
+
+        // --- UPDATED logic for the Floating Action Button ---
+        const fabContainer = document.getElementById('fab-container');
+        const fabMainBtn = document.getElementById('fab-main-btn');
+        const actionSheetButtons = document.querySelectorAll('.action-sheet-btn');
+
+        if (fabMainBtn) {
+            fabMainBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                fabContainer.classList.toggle('active');
+            });
+        }
+
+        // This part opens the correct modal when an option is clicked
+        actionSheetButtons.forEach(option => {
+            option.addEventListener('click', () => {
+                const modalId = option.dataset.modal;
+                if (modalId === 'transactionModal') {
+                    showTransactionModal(appState);
+                } else if (modalId) {
+                    toggleModal(modalId, true);
+                }
+                fabContainer.classList.remove('active'); // Close the FAB menu
+            });
+        });
+
+        // Close FAB when clicking anywhere else on the page
+        document.querySelector('.content').addEventListener('click', () => {
+            if (fabContainer && fabContainer.classList.contains('active')) {
+                fabContainer.classList.remove('active');
+            }
+        });
     },
 
     // NEW: The single source of truth for changing tabs
