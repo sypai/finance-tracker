@@ -28,6 +28,8 @@ const App = {
         this.bindEvents();
         this.render(); // Initial render
 
+        this.handleTabSwitch('dashboard'); 
+        
         // Initial positioning of the sidebar indicator
         const initialActiveItem = document.querySelector('.sidebar-item.active');
         this.moveSidebarIndicator(initialActiveItem);

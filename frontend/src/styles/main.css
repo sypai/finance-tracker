@@ -22,18 +22,18 @@ body {
 }
 
 /* Grid Background */
-.grid-bg { 
+/* .grid-bg { 
     background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.03) 1.2px, transparent 1.2px), 
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1.2px, transparent 1.2px); 
-    background-size: 45px 45px; 
+        linear-gradient(rgba(255, 255, 255, 0.03) 0.75px, transparent 0.75px), 
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0.75px, transparent 0.75px); 
+    background-size: 1px px; 
     position: fixed; 
     top: 0; 
     left: 0; 
     right: 0; 
     bottom: 0; 
     z-index: -1; 
-}
+} */
 
 /* Main Layout */
 .sidebar { 
