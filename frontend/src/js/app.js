@@ -29,7 +29,7 @@ const App = {
         this.render(); // Initial render
 
         this.handleTabSwitch('dashboard'); 
-        
+
         // Initial positioning of the sidebar indicator
         const initialActiveItem = document.querySelector('.sidebar-item.active');
         this.moveSidebarIndicator(initialActiveItem);
@@ -326,6 +326,22 @@ const App = {
             if (fabContainer && fabContainer.classList.contains('active')) {
                 fabContainer.classList.remove('active');
             }
+        });
+
+        document.querySelector('.content').addEventListener('click', (event) => {
+            const metric = event.target.closest('.toggable-metric');
+            if (!metric) return;
+        
+            const { full, abbreviated } = metric.dataset;
+            
+            if (metric.textContent === abbreviated) {
+                metric.textContent = full;
+            } else {
+                metric.textContent = abbreviated;
+            }
+        
+            // Add this line to toggle the class
+            metric.classList.toggle('is-expanded');
         });
     },
 

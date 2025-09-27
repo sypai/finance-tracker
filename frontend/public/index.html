@@ -126,31 +126,30 @@
 
             <!-- These are the upper 3 overview cards -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <div class="card p-8">
-                    <h3 class="text-xl font-semibold mb-2">Net Worth</h3>
-                    <p id="netWorthValue" class="text-4xl mono metric-value"></p>
+                <div class="card p-6 lg:p-8">
+                    <h3 class="text-lg lg:text-xl font-semibold mb-2">Net Worth</h3>
+                    <p id="netWorthValue" class="text-3xl lg:text-4xl mono metric-value"></p>
                     <div class="mt-2 text-sm font-medium flex items-center">
                         <span id="netWorthChange"></span>
                     </div>
                 </div>
-                <div class="card p-8">
-                    <h3 class="text-xl font-semibold mb-2">Monthly Expenses</h3>
-                    <p id="monthlyExpensesValue" class="text-4xl mono metric-value"></p>
+                <div class="card p-6 lg:p-8">
+                    <h3 class="text-lg lg:text-xl font-semibold mb-2">Monthly Expenses</h3>
+                    <p id="monthlyExpensesValue" class="text-3xl lg:text-4xl mono metric-value"></p>
                     <div class="mt-2 text-sm font-medium flex items-center">
                         <span id="monthlyExpensesChange"></span>
                     </div>
                 </div>
-                <div class="card p-8">
-                    <h3 class="text-xl font-semibold mb-2">Investments</h3>
-                    <p id="investmentsValue" class="text-4xl mono metric-value"></p>
+                <div class="card p-6 lg:p-8">
+                    <h3 class="text-lg lg:text-xl font-semibold mb-2">Investments</h3>
+                    <p id="investmentsValue" class="text-3xl lg:text-4xl mono metric-value"></p>
                     <div class="mt-2 text-sm font-medium flex items-center">
                     <span id="investmentsChange"></span>
                     </div>
                 </div>
             </div>
-            
             <!-- These are the bottom 2 cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 lg:items-start">
                 
                 <!-- investment portfolio -->
                 <div class="card p-8 flex flex-col flex-grow">
@@ -377,6 +376,7 @@
         </button>
     
     </div>
+
     <div id="transactionModal" class="modal-backdrop">
         <div class="modal-content card p-8">
             

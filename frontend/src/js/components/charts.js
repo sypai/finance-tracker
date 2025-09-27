@@ -153,9 +153,9 @@ export function createCharts(appState) {
                 labels: finalChartData.map(d => d.category),
                 datasets: [{
                     data: finalChartData.map(d => d.amount),
-                    backgroundColor: '#babaf4',
-                    borderRadius: 4,
-                    barThickness: 12,
+                    backgroundColor: '#D4D4D4',
+                    borderRadius: 5,
+                    barThickness: 10,
                 }]
             },
             options: {
