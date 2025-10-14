@@ -57,23 +57,26 @@
                 <header class="pt-8 pb-4 opacity-0 animate-fade-in-up" style="animation-delay: 1.2s;">
                     <nav class="flex items-center justify-between">
                         <div><h1 class="text-3xl font-heading font-bold text-text-primary">अर्थ</h1></div>
-                        <a href="#" class="px-6 py-2.5 bg-transparent border border-primary-accent text-primary-accent rounded-lg font-semibold transition-colors duration-300 hover:bg-primary-accent hover:text-white">
-                            Sign In
+                        <a href="#" class="inline-flex items-center gap-2 px-6 py-2.5 bg-transparent border border-primary-accent text-primary-accent rounded-lg font-semibold transition-colors duration-300 hover:bg-primary-accent hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                            </svg>
+                            <span>Sign In</span>
                         </a>
                     </nav>
                 </header>
 
                 <div class="grid lg:grid-cols-2 gap-8 items-center flex-1">
                     
-                    <div class="relative z-30">
+                    <div class="relative z-30 text-center lg:text-left">
                         <main>
                             <h1 class="font-heading text-6xl md:text-7xl font-extrabold text-text-primary leading-tight text-shadow opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
                                 Know Your <br> <span class="text-primary-accent">W</span>orth.
                             </h1>
-                            <p class="mt-6 text-lg md:text-xl text-text-secondary max-w-lg opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                            <p class="mt-6 text-lg md:text-xl text-text-secondary max-w-lg mx-auto lg:mx-0 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
                                 अर्थ is a beautifully simple, powerful tool to organize your finances and find your path to financial wellness.
                             </p>
-                            <div class="mt-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                            <div class="mt-8 flex justify-center lg:justify-start opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
                                  <a href="#" class="group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
                                     <span>Get Started Free</span>
                                     <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
@@ -209,7 +212,7 @@
     <script>
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < 400; i++) {
             const star = document.createElement('div');
             star.className = 'absolute rounded-full bg-text-secondary';
             const size = Math.random() * 1.5;
