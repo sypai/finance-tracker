@@ -22,6 +22,24 @@
         .cosmic-node-divider { display: flex; align-items: center; justify-content: center; height: 1px; }
         .cosmic-node-divider::before, .cosmic-node-divider::after { content: ''; flex-grow: 1; height: 1px; background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05)); }
         .cosmic-node-divider::before { background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.05)); }
+
+        /* Page Transition Overlay */
+        #page-transition-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: #131314; /* background color */
+            z-index: 9999; /* Ensure it's on top */
+            opacity: 1;
+            transition: opacity 0.4s ease-in-out; /* Control fade speed */
+            pointer-events: none; /* Allow clicks through initially */
+        }
+        #page-transition-overlay.fade-out {
+            opacity: 0;
+        }
+        #page-transition-overlay.fade-in {
+            opacity: 1;
+            pointer-events: auto; /* Block clicks during fade-out */
+}
     </style>
     <script>
         tailwind.config = {
@@ -49,7 +67,7 @@
     </script>
 </head>
 <body class="bg-background font-sans text-text-primary">
-
+    <div id="page-transition-overlay"></div>
     <div class="relative">
         
         <div id="cosmic-canvas" class="absolute inset-0 z-0"></div>
@@ -72,7 +90,7 @@
                             <h1 class="font-heading text-6xl md:text-7xl font-extrabold text-text-primary leading-tight text-shadow opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">Know Your <br> <span class="text-primary-accent">W</span>orth.</h1>
                             <p class="mt-6 text-lg md:text-xl text-text-secondary opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">अर्थ is a beautifully simple, powerful tool to organize your finances and find your path to financial wellness.</p>
                             <div class="mt-8 flex justify-center lg:justify-start opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
-                                 <a href="#" class="group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
+                                 <a href="signup.html" class="group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
                                     <span>Get Early Access</span>
                                     <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
                                 </a>
@@ -232,6 +250,56 @@
     </div>
     
     <script>
+        const overlay = document.getElementById('page-transition-overlay');
+
+        // --- Fade OUT on Page Load ---
+        window.addEventListener('load', () => {
+            // Ensure overlay starts visible (in case of bfcache)
+            overlay.classList.remove('fade-out');
+            overlay.classList.remove('fade-in'); // Reset classes
+            overlay.style.pointerEvents = 'none'; // Ensure it starts non-blocking
+
+            // Small delay to ensure rendering, then fade out
+            setTimeout(() => {
+                if (overlay) {
+                    overlay.classList.add('fade-out');
+                }
+            }, 50); // Small delay like 50ms
+        });
+
+        // --- Fade IN on Page Exit ---
+        // Select all links that should trigger the fade-out
+        // Adjust selector as needed, e.g., 'a[href="signup.html"], a[href="signin.html"]' etc.
+        const transitionLinks = document.querySelectorAll('a[href="signup.html"], a[href="signin.html"], a[href="index.html"]'); 
+
+        transitionLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                // Check if it's a relative link within your site and not just '#'
+                if (href && href !== '#' && !href.startsWith('http') && !link.target === '_blank') { 
+                    e.preventDefault(); // Stop immediate navigation
+
+                    if (overlay) {
+                        overlay.classList.add('fade-in'); // Fade in overlay
+                    }
+
+                    // Wait for the fade animation to mostly complete
+                    setTimeout(() => {
+                        window.location.href = href; // Navigate after delay
+                    }, 300); // Should be slightly less than CSS transition duration
+                }
+            });
+        });
+
+        // Handle back/forward button (bfcache)
+        window.addEventListener('pageshow', function(event) {
+            // If the page was loaded from the cache, the overlay might still be visible
+            if (event.persisted && overlay) {
+                overlay.classList.add('fade-out'); // Force fade-out again
+                overlay.style.pointerEvents = 'none'; 
+            }
+        });
+
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         if (cosmicCanvas) {
             for (let i = 0; i < 1500; i++) { // Increased star count for full page
