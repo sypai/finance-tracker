@@ -78,7 +78,7 @@
                 <div class="pt-8 pb-4 opacity-0 animate-fade-in-up" style="animation-delay: 1.2s;">
                     <nav class="flex items-center justify-between">
                         <div><h1 class="text-3xl font-heading font-bold text-text-primary">अर्थ</h1></div>
-                        <a href="#" class="inline-flex items-center gap-2 px-6 py-2.5 bg-transparent border border-primary-accent text-primary-accent rounded-lg font-semibold transition-colors duration-300 hover:bg-primary-accent hover:text-white">
+                        <a href="signin.html" class="inline-flex items-center gap-2 px-6 py-2.5 bg-transparent border border-primary-accent text-primary-accent rounded-lg font-semibold transition-colors duration-300 hover:bg-primary-accent hover:text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
                             <span>Sign In</span>
                         </a>
@@ -217,7 +217,7 @@
                         </p>
             
                         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                            <a href="#" class="group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
+                            <a href="signup.html" class="group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
                                 <span>Get Early Access</span>
                                 <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
                             </a>
@@ -252,8 +252,9 @@
     <script>
         const overlay = document.getElementById('page-transition-overlay');
 
-        // --- Fade OUT on Page Load ---
-        window.addEventListener('load', () => {
+        // --- Fade OUT on DOM Ready (Faster & Works Offline) ---
+        // *** CHANGED 'load' to 'DOMContentLoaded' ***
+        document.addEventListener('DOMContentLoaded', () => { 
             // Ensure overlay starts visible (in case of bfcache)
             overlay.classList.remove('fade-out');
             overlay.classList.remove('fade-in'); // Reset classes
@@ -268,37 +269,39 @@
         });
 
         // --- Fade IN on Page Exit ---
-        // Select all links that should trigger the fade-out
-        // Adjust selector as needed, e.g., 'a[href="signup.html"], a[href="signin.html"]' etc.
         const transitionLinks = document.querySelectorAll('a[href="signup.html"], a[href="signin.html"], a[href="index.html"]'); 
 
         transitionLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 const href = link.getAttribute('href');
-                // Check if it's a relative link within your site and not just '#'
                 if (href && href !== '#' && !href.startsWith('http') && !link.target === '_blank') { 
-                    e.preventDefault(); // Stop immediate navigation
+                    e.preventDefault(); 
 
                     if (overlay) {
-                        overlay.classList.add('fade-in'); // Fade in overlay
+                        overlay.classList.add('fade-in'); 
                     }
 
-                    // Wait for the fade animation to mostly complete
                     setTimeout(() => {
-                        window.location.href = href; // Navigate after delay
-                    }, 300); // Should be slightly less than CSS transition duration
+                        window.location.href = href; 
+                    }, 300); 
                 }
             });
         });
 
         // Handle back/forward button (bfcache)
         window.addEventListener('pageshow', function(event) {
-            // If the page was loaded from the cache, the overlay might still be visible
             if (event.persisted && overlay) {
-                overlay.classList.add('fade-out'); // Force fade-out again
+                overlay.classList.add('fade-out'); 
                 overlay.style.pointerEvents = 'none'; 
             }
         });
+        
+        // If the page was loaded from the cache, the overlay might still be visible
+        if (event.persisted && overlay) {
+            overlay.classList.add('fade-out'); // Force fade-out again
+            overlay.style.pointerEvents = 'none'; 
+        }
+        
 
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         if (cosmicCanvas) {

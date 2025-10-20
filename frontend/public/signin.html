@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - अर्थ (Artha)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700&display.swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display.swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base Keyframes */
+        @keyframes star-twinkle { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.5; } }
+        
+        /* Form Input Styles */
+        .form-input {
+            background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #E3E3E3;
+            border-radius: 0.5rem; padding: 0.75rem 1rem; width: 100%; transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-input:focus { outline: none; border-color: #1D4ED8; box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.3); }
+
+        /* Orb of Clarity Animation Styles */
+        #orb-container { } 
+        .orb {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(29, 78, 216, 0.3) 0%, rgba(29, 78, 216, 0.1) 40%, rgba(30, 31, 32, 0) 70%);
+            box-shadow: inset 0 0 40px rgba(199, 210, 254, 0.2), 0 0 60px rgba(29, 78, 216, 0.4);
+            position: relative; animation: pulse-orb 6s infinite ease-in-out alternate;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .orb::before { 
+            content: ''; position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; border-radius: 50%;
+            background: radial-gradient(ellipse at top left, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+            animation: rotate-sheen 10s infinite linear; z-index: 1;
+        }
+        .orb-logo {
+            font-family: 'Satoshi', sans-serif; font-size: 2.5rem; font-weight: 700;
+            color: rgba(227, 227, 227, 0.8); z-index: 2; 
+            text-shadow: 0 0 10px rgba(29, 78, 216, 0.5);
+        }
+
+        @keyframes pulse-orb {
+            0% { transform: scale(0.95); box-shadow: inset 0 0 30px rgba(199, 210, 254, 0.15), 0 0 50px rgba(29, 78, 216, 0.3); }
+            100% { transform: scale(1.05); box-shadow: inset 0 0 50px rgba(199, 210, 254, 0.25), 0 0 70px rgba(29, 78, 216, 0.5); }
+        }
+        @keyframes rotate-sheen { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .particle {
+            position: absolute; width: 2px; height: 2px; background-color: rgba(227, 227, 227, 0.7);
+            border-radius: 50%; box-shadow: 0 0 5px 1px rgba(227, 227, 227, 0.5);
+            animation: flow-particle 8s infinite linear; opacity: 0; z-index: 0;
+        }
+        .particle-1 { top: 50%; left: 50%; animation-duration: 7s; animation-delay: -1s; }
+        .particle-2 { top: 50%; left: 50%; animation-duration: 9s; animation-delay: -2s; }
+        .particle-3 { top: 50%; left: 50%; animation-duration: 6s; animation-delay: -3s; }
+        .particle-4 { top: 50%; left: 50%; animation-duration: 8s; animation-delay: -4s; }
+        .particle-5 { top: 50%; left: 50%; animation-duration: 10s; animation-delay: -5s; }
+        .particle-6 { top: 50%; left: 50%; animation-duration: 7.5s; animation-delay: -6s; }
+        .particle-7 { top: 50%; left: 50%; animation-duration: 8.5s; animation-delay: -7s; }
+        .particle-8 { top: 50%; left: 50%; animation-duration: 9.5s; animation-delay: -8s; }
+
+        @keyframes flow-particle {
+            0% { transform: translate(-50%, -50%) rotate(0deg) translateX(140px) rotate(0deg); opacity: 0; } 
+            20% { opacity: 0.8; } 80% { opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) rotate(360deg) translateX(140px) rotate(-360deg); opacity: 0; } 
+        }
+        
+        .text-shadow-subtle { text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5); }
+        .font-heading { font-family: 'Satoshi', sans-serif; } 
+
+        /* Page Transition Overlay */
+        #page-transition-overlay { position: fixed; inset: 0; background-color: #131314; z-index: 9999; opacity: 1; transition: opacity 0.4s ease-in-out; pointer-events: none; }
+        #page-transition-overlay.fade-out { opacity: 0; }
+        #page-transition-overlay.fade-in { opacity: 1; pointer-events: auto; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Satoshi', 'sans-serif'], mono: ['Noto Sans Mono', 'monospace'], },
+                    colors: { 'background': '#131314', 'card-bg': '#1E1F20', 'text-primary': '#E3E3E3', 'text-secondary': '#969696', 'primary-accent': '#1D4ED8', 'primary-accent-hover': '#173FAA', 'border-color': 'rgba(255, 255, 255, 0.1)', },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-sans text-text-primary">
+    
+    <div id="page-transition-overlay"></div> 
+
+    <div class="min-h-screen grid lg:grid-cols-5 relative">
+        
+        <div id="cosmic-canvas" class="absolute inset-0 z-0"></div>
+
+        <div class="hidden lg:col-span-2 lg:flex flex-col items-center justify-center relative overflow-hidden p-12 border-r border-border-color bg-gradient-to-br from-background via-background to-primary-accent/10">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(29,78,216,0.1),transparent_70%)] opacity-70"></div>
+            <div id="orb-container" class="relative z-10 w-64 h-64 flex items-center justify-center mb-12">
+                <div class="orb">
+                    <a href="index.html" class="orb-logo z-10 hover:opacity-80 transition-opacity duration-300">अर्थ</a> 
+                </div>
+                <div class="particle particle-1"></div> <div class="particle particle-2"></div> <div class="particle particle-3"></div>
+                <div class="particle particle-4"></div> <div class="particle particle-5"></div> <div class="particle particle-6"></div>
+                <div class="particle particle-7"></div> <div class="particle particle-8"></div>
+            </div>
+            <div class="relative z-20 text-center text-white max-w-sm">
+                 <h1 class="font-heading text-4xl font-bold leading-tight text-shadow-subtle">Command Your Financial Universe.</h1>
+                <p class="text-lg text-white/70 mt-4 mx-auto text-shadow-subtle">अर्थ provides the focus you need to navigate your financial world with precision.</p>
+            </div>
+        </div>
+
+
+        <div class="lg:col-span-3 flex flex-col items-center justify-center relative z-10 p-6 md:p-12 min-h-screen">
+            <div class="w-full max-w-md">
+                <div class="text-center mb-10 lg:hidden"> 
+                    <a href="index.html" class="inline-block mb-8 text-3xl font-heading font-bold">अर्थ</a>
+                </div>
+                <div class="bg-card-bg rounded-xl shadow-2xl p-8 md:p-10 border border-border-color">
+                    
+                    <div id="signInFormContent">
+                        <div class="text-center mb-8">
+                            <h2 class="text-3xl font-bold font-heading mb-2 text-text-primary">Welcome Back</h2> 
+                            <p class="text-text-secondary">Sign in via magic link or Google.</p>
+                        </div>
+
+                        <form id="signInEmailForm" class="space-y-4">
+                            <div>
+                                <label for="signInEmail" class="sr-only">Email Address</label> 
+                                <input type="email" id="signInEmail" name="email" required class="form-input text-lg placeholder-text-secondary/50" placeholder="you@example.com"> 
+                            </div>
+                            <div>
+                                <button type="submit" class="w-full group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-colors duration-300 hover:bg-transparent hover:text-primary-accent">
+                                    Send Sign-In Link <span class="ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>
+                                </button>
+                            </div>
+                        </form>
+
+                         <div class="relative my-6">
+                            <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-border-color"></div></div>
+                            <div class="relative flex justify-center text-sm"><span class="bg-card-bg px-2 text-text-secondary">Or</span></div>
+                        </div>
+
+                        <div>
+                            <button type="button" class="w-full inline-flex items-center justify-center gap-3 rounded-lg bg-transparent border border-primary-accent text-primary-accent px-4 py-3 text-sm font-semibold shadow-sm hover:bg-primary-accent hover:text-white transition-colors duration-300">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+                                  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+                                  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+                                  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C39.712,35.816,44,30.176,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                                </svg>
+                                <span>Sign in with Google</span>
+                            </button>
+                        </div>
+
+                        <div class="text-center mt-6">
+                             <a href="#" class="text-sm font-medium text-primary-accent hover:underline">Sign in with password instead?</a>
+                        </div>
+                    </div>
+
+                    <div id="signInConfirmationMessage" class="hidden text-center space-y-6 py-8 transition-opacity duration-500 ease-in-out opacity-0" style="transition-delay: 300ms;">
+                         <svg class="w-16 h-16 mx-auto text-primary-accent opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"> 
+                             <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /> 
+                         </svg>
+                        <h3 class="text-2xl font-semibold font-heading text-text-primary">Check Your Inbox</h3>
+                        <p class="text-text-secondary">We've sent a secure sign-in link to <br><strong id="signInUserEmailDisplay" class="text-text-primary font-medium">your email</strong>.</p>
+                        <p class="text-sm text-text-secondary/80">Click the link to enter अर्थ.</p>
+                         <p class="pt-4 text-sm">
+                            <a href="#" id="tryDifferentEmailLink" class="text-primary-accent hover:underline">Use a different email</a>
+                        </p>
+                    </div>
+                </div>
+                <p class="text-center text-sm text-text-secondary pt-8">
+                    Don't have an account? <a href="signup.html" class="font-medium text-primary-accent hover:underline">Sign Up</a>
+                </p>
+                 <p class="text-center text-xs text-text-secondary/60 pt-6">
+                    By continuing, you agree to the <a href="#" class="underline hover:text-text-secondary">Terms of Service</a> and <a href="#" class="underline hover:text-text-secondary">Privacy Policy</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Starfield Script
+        const cosmicCanvas = document.getElementById('cosmic-canvas');
+        if (cosmicCanvas) {
+            cosmicCanvas.innerHTML = ''; 
+            for (let i = 0; i < 600; i++) { 
+                const star = document.createElement('div');
+                star.className = 'absolute rounded-full bg-text-secondary';
+                const size = Math.random() * 1.5;
+                star.style.width = `${size}px`; star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 100}%`;
+                star.style.animation = `star-twinkle ${Math.random() * 6 + 4}s infinite alternate`; star.style.opacity = '0.1';
+                cosmicCanvas.appendChild(star);
+            }
+        }
+
+        // Page Transition Script
+        const overlay = document.getElementById('page-transition-overlay');
+        document.addEventListener('DOMContentLoaded', () => { 
+            overlay.classList.remove('fade-out'); overlay.classList.remove('fade-in'); 
+            overlay.style.pointerEvents = 'none'; 
+            setTimeout(() => { if (overlay) { overlay.classList.add('fade-out'); } }, 50); 
+        });
+        const transitionLinks = document.querySelectorAll('a[href="signup.html"], a[href="signin.html"], a[href="index.html"]'); 
+        transitionLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && !href.startsWith('http') && !link.target === '_blank') { 
+                    e.preventDefault(); 
+                    if (overlay) { overlay.classList.add('fade-in'); }
+                    setTimeout(() => { window.location.href = href; }, 300); 
+                }
+            });
+        });
+         window.addEventListener('pageshow', function(event) {
+            if (event.persisted && overlay) {
+                 overlay.classList.add('fade-out'); 
+                 overlay.style.pointerEvents = 'none'; 
+            }
+        });
+
+        // Sign In Form Logic
+        const signInEmailForm = document.getElementById('signInEmailForm');
+        const signInFormContent = document.getElementById('signInFormContent');
+        const signInConfirmationMessage = document.getElementById('signInConfirmationMessage');
+        const signInUserEmailDisplay = document.getElementById('signInUserEmailDisplay');
+        const signInEmailInput = document.getElementById('signInEmail');
+        const tryDifferentEmailLink = document.getElementById('tryDifferentEmailLink');
+
+        signInEmailForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = signInEmailInput.value;
+            if (email) {
+                signInUserEmailDisplay.textContent = email;
+                signInFormContent.style.transition = 'opacity 0.3s ease-out, display 0s linear 0.3s';
+                signInFormContent.style.opacity = '0';
+                signInFormContent.style.display = 'none'; 
+
+                signInConfirmationMessage.style.display = 'block';
+                signInConfirmationMessage.style.opacity = '0'; 
+                requestAnimationFrame(() => {
+                    signInConfirmationMessage.style.transition = 'opacity 0.5s ease-in-out 0.3s';
+                    signInConfirmationMessage.style.opacity = '1';
+                });
+                // Backend: Send magic link here
+            }
+        });
+
+        tryDifferentEmailLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            signInConfirmationMessage.style.transition = 'opacity 0.3s ease-out, display 0s linear 0.3s';
+            signInConfirmationMessage.style.opacity = '0';
+            signInConfirmationMessage.style.display = 'none';
+
+            signInFormContent.style.display = 'block';
+            signInFormContent.style.opacity = '0'; 
+            requestAnimationFrame(() => {
+                 signInFormContent.style.transition = 'opacity 0.5s ease-in-out 0.3s';
+                 signInFormContent.style.opacity = '1';
+            });
+            signInEmailInput.focus(); 
+            signInEmailInput.value = ''; // Clear the input
+        });
+    </script>
+</body>
+</html>
