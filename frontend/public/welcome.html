@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - अर्थ (Artha)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base Keyframes */
+        @keyframes star-twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.7; } } 
+        @keyframes initial-logo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes particle-burst {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* Form Input Styles */
+        .form-input {
+            background-color: transparent; border-width: 0 0 1px 0; border-color: rgba(255, 255, 255, 0.2);
+            color: #E3E3E3; border-radius: 0; padding: 0.75rem 0.25rem; width: 100%;
+            transition: border-color 0.3s ease; text-align: center;
+            font-size: 1.875rem; line-height: 2.25rem; font-weight: 500;
+        }
+        .form-input:focus { outline: none; border-color: #1D4ED8; }
+        .form-input::placeholder { color: rgba(150, 150, 150, 0.4); font-weight: 400; }
+
+        .font-heading { font-family: 'Satoshi', sans-serif; }
+
+        /* Entry Animations (Flicker Fix) */
+        .animate-stage {
+            opacity: 0; /* Start invisible */
+            transform: translateY(20px); /* Start 20px down */
+            animation-fill-mode: forwards; /* Hold the 'to' state */
+            animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        .animate-stage-logo {
+            animation: fade-in-up 1s ease-out 0.3s forwards, 
+                       initial-logo-pulse 4s ease-in-out 1.3s infinite;
+        }
+        .animate-stage-1 {
+            animation-name: fade-in-up;
+            animation-duration: 0.8s;
+            animation-delay: 1.0s;
+        }
+        .animate-stage-2 {
+            animation-name: fade-in-up;
+            animation-duration: 0.8s;
+            animation-delay: 1.8s;
+        }
+        .animate-stage-3 {
+            animation-name: fade-in-up;
+            animation-duration: 0.8s;
+            animation-delay: 2.2s;
+        }
+        .animate-stage-4 {
+            animation-name: fade-in-up;
+            animation-duration: 0.8s;
+            animation-delay: 2.6s;
+        }
+
+        /* Particle effect */
+        .input-wrapper { position: relative; }
+        .js-particle {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: 999;
+        }
+
+        /* Button Icon Transition */
+        .button-icon { transition: opacity 0.3s ease-in 0.1s; }
+        .button-text { transition: opacity 0.2s ease-out; }
+        button:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        /* Final Confirmation Text Style */
+        #final-confirmation-container { transition: opacity 0.5s ease-in 0.4s; }
+
+    </style>
+    <script>
+        tailwind.config = {
+             theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Satoshi', 'sans-serif'],
+                        mono: ['Noto Sans Mono', 'monospace'],
+                    },
+                    colors: {
+                        'background': '#131314',
+                        'card-bg': '#1E1F20',
+                        'text-primary': '#E3E3E3',
+                        'text-secondary': '#969696',
+                        'primary-accent': '#1D4ED8',
+                        'primary-accent-hover': '#173FAA',
+                        'positive-color': '#5BB974',
+                        'negative-color': '#F0857D',
+                        'border-color': 'rgba(255, 255, 255, 0.1)',
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-sans text-text-primary">
+
+    <div class="min-h-screen flex items-center justify-center relative p-6 overflow-hidden">
+        <div id="cosmic-canvas" class="absolute inset-0 z-0"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(29,78,216,0.08),transparent_70%)] z-0"></div>
+
+        <div class="relative z-10 w-full max-w-2xl text-center">
+
+            <h1 id="main-logo" 
+                class="font-heading text-6xl md:text-7xl font-bold mb-8 text-text-primary animate-stage animate-stage-logo transition-opacity duration-300 ease-out">
+                अर्थ
+            </h1>
+
+            <div id="initial-content-container" class="transition-opacity duration-300 ease-out">
+                <p id="invitation-text" class="text-xl text-text-secondary mb-12 animate-stage animate-stage-1">Let's chart your financial cosmos.</p>
+
+                <form id="nameForm" class="space-y-8 max-w-sm mx-auto">
+                    <div id="name-label-wrapper" class="animate-stage animate-stage-2"> 
+                        <label for="userName" class="block text-lg text-text-secondary mb-4">How should we refer to you?</label>
+                        <div class="input-wrapper animate-stage animate-stage-3"> 
+                            <input type="text" id="userName" name="name" required class="form-input bg-transparent" autocomplete="off" placeholder="Enter your name">
+                        </div>
+                    </div>
+                    <div class="pt-2 animate-stage animate-stage-4" id="continue-button-wrapper" style="opacity: 0;"> 
+                        <button type="submit"
+                                id="submitNameButton"
+                                class="relative w-full group inline-flex items-center justify-center bg-primary-accent border border-primary-accent text-white px-8 py-3 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-transparent hover:text-primary-accent overflow-hidden">
+                            <span class="button-text transition-opacity duration-200 ease-out">
+                                Continue
+                                <span class="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+                            </span>
+                            <span class="button-icon absolute inset-0 flex items-center justify-center text-white opacity-0 transition-opacity duration-300 ease-in">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="final-confirmation-container" class="absolute inset-x-0 top-[calc(50%+40px)] transform -translate-y-1/2 opacity-0 pointer-events-none transition-opacity duration-500 ease-in-out" style="top: 45%;"> 
+                 <h2 id="final-confirmation-text-line1" class="font-heading text-4xl md:text-5xl font-bold text-text-primary mb-2">
+                 </h2>
+                 <p id="final-confirmation-text-line2" class="text-xl text-text-secondary">
+                    Your journey begins now.
+                 </p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Starfield Script
+        const cosmicCanvas = document.getElementById('cosmic-canvas');
+        if (cosmicCanvas) {
+             cosmicCanvas.innerHTML = '';
+            for (let i = 0; i < 300; i++) { 
+                const star = document.createElement('div');
+                star.className = 'absolute rounded-full bg-text-secondary';
+                const size = Math.random() * 1.2 + 0.2; 
+                star.style.width = `${size}px`; star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`; star.style.top = `${Math.random() * 100}%`;
+                star.style.animation = `star-twinkle ${Math.random() * 8 + 5}s infinite alternate`; 
+                star.style.opacity = '0.2'; 
+                cosmicCanvas.appendChild(star);
+            }
+        }
+
+        // --- Particle Burst Function ---
+        function burstParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'js-particle';
+                p.style.width = Math.random() * 4 + 2 + 'px';
+                p.style.height = p.style.width;
+                p.style.background = '#1D4ED8';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.transform = 'translate(-50%, -50%)';
+                p.style.opacity = '0.9';
+                document.body.appendChild(p);
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 60 + 40;
+                const dx = Math.cos(angle) * distance;
+                const dy = Math.sin(angle) * distance;
+
+                p.animate([
+                  { transform: `translate(-50%, -50%) scale(1)`, opacity: 1 },
+                  { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+                ], {
+                  duration: 600 + Math.random() * 200,
+                  easing: 'ease-out'
+                });
+
+                setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        // --- Get Elements ---
+        const mainLogo = document.getElementById('main-logo');
+        const initialContentContainer = document.getElementById('initial-content-container');
+        const finalConfirmationContainer = document.getElementById('final-confirmation-container');
+        const finalConfirmationTextLine1 = document.getElementById('final-confirmation-text-line1'); 
+        const nameInput = document.getElementById('userName');
+        const nameForm = document.getElementById('nameForm');
+        const continueButtonWrapper = document.getElementById('continue-button-wrapper');
+        const submitButton = document.getElementById('submitNameButton');
+        const buttonText = submitButton.querySelector('.button-text');
+        const buttonIcon = submitButton.querySelector('.button-icon');
+        
+        let isSubmitting = false;
+
+        // --- Add Pulse After Fade-In ---
+        setTimeout(() => {
+            if(mainLogo) mainLogo.classList.add('logo-pulse');
+        }, 1300); // 1s duration + 0.3s delay
+
+        // --- Handle Input ---
+        nameInput.addEventListener('input', () => {
+            const name = nameInput.value.trim();
+            continueButtonWrapper.style.opacity = name ? '1' : '0';
+        });
+
+        // --- Handle Form Submission ---
+        nameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (isSubmitting) return;
+            const userName = nameInput.value.trim();
+
+            if (userName) {
+                isSubmitting = true;
+                nameInput.disabled = true;
+                submitButton.disabled = true;
+
+                const rect = submitButton.getBoundingClientRect();
+                burstParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+                initialContentContainer.style.opacity = '0';
+                initialContentContainer.style.pointerEvents = 'none';
+
+                buttonText.style.opacity = '0';
+                submitButton.classList.remove('bg-primary-accent', 'hover:bg-transparent', 'hover:text-primary-accent');
+                submitButton.classList.add('bg-positive-color', 'border-positive-color');
+
+                setTimeout(() => {
+                    buttonIcon.style.opacity = '1';
+                    
+                    // --- REFINED TEXT ---
+                    finalConfirmationTextLine1.textContent = `Welcome, ${userName}.`; 
+                    
+                    finalConfirmationContainer.style.opacity = '1';
+                    finalConfirmationContainer.style.pointerEvents = 'auto';
+
+                    setTimeout(() => {
+                         submitButton.style.transition = 'opacity 0.4s ease-out';
+                         submitButton.style.opacity = '0';
+                         submitButton.style.pointerEvents = 'none';
+                    }, 800);
+
+                }, 300);
+
+                // --- ADJUSTED TIMING ---
+                setTimeout(() => {
+                    document.body.style.transition = 'opacity 0.5s ease-out';
+                    document.body.style.opacity = '0';
+                }, 3000); // Wait 2.7s after checkmark/text appears (300ms + 2700ms)
+
+                setTimeout(() => {
+                   window.location.href = 'dashboard.html';
+                }, 3500); // 3000ms + 500ms fade
+
+            } else {
+                nameInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
