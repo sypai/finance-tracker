@@ -130,11 +130,12 @@ export function populateAccountDropdown(accounts) {
     ).join('');
 }
 
-// --- *** MODIFIED: `renderTransactions` *** ---
-// Now adds `is-open` to the first transaction group.
+// --- *** "PERFECTIFIED" `renderTransactions` *** ---
 export function renderTransactions(transactions, accounts) {
-    const container = elements.transactionList;
+    const container = elements.transactionList; // This is the .flex-col container
     if (!container) return;
+
+    container.innerHTML = ''; // Clear old content
 
     if (transactions.length === 0) {
         container.innerHTML = `<div class="p-8 text-center text-gray-400">
@@ -144,7 +145,8 @@ export function renderTransactions(transactions, accounts) {
         return;
     }
 
-    const grouped = transactions.reduce((acc, t) => {
+    // 1. Group by Month-Year
+    const groupedByMonth = transactions.reduce((acc, t) => {
         const date = new Date(t.date);
         const monthYearKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         if (!acc[monthYearKey]) {
@@ -156,56 +158,102 @@ export function renderTransactions(transactions, accounts) {
         return acc;
     }, {});
 
-    let html = '';
-    const sortedGroupKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-    let delay = 300; 
-
-    sortedGroupKeys.forEach((key, index) => {
-        const group = grouped[key];
-        delay += 50; 
+    const sortedMonthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
+    
+    // 2. Render the Accordion Groups (Months)
+    sortedMonthKeys.forEach((monthKey, index) => {
+        const monthGroup = groupedByMonth[monthKey];
+        const isOpenClass = index === 0 ? 'is-open' : ''; // Open first month
         
-        // --- MODIFICATION: Open the first group by default ---
-        const isOpenClass = index === 0 ? 'is-open' : '';
-
-        const isNetPositive = group.netTotal >= 0;
+        const isNetPositive = monthGroup.netTotal >= 0;
         const netTotalSign = isNetPositive ? '+' : '-';
         const netTotalColor = isNetPositive ? 'text-positive-value' : 'text-negative-value';
-        const netTotalFormatted = `${netTotalSign}₹${Math.abs(group.netTotal).toLocaleString('en-IN')}`;
+        const netTotalFormatted = `${netTotalSign}₹${Math.abs(monthGroup.netTotal).toLocaleString('en-IN')}`;
 
-        html += `
-            <div class="transaction-group animate-fade-in ${isOpenClass}" style="animation-delay: ${delay}ms;">
-                <h3 class="transaction-group-header" data-group-key="${key}">
-                    <span>${group.monthName}</span>
-                    <span class="month-total ${netTotalColor}">${netTotalFormatted}</span>
-                </h3>
-                <div class="transaction-group-list">
-        `;
+        const groupEl = document.createElement('div');
+        groupEl.className = `transaction-group ${isOpenClass}`;
 
-        const sortedTransactions = group.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // 3. Group this month's transactions by DAY
+        const groupedByDay = monthGroup.transactions.reduce((acc, t) => {
+            const date = new Date(t.date);
+            const dayKey = date.toISOString().split('T')[0]; // "2025-10-22"
+            if (!acc[dayKey]) {
+                acc[dayKey] = {
+                    dayHeader: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                    dayNetTotal: 0,
+                    transactions: []
+                };
+            }
+            acc[dayKey].dayNetTotal += (t.type === 'income' ? t.amount : -t.amount);
+            acc[dayKey].transactions.push(t);
+            return acc;
+        }, {});
+        
+        const sortedDayKeys = Object.keys(groupedByDay).sort((a, b) => b.localeCompare(a));
 
-        for (const t of sortedTransactions) {
-            const account = accounts.find(a => a.id === t.accountId);
-            const isPositive = t.type === 'income';
-            const amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
-            const iconSvg = getCategoryIcon(t.description);
-            const transactionDate = new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        // 4. Build the HTML for the Day Columns
+        let dayColumnsHtml = '';
+        sortedDayKeys.forEach((dayKey, dayIndex) => {
+            const dayGroup = groupedByDay[dayKey];
+            const dayNetPositive = dayGroup.dayNetTotal >= 0;
+            const dayNetTotalFormatted = `${dayNetPositive ? '+' : '-'}₹${Math.abs(dayGroup.dayNetTotal).toLocaleString('en-IN')}`;
 
-            html += `
-                <a href="#" class="transaction-row" data-transaction-id="${t.id}">
-                    <div class="transaction-icon-wrapper">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${iconSvg}</svg>
+            // Build the cards for this day
+            const transactionCardsHtml = dayGroup.transactions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(t => {
+                    const account = accounts.find(a => a.id === t.accountId);
+                    const isPositive = t.type === 'income';
+                    const amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
+                    const iconSvg = getCategoryIcon(t.description);
+                    
+                    return `
+                        <a href="#" class="transaction-card" data-transaction-id="${t.id}">
+                            <div class="transaction-icon-wrapper">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${iconSvg}</svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-text-primary truncate">${t.description}</p>
+                                <p class="text-sm text-text-secondary">${account ? account.name : 'Unknown'}</p>
+                            </div>
+                            <p class="font-semibold mono ${isPositive ? 'text-positive-value' : 'text-negative-value'}">
+                                ${amountFormatted}
+                            </p>
+                        </a>
+                    `;
+                }).join('');
+
+            // Assemble the Day Column
+            dayColumnsHtml += `
+                <div class="day-column" style="animation-delay: ${dayIndex * 50}ms">
+                    <div class="day-header">
+                        <h4 class="font-heading">${dayGroup.dayHeader}</h4>
+                        <span class="mono ${dayNetPositive ? 'text-positive-value' : 'text-negative-value'}">
+                            ${dayNetTotalFormatted}
+                        </span>
                     </div>
-                    <div class="flex-1">
-                        <p class="font-semibold text-text-primary">${t.description}</p>
-                        <p class="text-sm text-text-secondary">${account ? account.name : 'Unknown'} • ${transactionDate}</p>
+                    <div class="day-stream">
+                        ${transactionCardsHtml}
                     </div>
-                    <p class="font-semibold mono ${isPositive ? 'text-positive-value' : 'text-negative-value'}">
-                        ${amountFormatted}
-                    </p>
-                </a>
+                </div>
             `;
-        }
-        html += `</div></div>`;
+        });
+
+        // 5. Assemble the final Month Group
+        groupEl.innerHTML = `
+            <h3 class="transaction-group-header" data-group-key="${monthKey}">
+                <span>${monthGroup.monthName}</span>
+                <span class="month-total ${netTotalColor}">${netTotalFormatted}</span>
+                <svg class="chevron-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+            </h3>
+            <div class="transaction-group-list">
+                <div class="horizontal-stream-container">
+                    ${dayColumnsHtml}
+                </div>
+            </div>
+        `;
+        container.appendChild(groupEl);
     });
-    container.innerHTML = html;
 }

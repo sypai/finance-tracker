@@ -25,6 +25,9 @@ import {
 
 const App = {
     init() {
+        // NEW: Add navigation state
+        appState.activeYear = new Date().getFullYear().toString();
+        appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
         appState.hasDashboardLoaded = false;
         initUI();
         this.bindEvents();
@@ -60,65 +63,87 @@ const App = {
             renderInvestmentsTab(appState);
         } else if (activeTab === 'transactions') {
             renderTransactionInsights(appState); // Renders top-left card
-            renderTransactions(appState.transactions, appState.accounts); // Renders bottom ledger
+            // Pass the full navigation state
+            renderTransactions(
+                appState.transactions, 
+                appState.accounts, 
+                appState.activeYear,
+                appState.activeMonth
+            ); // Renders bottom ledger
         }
         
         createCharts(appState);
     },
 
     bindEvents() {
-            // --- NEW: Transaction Ledger Accordion ---
+
+        // --- "INSET JOURNAL" ACCORDION CLICK ---
         elements.transactionList.addEventListener('click', (event) => {
             const header = event.target.closest('.transaction-group-header');
             if (header) {
+                // Toggle the clicked group
                 header.parentElement.classList.toggle('is-open');
+                
+                // Elite Touch: Close other groups
+                document.querySelectorAll('#transactionList .transaction-group.is-open').forEach(openGroup => {
+                    if (openGroup !== header.parentElement) {
+                        openGroup.classList.remove('is-open');
+                    }
+                });
             }
         });
 
-        // --- NEW: Transaction Row "Drill-Down" Click ---
+        // --- "INSET JOURNAL" CARD CLICK (Drill-Down) ---
+        // This targets the .transaction-card, which is now inside the horizontal stream
         elements.transactionList.addEventListener('click', (event) => {
-            const row = event.target.closest('.transaction-row');
+            const row = event.target.closest('.transaction-card'); // Changed from .transaction-row
             if (row) {
-                event.preventDefault(); // Stop the <a href="#">
+                event.preventDefault(); 
                 const transactionId = parseInt(row.dataset.transactionId);
                 const transaction = appState.transactions.find(t => t.id === transactionId);
                 if (transaction) {
-                    // Call the newly upgraded modal function
                     showTransactionModal(appState, transaction);
                 }
             }
         });
 
-        // --- NEW: Live Search for Transactions ---
+        // --- "INSET JOURNAL" LIVE SEARCH ---
         const transactionSearchInput = document.getElementById('transactionSearch');
         if (transactionSearchInput) {
             transactionSearchInput.addEventListener('input', (event) => {
                 const searchTerm = event.target.value.toLowerCase();
                 
+                // We must search all the way down to the cards
                 document.querySelectorAll('.transaction-group').forEach(group => {
-                    let groupHasVisibleRows = false;
+                    let groupHasVisibleCards = false;
                     
-                    group.querySelectorAll('.transaction-row').forEach(row => {
-                        const description = row.querySelector('.font-semibold').textContent.toLowerCase();
-                        const account = row.querySelector('.text-sm').textContent.toLowerCase();
-                        const amount = row.querySelector('.mono').textContent.toLowerCase();
-                        
-                        const isMatch = description.includes(searchTerm) || 
-                                      account.includes(searchTerm) || 
-                                      amount.includes(searchTerm);
-                        
-                        row.classList.toggle('hidden', !isMatch);
-                        if (isMatch) {
-                            groupHasVisibleRows = true;
-                        }
-                    });
+                    group.querySelectorAll('.day-column').forEach(column => {
+                        let columnHasVisibleCards = false;
 
-                    // Now hide the entire group (header and all) if no rows match
-                    group.classList.toggle('hidden', !groupHasVisibleRows);
+                        column.querySelectorAll('.transaction-card').forEach(card => {
+                            const description = card.querySelector('.font-semibold').textContent.toLowerCase();
+                            const account = card.querySelector('.text-sm').textContent.toLowerCase();
+                            const amount = card.querySelector('.mono').textContent.toLowerCase();
+                            
+                            const isMatch = description.includes(searchTerm) || 
+                                          account.includes(searchTerm) || 
+                                          amount.includes(searchTerm);
+                            
+                            card.classList.toggle('hidden', !isMatch);
+                            if (isMatch) {
+                                columnHasVisibleCards = true;
+                                groupHasVisibleCards = true;
+                            }
+                        });
+                        // Hide the *day column* if no cards match
+                        column.classList.toggle('hidden', !columnHasVisibleCards);
+                    });
+                    // Hide the *entire month group* if no days match
+                    group.classList.toggle('hidden', !groupHasVisibleCards);
                 });
             });
         }
-    
+        
         elements.mobileMenuButton.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
         
         elements.addTransactionBtn.addEventListener('click', () => showTransactionModal(appState));
@@ -435,7 +460,6 @@ const App = {
         elements.sidebarIndicator.style.transform = `translateY(${top}px)`;
         elements.sidebarIndicator.style.height = `${height}px`;
     },
-
 
     // NEW helper function to move the indicator
     moveSidebarIndicator(activeItem) {

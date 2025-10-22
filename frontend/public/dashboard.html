@@ -203,48 +203,57 @@
         <!-- TAB SEPARATION -->
 
         <!-- TRANSACTIONS TAB -->
+        <!-- TRANSACTIONS TAB -->
         <div id="transactions" class="tab-content">
 
+            <!-- Top Row: Cash Flow Chart + Key Insights -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 
+                <!-- Monthly Cash Flow Chart -->
                 <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-100">
                     <h3 class="text-xl font-semibold mb-6">Monthly Cash Flow (Last 6 Months)</h3>
                     <div class="chart-container-medium">
                         <canvas id="cashFlowChart"></canvas>
                     </div>
                 </div>
-        
+
+                <!-- Key Insights Briefing -->
                 <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-200">
                     <h3 class="text-xl font-semibold mb-6">Key Insights</h3>
                     <div id="transaction-insights-list" class="space-y-5">
-                        </div>
-                </div>
-        
-            </div>
-        
-            <div class="card flex flex-col animate-fade-in delay-300">
-                
-                <div class="flex flex-col md:flex-row justify-between items-center p-6 border-b border-white/5 gap-4">
-                    <h3 class="text-xl font-semibold flex-shrink-0">Transaction Ledger</h3>
-                    <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-                        <div class="relative flex-1 md:min-w-[250px]">
-                            <input type="text" id="transactionSearch" placeholder="Search transactions..." class="form-input w-full pl-10" />
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                        <button id="filterTransactionsBtn" class="btn btn-secondary flex-shrink-0">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                            </svg>
-                            <span>Filter</span>
-                        </button>
+                        <!-- Insights rendered by JS -->
                     </div>
                 </div>
-                
-                <div id="transactionList" class="p-2 md:p-4 space-y-4">
-                    </div>
+
             </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            </div>
+    
+        <div id="transaction-journal-view" class="card flex flex-col animate-fade-in delay-300">
+            
+            <div id="journal-command-bar" class="flex flex-col md:flex-row justify-between items-center p-5 gap-4">
+                <h3 class="text-xl font-semibold flex-shrink-0">Transactions</h3>
+                <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                    <div class="relative flex-1 md:min-w-[250px]">
+                        <input type="text" id="transactionSearch" placeholder="Search transactions..." class="form-input w-full pl-10" />
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <button id="filterTransactionsBtn" class="btn btn-secondary flex-shrink-0">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <span>Filter</span>
+                    </button>
+                </div>
+            </div>
+    
+            <div id="transactionList" class="flex flex-col p-2 md:p-4">
+                </div>
+        </div>
+
         </div>
 
         <!-- INVESTMENTS TAB -->
