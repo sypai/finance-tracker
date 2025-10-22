@@ -6,8 +6,9 @@ import {
     setActiveTab, 
     updateDateTime, 
     updateGreeting, 
-    renderAccountsPage, 
-    renderTransactions,
+    renderAccountsPage,
+    renderTransactionInsights,
+    renderTransactions,        // Kept
     // populateAccountDropdown,
     renderInvestmentCard,
     renderInvestmentsTab,
@@ -19,11 +20,12 @@ import {
     showTransactionModal,
     showPortfolioModal,
     createHoldingRow,
-    renderHoldingsView
+    renderHoldingsView,
 } from './utils/ui/index.js';
 
 const App = {
     init() {
+        appState.hasDashboardLoaded = false;
         initUI();
         this.bindEvents();
         this.render(); // Initial render
@@ -57,14 +59,66 @@ const App = {
         } else if (activeTab === 'investments') {
             renderInvestmentsTab(appState);
         } else if (activeTab === 'transactions') {
-            renderTransactions(appState.transactions, appState.accounts);
+            renderTransactionInsights(appState); // Renders top-left card
+            renderTransactions(appState.transactions, appState.accounts); // Renders bottom ledger
         }
         
         createCharts(appState);
     },
 
     bindEvents() {
-        // Static elements that always exist on the page
+            // --- NEW: Transaction Ledger Accordion ---
+        elements.transactionList.addEventListener('click', (event) => {
+            const header = event.target.closest('.transaction-group-header');
+            if (header) {
+                header.parentElement.classList.toggle('is-open');
+            }
+        });
+
+        // --- NEW: Transaction Row "Drill-Down" Click ---
+        elements.transactionList.addEventListener('click', (event) => {
+            const row = event.target.closest('.transaction-row');
+            if (row) {
+                event.preventDefault(); // Stop the <a href="#">
+                const transactionId = parseInt(row.dataset.transactionId);
+                const transaction = appState.transactions.find(t => t.id === transactionId);
+                if (transaction) {
+                    // Call the newly upgraded modal function
+                    showTransactionModal(appState, transaction);
+                }
+            }
+        });
+
+        // --- NEW: Live Search for Transactions ---
+        const transactionSearchInput = document.getElementById('transactionSearch');
+        if (transactionSearchInput) {
+            transactionSearchInput.addEventListener('input', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                
+                document.querySelectorAll('.transaction-group').forEach(group => {
+                    let groupHasVisibleRows = false;
+                    
+                    group.querySelectorAll('.transaction-row').forEach(row => {
+                        const description = row.querySelector('.font-semibold').textContent.toLowerCase();
+                        const account = row.querySelector('.text-sm').textContent.toLowerCase();
+                        const amount = row.querySelector('.mono').textContent.toLowerCase();
+                        
+                        const isMatch = description.includes(searchTerm) || 
+                                      account.includes(searchTerm) || 
+                                      amount.includes(searchTerm);
+                        
+                        row.classList.toggle('hidden', !isMatch);
+                        if (isMatch) {
+                            groupHasVisibleRows = true;
+                        }
+                    });
+
+                    // Now hide the entire group (header and all) if no rows match
+                    group.classList.toggle('hidden', !groupHasVisibleRows);
+                });
+            });
+        }
+    
         elements.mobileMenuButton.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
         
         elements.addTransactionBtn.addEventListener('click', () => showTransactionModal(appState));

@@ -34,7 +34,6 @@ function getTransactionsForPeriod(transactions, period = 'month') {
     return transactions.filter(t => new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === currentYear);
 }
 
-// Replace this function in your src/js/utils/ui.js file
 export function renderExpenseAnalysisCard(appState) {
     const normalView = elements.expenseAnalysisNormalView;
     const zeroStateView = elements.expenseAnalysisZeroState;
@@ -62,26 +61,18 @@ export function renderExpenseAnalysisCard(appState) {
     }
 }
 
-// Replace the renderExpenseList function in your ui.js file
 export function renderExpenseList(transactions, period) {
     const container = elements.expenseInsightsList;
     const filteredExpenses = getTransactionsForPeriod(transactions, period).filter(t => t.type === 'expense');
     const chartContainer = elements.expenseChartContainer;
-    // Show a welcoming message if there are no transactions at all
-    // if (transactions.length === 0) {
-    //     container.innerHTML = `<p class="text-center text-gray-400">Welcome! Add your first transaction to see your expense analysis here.</p>`;
-    //     return;
-    // }
     
     if (filteredExpenses.length === 0) {
-        // If there are transactions, but just not for this period
         chartContainer.classList.add('hidden');
-        container.innerHTML = `<p class="text-center text-gray-500 pt-8">No expenses recorded for this period.</p>`;
+        // Clear the list container and add the message
+        container.innerHTML = `<p class="text-center text-text-secondary pt-8">No expenses recorded for this ${period}.</p>`;
         return;
     }
    
-    // --- The rest of the function with the "Smart Summary" logic ---
-
     const totalExpensesInPeriod = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
 
     const categoryTotals = filteredExpenses.reduce((acc, t) => {
@@ -106,25 +97,46 @@ export function renderExpenseList(transactions, period) {
         finalExpenses = sortedExpenses;
     }
     
-    // FIX: Check if finalExpenses has any items before creating the summary
-    let summaryHTML = '';
-    if (finalExpenses.length > 0) {
-        const topCategory = finalExpenses[0];
-        const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
-        summaryHTML = `<p class="text-sm text-gray-400 mb-4">Your top expense category this ${period} was <b>${topCategory.category}</b>, making up <b>${topPercentage}%</b> of the total.</p>`;
-    }
     chartContainer.classList.remove('hidden');
+    
+    // --- START: MODIFIED CODE ---
+
+    // 1. Build the list of expenses with subdued colors and smaller fonts
     const listHTML = finalExpenses.map(item => {
         const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
         return `
-            <div class="flex justify-between items-center text-base">
-                <p class="font-xs text-gray-300">${item.category}</p>
+            <div class="flex justify-between items-center">
+                <p class="text-sm text-text-primary">${item.category}</p>
                 <div class="text-right">
-                    <span class="font-semibold text-white">₹${item.amount.toLocaleString('en-IN')}</span>
-                    <span class="text-xs text-gray-500 ml-2 w-10 inline-block text-right">(${percentage}%)</span>
+                    <span class="font-semibold text-text-metric mono text-sm">₹${item.amount.toLocaleString('en-IN')}</span>
+                    <span class="text-xs text-text-secondary ml-2 w-10 inline-block text-right">(${percentage}%)</span>
                 </div>
             </div>`;
     }).join('');
 
-    container.innerHTML = summaryHTML + listHTML;
+    // 2. Build the styled summary insight block (with icon)
+    let summaryHTML = '';
+    if (finalExpenses.length > 0) {
+        const topCategory = finalExpenses[0];
+        const topPercentage = totalExpensesInPeriod > 0 ? ((topCategory.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
+        
+        summaryHTML = `
+            <div class="mt-4 pt-4 border-t border-white/5">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary-accent flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m12.728 0l.707-.707M6.343 17.657l-.707.707m12.728 0l.707.707M12 21v-1m0-8a3 3 0 00-3 3h6a3 3 0 00-3-3z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-text-secondary">
+                            Your top expense category this ${period} was <span class="font-semibold text-text-primary">${topCategory.category}</span>, making up ${topPercentage}% of the total.
+                        </p>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // 3. Render list first, THEN summary
+    container.innerHTML = listHTML + summaryHTML;
+
+    // --- END: MODIFIED CODE ---
 }

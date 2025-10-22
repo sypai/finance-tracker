@@ -28,6 +28,39 @@ function setToggableMetric(element, value) {
     element.title = fullValue;
 }
 
+// /**
+//  * NEW: Animates a number from start to end with formatting.
+//  * @param {HTMLElement} element - The DOM element to update.
+//  * @param {number} start - The starting number.
+//  * @param {number} end - The final number.
+//  * @param {number} duration - Animation duration in ms.
+//  * @param {function} formatter - The function to format the value (e.g., formatIndianCurrency).
+//  */
+// function animateValue(element, start, end, duration, formatter) {
+//     if (!element) return;
+//     let startTime = null;
+
+//     // Helper to format the final display text
+//     const formatFinalText = (val) => formatter ? formatter(val) : `₹${val.toLocaleString('en-IN')}`;
+
+//     const step = (timestamp) => {
+//         if (!startTime) startTime = timestamp;
+//         const progress = Math.min((timestamp - startTime) / duration, 1);
+//         const currentNum = Math.floor(progress * (end - start) + start);
+        
+//         // Update text content on each frame
+//         element.textContent = formatFinalText(currentNum);
+
+//         if (progress < 1) {
+//             window.requestAnimationFrame(step);
+//         } else {
+//             // Animation finished. Set the final, precise values.
+//             setToggableMetric(element, end); // Use your existing function to set final state
+//         }
+//     };
+//     window.requestAnimationFrame(step);
+// }
+
 /**
  * Updates the main dashboard metrics using data from the app state.
  * @param {object} appState The central state object of the application.
@@ -53,6 +86,7 @@ export function updateDashboardMetrics(appState) {
     setToggableMetric(elements.investmentsValue, totalInvestments);
     
     // --- (The percentage change logic remains the same) ---
+    // (This part would ideally fetch real data)
     const changeData = {
         netWorth: { value: 8.2, isPositive: true },
         expenses: { value: 12.1, isPositive: false },

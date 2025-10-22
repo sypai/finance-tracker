@@ -1,4 +1,15 @@
-// js/charts.js
+// js/components/charts.js
+
+// --- A better way to manage chart instances ---
+const chartInstances = {};
+function destroyChart(id) {
+    if (chartInstances[id]) {
+        chartInstances[id].destroy();
+        delete chartInstances[id];
+    }
+}
+// --- End instance management ---
+
 function getCommonChartOptions(showScales = true, indexAxis = 'x') {
     const options = {
         responsive: true,
@@ -72,12 +83,13 @@ function getTransactionsForPeriod(transactions, period = 'month') {
 }
 
 export function createCharts(appState) {
+    // --- Destroy all charts ---
+    // (Using your original method for simplicity)
     Object.values(Chart.instances).forEach(chart => chart.destroy());
 
     // --- Investments Growth Chart ---
     const investmentsGrowthChartCtx = document.getElementById('investmentsGrowthChart')?.getContext('2d');
     if (investmentsGrowthChartCtx) {
-        // FIX: Only draw the chart if there is data for it
         if (appState.investmentGrowth && appState.investmentGrowth.length > 0) {
             new Chart(investmentsGrowthChartCtx, {
                 type: 'line',
@@ -101,11 +113,11 @@ export function createCharts(appState) {
                 options: getCommonChartOptions(true)
             });
         } else {
-            // If no data, clear the canvas to prevent old charts from showing
             investmentsGrowthChartCtx.clearRect(0, 0, investmentsGrowthChartCtx.canvas.width, investmentsGrowthChartCtx.canvas.height);
         }
     }
 
+    // --- Expense Bar Chart (Dashboard) ---
     const expenseBarCtx = document.getElementById('expenseBarChart')?.getContext('2d');
     if (expenseBarCtx) {
         const filteredTransactions = getTransactionsForPeriod(appState.transactions, appState.activeExpensePeriod);
@@ -119,7 +131,7 @@ export function createCharts(appState) {
             .map(([category, amount]) => ({ category, amount }))
             .sort((a, b) => b.amount - a.amount);
 
-        const topN = 3; // Show top 3
+        const topN = 3; 
         let finalChartData = [];
         if (sortedExpenses.length > topN) {
             finalChartData = sortedExpenses.slice(0, topN);
@@ -133,7 +145,6 @@ export function createCharts(appState) {
 
         finalChartData.sort((a, b) => a.amount - b.amount);
         
-        // If there is no expense data, clear the canvas and show a message
         if (finalChartData.length === 0) {
             const canvas = expenseBarCtx.canvas;
             const ctx = expenseBarCtx;
@@ -144,34 +155,33 @@ export function createCharts(appState) {
             ctx.font = "14px 'Manrope'";
             ctx.fillText("No expense data for this period", canvas.width / 2, canvas.height / 2);
             ctx.restore();
-            return; // Stop before trying to create a chart
-        }
-
-        new Chart(expenseBarCtx, {
-            type: 'bar',
-            data: {
-                labels: finalChartData.map(d => d.category),
-                datasets: [{
-                    data: finalChartData.map(d => d.amount),
-                    backgroundColor: '#D4D4D4',
-                    borderRadius: 5,
-                    barThickness: 10,
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                     x: { grid: { drawBorder: false, color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } },
-                     y: { grid: { display: false, drawBorder: false }, ticks: { color: '#F0F0F5', font: { family: 'Manrope' } } }
+        } else {
+             new Chart(expenseBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: finalChartData.map(d => d.category),
+                    datasets: [{
+                        data: finalChartData.map(d => d.amount),
+                        backgroundColor: '#D4D4D4',
+                        borderRadius: 5,
+                        barThickness: 10,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                         x: { grid: { drawBorder: false, color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } },
+                         y: { grid: { display: false, drawBorder: false }, ticks: { color: '#F0F0F5', font: { family: 'Manrope' } } }
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
-    // --- Balance History Chart ---
+    // --- Balance History Chart (Accounts Tab) ---
     const balanceChartCtx = document.getElementById('balanceChart')?.getContext('2d');
     if (balanceChartCtx && appState.accounts.length > 0) {
         const selectedAccountId = document.getElementById('accountFilter').value;
@@ -189,19 +199,13 @@ export function createCharts(appState) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
+                interaction: { mode: 'index', intersect: false, },
                 plugins: {
-                    crosshair: true, // Enable our custom plugin
+                    crosshair: true, 
                     legend: {
-                        display: true,
-                        position: 'top',
-                        align: 'end',
+                        display: true, position: 'top', align: 'end',
                         labels: { color: '#F0F0F5', font: { family: 'Manrope' } }
                     },
-                    // --- THIS IS THE KEY FIX FOR THE TOOLTIP ---
                     tooltip: {
                         position: 'nearest',
                         callbacks: {
@@ -212,12 +216,9 @@ export function createCharts(appState) {
                             label: function(context) {
                                 const label = context.dataset.label || '';
                                 const hoveredTimestamp = context.parsed.x;
-                                
-                                // Find the last data point on or before the hovered date
                                 const relevantPoint = [...context.dataset.data]
                                     .reverse()
                                     .find(point => point.x <= hoveredTimestamp);
-
                                 const value = relevantPoint ? relevantPoint.y : 0;
                                 return `${label}: ₹${value.toLocaleString('en-IN')}`;
                             }
@@ -247,7 +248,7 @@ export function createCharts(appState) {
         });
     }
 
-        // In your createCharts function in charts.js
+    // --- Allocation Chart (Investments Tab) ---
     const allocationChartCtx = document.getElementById('allocationChart')?.getContext('2d');
     if (allocationChartCtx && appState.investmentAccounts.length > 0) {
         const allocationData = appState.investmentAccounts
@@ -278,7 +279,59 @@ export function createCharts(appState) {
             }
         });
     }
+    
+    // --- *** NEW: CASH FLOW CHART (Transactions Tab) *** ---
+    const cashFlowChartCtx = document.getElementById('cashFlowChart')?.getContext('2d');
+    if (cashFlowChartCtx) {
+        const monthlyData = appState.transactions.reduce((acc, t) => {
+            const date = new Date(t.date);
+            const monthYearKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            if (!acc[monthYearKey]) {
+                acc[monthYearKey] = { monthName: date.toLocaleDateString('en-US', { month: 'short' }), income: 0, expense: 0 };
+            }
+            if (t.type === 'income') acc[monthYearKey].income += t.amount;
+            else acc[monthYearKey].expense += t.amount;
+            return acc;
+        }, {});
 
+        const sortedKeys = Object.keys(monthlyData).sort((a, b) => a.localeCompare(b)).slice(-6); // Get last 6 months
+        const labels = sortedKeys.map(key => monthlyData[key].monthName);
+        const incomeData = sortedKeys.map(key => monthlyData[key].income);
+        const expenseData = sortedKeys.map(key => monthlyData[key].expense);
+
+        new Chart(cashFlowChartCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Income', data: incomeData, backgroundColor: 'rgba(91, 185, 116, 0.7)', borderWidth: 0, borderRadius: 4, }, // var(--positive-color)
+                    { label: 'Expense', data: expenseData, backgroundColor: 'rgba(240, 133, 125, 0.7)', borderWidth: 0, borderRadius: 4, } // var(--negative-color)
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 800, easing: 'easeOutQuart' },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#969696', callback: (value) => `₹${value / 1000}k` } }, // Using --text-secondary
+                    x: { grid: { display: false }, ticks: { color: '#969696' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#969696', boxWidth: 12, padding: 20 } },
+                    tooltip: { 
+                        backgroundColor: '#1E1F20', // var(--card-bg)
+                        titleColor: '#E3E3E3', // var(--text-primary)
+                        bodyColor: '#E3E3E3',
+                        borderColor: 'rgba(255, 255, 255, 0.1)', // var(--card-border)
+                        borderWidth: 1,
+                        callbacks: {
+                            label: (context) => ` ${context.dataset.label}: ₹${context.raw.toLocaleString('en-IN')}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+    // --- *** END NEW CHART LOGIC *** ---
 } 
 
 function interpolateY(p1, p2, x) {
@@ -304,21 +357,16 @@ const crosshairPlugin = {
     afterDraw: chart => {
         if (chart.crosshairPosition) {
             const { x } = chart.crosshairPosition;
-            const { ctx, chartArea: { top, bottom, left, right } } = chart; // Get all bounds
+            const { ctx, chartArea: { top, bottom, left, right } } = chart;
             
             ctx.save();
-
-            // --- 1. Draw all dashed lines (vertical and horizontal) ---
             ctx.beginPath();
             ctx.setLineDash([5, 5]);
             ctx.lineWidth = 1;
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-
-            // Draw vertical line
             ctx.moveTo(x, top);
             ctx.lineTo(x, bottom);
 
-            // Find interpolated Y for each dataset and draw horizontal lines
             chart.getSortedVisibleDatasetMetas().forEach(meta => {
                 const points = meta.data;
                 let p1, p2;
@@ -330,12 +378,11 @@ const crosshairPlugin = {
                 if (p1 && p2) {
                     const y = interpolateY(p1, p2, x);
                     ctx.moveTo(left, y);
-                    ctx.lineTo(right, y); // Draw all the way across
+                    ctx.lineTo(right, y);
                 }
             });
-            ctx.stroke(); // Stroke all dashed lines at once
+            ctx.stroke();
 
-            // --- 2. Draw the solid dots on top ---
             chart.getSortedVisibleDatasetMetas().forEach(meta => {
                 const dataset = meta.controller.getDataset();
                 const points = meta.data;
@@ -362,10 +409,8 @@ const crosshairPlugin = {
     }
 };
 
-// Register the plugin with Chart.js
 Chart.register(crosshairPlugin);
 
-// This helper prepares the time-series data for the balance chart
 function prepareBalanceHistoryDatasets(accounts, transactions, period) {
     const now = new Date();
     let startDate;
@@ -380,15 +425,14 @@ function prepareBalanceHistoryDatasets(accounts, transactions, period) {
             break;
     }
 
-    // --- NEW LOGIC: Find the account with the HIGHEST starting balance ---
     const topAccount = accounts.reduce((highest, current) => {
-        return current.startingBalance > highest.startingBalance ? current : highest;
+        return (current.startingBalance || 0) > (highest.startingBalance || 0) ? current : highest;
     }, accounts[0] || { startingBalance: -Infinity });
 
     const colors = ['#babaf4', '#5CF1B2', '#FF9B9B', '#FBBF24', '#818CF8'];
 
     return accounts.map((account, index) => {
-        const initialBalance = account.startingBalance;
+        const initialBalance = account.startingBalance; // This seems to be what you're using
         const createdAt = new Date(account.createdAt).getTime();
         let runningBalance = initialBalance;
         const balanceHistory = [{ x: createdAt, y: runningBalance }];
@@ -408,19 +452,16 @@ function prepareBalanceHistoryDatasets(accounts, transactions, period) {
             label: account.name,
             data: filteredHistory,
             borderColor: colors[index % colors.length],
-            // --- THIS IS THE KEY FIX ---
-            // Only fill the top-most account's line
             fill: account.id === topAccount.id, 
-            // The backgroundColor is now a function to create the gradient
             backgroundColor: context => {
                 const chart = context.chart;
                 const {ctx, chartArea} = chart;
                 if (!chartArea) {
-                    return null; // Return null if chart area is not defined yet
+                    return null;
                 }
                 const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                gradient.addColorStop(0, `${colors[index % colors.length]}4D`); // Semi-transparent at the top
-                gradient.addColorStop(1, `${colors[index % colors.length]}00`); // Fully transparent at the bottom
+                gradient.addColorStop(0, `${colors[index % colors.length]}4D`);
+                gradient.addColorStop(1, `${colors[index % colors.length]}00`);
                 return gradient;
             },
             tension: 0.4,
