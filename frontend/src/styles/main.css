@@ -568,7 +568,32 @@ tbody td.group-divider {
 /* -------------- */
 
 /* --- "Perfectified" Inset Journal --- */
+#journal-command-bar {
+    position: relative; /* Required for the pseudo-element */
+}
 
+#journal-command-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.25rem;  /* 20px */
+    right: 1.25rem; /* 20px */
+    height: 1px;
+    
+    /*
+      THE FIX:
+      Using a 15% opacity white (rgba(255, 255, 255, 0.15)) 
+      instead of var(--border-color) which was only 10%.
+      This will be visibly subtle.
+    */
+    background: linear-gradient(
+        to right,
+        transparent, 
+        rgba(255, 255, 255, 0.15) 20%, 
+        rgba(255, 255, 255, 0.15) 80%, 
+        transparent 
+    );
+}
 /* 1. The Month Accordion Group */
 .transaction-group {
     border-bottom: 1px solid var(--border-color);
@@ -708,7 +733,7 @@ tbody td.group-divider {
 /* 6. The "Open" State */
 .transaction-group.is-open .chevron-icon {
     transform: translateY(-50%) rotate(-180deg);
-    color: var(--primary-accent);
+    /* color: var(--primary-accent); */
 }
 .transaction-group.is-open .transaction-group-list {
     /* Set a fixed height for the horizontal scroll area */
