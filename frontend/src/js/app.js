@@ -8,7 +8,8 @@ import {
     updateGreeting, 
     renderAccountsPage,
     renderTransactionInsights,
-    renderTransactions,        // Kept
+    renderTransactionStructure,
+    loadTransactionData,        // Kept
     // populateAccountDropdown,
     renderInvestmentCard,
     renderInvestmentsTab,
@@ -61,16 +62,7 @@ const App = {
             renderAccountsPage(appState);
         } else if (activeTab === 'investments') {
             renderInvestmentsTab(appState);
-        } else if (activeTab === 'transactions') {
-            renderTransactionInsights(appState); // Renders top-left card
-            // Pass the full navigation state
-            renderTransactions(
-                appState.transactions, 
-                appState.accounts, 
-                appState.activeYear,
-                appState.activeMonth
-            ); // Renders bottom ledger
-        }
+        } 
         
         createCharts(appState);
     },
@@ -447,6 +439,29 @@ const App = {
         document.querySelector('.overlay')?.classList.remove('active');
         
         setActiveTab(tabName);
+
+        // --- FIX: Use requestAnimationFrame for Async Loading ---
+        if (tabName === 'transactions') {
+            // 1. Immediately render the basic structure (fast)
+            renderTransactionStructure(appState.transactions);
+
+            // 2. Schedule the heavy data loading using requestAnimationFrame
+            requestAnimationFrame(() => {
+                // This code will run just before the next repaint,
+                // ensuring the structure is likely ready in the DOM.
+                loadTransactionData(appState.transactions, appState.accounts);
+
+                // We can also render insights and charts here if they are fast enough
+                // or schedule them separately if needed.
+                renderTransactionInsights(appState);
+                createCharts(appState);
+            });
+
+        } else {
+            // For other tabs, render everything synchronously
+            this.render();
+        }
+
         this.render();
     },
 

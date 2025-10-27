@@ -566,7 +566,6 @@ tbody td.group-divider {
 
 /* -------------- */
 /* -------------- */
-
 /* --- "Perfectified" Inset Journal --- */
 #journal-command-bar {
     position: relative; /* Required for the pseudo-element */
@@ -579,19 +578,12 @@ tbody td.group-divider {
     left: 1.25rem;  /* 20px */
     right: 1.25rem; /* 20px */
     height: 1px;
-    
-    /*
-      THE FIX:
-      Using a 15% opacity white (rgba(255, 255, 255, 0.15)) 
-      instead of var(--border-color) which was only 10%.
-      This will be visibly subtle.
-    */
     background: linear-gradient(
         to right,
-        transparent, 
-        rgba(255, 255, 255, 0.15) 20%, 
-        rgba(255, 255, 255, 0.15) 80%, 
-        transparent 
+        transparent,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.15) 80%,
+        transparent
     );
 }
 /* 1. The Month Accordion Group */
@@ -604,9 +596,9 @@ tbody td.group-divider {
 
 .transaction-group-header {
     display: flex;
-    justify-content: space-between; 
+    justify-content: space-between;
     align-items: center;
-    padding: 1rem 2.5rem 1rem 0.5rem; 
+    padding: 1rem 2.5rem 1rem 0.5rem;
     cursor: pointer;
     position: relative;
     transition: background-color var(--transition-fast);
@@ -627,16 +619,17 @@ tbody td.group-divider {
     color: var(--text-secondary);
 }
 
-/* 2. The "Inset" Content Area (Now holds the horizontal scroller) */
+/* 2. The "Inset" Content Area (Holds the horizontal scroller) */
 .transaction-group-list {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
     background-color: var(--background); /* The #131314 inset */
-    border-radius: var(--radius-md); 
-    
-    /* We need to transition padding/margin to give it "breathing room" */
-    padding: 0 0.5rem;
+    border-radius: var(--radius-md);
+
+    /* Remove vertical padding, added back in .is-open */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
     margin: 0 0.5rem 0 0.5rem;
 
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
@@ -653,8 +646,8 @@ tbody td.group-divider {
     overflow-y: hidden;
     gap: 1.5rem; /* 24px space between day columns */
     padding: 1.5rem 0.5rem; /* Give the columns vertical space */
-    
-    -webkit-overflow-scrolling: touch; 
+
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border-color) transparent;
 }
@@ -667,6 +660,7 @@ tbody td.group-divider {
 .horizontal-stream-container::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
+
 
 /* 4. The Day Column (INSIDE horizontal scroller) */
 .day-column {
@@ -690,16 +684,19 @@ tbody td.group-divider {
     font-size: 0.875rem; /* 14px */
     font-weight: 500;
 }
+
+/* Day Stream container (holds cards) */
 .day-stream {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    /* Removed max-height, overflow-y, padding-right, scrollbar styles */
 }
 
 /* 5. The Transaction Card (INSIDE Day Column) */
 .transaction-card {
     display: flex;
-    align-items: center;
+    align-items: center; /* Vertical alignment */
     gap: 0.75rem;
     background-color: var(--card-bg); /* The #1E1F20 card */
     border: 1px solid var(--border-color);
@@ -713,6 +710,14 @@ tbody td.group-divider {
     border-color: rgba(29, 78, 216, 0.5);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
+
+/* --- FIX: Left-align text in the middle section --- */
+.transaction-card .flex-1 {
+    min-w: 0; /* Fixes text overflow with flexbox */
+    text-align: left; /* Explicitly align text to the left */
+}
+/* --- End Fix --- */
+
 .transaction-card .transaction-icon-wrapper {
     flex-shrink: 0;
     width: 2.5rem; height: 2.5rem;
@@ -733,13 +738,14 @@ tbody td.group-divider {
 /* 6. The "Open" State */
 .transaction-group.is-open .chevron-icon {
     transform: translateY(-50%) rotate(-180deg);
-    /* color: var(--primary-accent); */
+    /* Color remains default (text-secondary) */
 }
 .transaction-group.is-open .transaction-group-list {
-    /* Set a fixed height for the horizontal scroll area */
-    max-height: 500px; 
+    max-height: 5000px; /* Use a very large number for dynamic height */
     opacity: 1;
-    padding: 0.5rem;
+    /* Add vertical padding back when open */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
     margin: 0 0.5rem 1rem 0.5rem;
 }
 
@@ -749,20 +755,30 @@ tbody td.group-divider {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* 8. Mobile Responsiveness */
+/* --- Corrected Mobile Stacking --- */
 @media (max-width: 767px) {
-    .horizontal-stream-container {
-        /* On mobile, stack the days vertically */
-        flex-direction: column;
-        overflow-x: hidden;
-        gap: 2rem;
-        padding: 1rem 0.5rem;
+    /* Target the container INSIDE the open list */
+    .transaction-group-list .horizontal-stream-container {
+        flex-direction: column; /* Stack days vertically */
+        overflow-x: hidden;    /* Disable horizontal scroll */
+        gap: 2rem;             /* Space between stacked days */
+        padding: 1rem 0.5rem;  /* Vertical padding */
     }
-    .day-column {
-        width: 100%; /* Full width */
+
+    /* Ensure day columns take full width */
+    .transaction-group-list .day-column {
+        width: 100%;
     }
+
+    /* Day stream height is dynamic on mobile */
+    .transaction-group-list .day-stream {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    /* Ensure open group list can expand fully */
     .transaction-group.is-open .transaction-group-list {
-        /* Let the height be dynamic */
-        max-height: 5000px; /* Large enough for all content */
+        max-height: 5000px; /* Allow dynamic height */
     }
 }
