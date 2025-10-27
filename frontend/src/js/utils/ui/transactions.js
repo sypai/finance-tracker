@@ -1,5 +1,6 @@
 // src/js/utils/ui/transactions.js
 import { elements } from './domElements.js';
+import { getIconIdForDescription } from '../categoryMapper.js';
 import { toggleModal } from './common.js';
 
 // --- Helper Functions ---
@@ -253,20 +254,22 @@ export function loadTransactionData(transactions, accounts) {
                     const amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
                     const iconSvg = getCategoryIcon(t.description);
                     // Date removed from here in the previous step - CORRECT
-
+                    const iconId = getIconIdForDescription(t.description);
                     return `
                         <a href="#" class="transaction-card" data-transaction-id="${t.id}">
-                            <div class="transaction-icon-wrapper">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">${iconSvg}</svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-text-primary truncate">${t.description}</p>
-                                <p class="text-sm text-text-secondary">${account ? account.name : 'Unknown'}</p>
-                            </div>
-                            <p class="font-semibold mono ${isPositive ? 'text-positive-value' : 'text-negative-value'}">
-                                ${amountFormatted}
-                            </p>
-                        </a>`;
+                        <div class="transaction-icon-wrapper">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <use href="${iconId}"></use>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-text-primary truncate">${t.description}</p>
+                            <p class="text-sm text-text-secondary">${account ? account.name : 'Unknown'}</p>
+                        </div>
+                        <p class="font-semibold mono ${isPositive ? 'text-positive-value' : 'text-negative-value'}">
+                            ${amountFormatted}
+                        </p>
+                    </a>`;
                 }).join('');
 
              dayColumnsHtml += `

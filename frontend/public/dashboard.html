@@ -22,6 +22,17 @@
 </head>
 
 <body>
+    <div id="svg-sprite-container" style="display: none;"></div> 
+    <script>
+      // Fetch and inject the SVG sprite
+      fetch('./assets/icons.svg') // Adjust path if needed
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('svg-sprite-container').innerHTML = data;
+        })
+        .catch(error => console.error('Error loading SVG sprite:', error));
+    </script>
+
     <div class="grid-bg"></div>
 
     <!-- This is our side panel -->
