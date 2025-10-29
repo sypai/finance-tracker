@@ -3,8 +3,7 @@ import { elements } from './domElements.js';
 // Correctly import the function that returns an ID
 import { getIconIdForDescription } from '../categoryMapper.js';
 import { toggleModal } from './common.js';
-
-// NOTE: The old getCategoryIcon function is REMOVED as we use the mapper now.
+import { setSelectedTags } from './tags.js';
 
 // --- Renders the "Briefing List" ---
 export function renderTransactionInsights(appState) {
@@ -74,9 +73,9 @@ export function renderTransactionInsights(appState) {
     }
 
     // Spending Pace
-    if (lastMonthSpent > 0 && totalSpent >= 0) { // Check >= 0 in case of zero spending
-        const percentChange = lastMonthSpent === 0 ? 100 : Math.round(((totalSpent - lastMonthSpent) / lastMonthSpent) * 100); // Handle division by zero
-        const isDown = percentChange <= 0; // Include 0% change as 'down' or neutral
+    if (lastMonthSpent > 0 && totalSpent >= 0) {
+        const percentChange = lastMonthSpent === 0 ? 100 : Math.round(((totalSpent - lastMonthSpent) / lastMonthSpent) * 100);
+        const isDown = percentChange <= 0;
         html += `
              <div class="insight-list-item">
                 <h4 class="insight-list-title">Spending Pace</h4>
@@ -99,7 +98,6 @@ export function renderTransactionInsights(appState) {
     container.innerHTML = html;
 }
 
-
 // --- Transaction Modal Functions ---
 export function showTransactionModal(appState, transactionToEdit = null) {
     // --- 1. Handle Zero State ---
@@ -114,28 +112,14 @@ export function showTransactionModal(appState, transactionToEdit = null) {
     }
 
     // --- 3. Populate Category Dropdown ---
-    const categorySelect = document.getElementById('transactionCategory');
-    if (categorySelect) {
-        categorySelect.innerHTML = appState.categories
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(cat => `<option value="${cat.id}">${cat.name}</option>`)
-            .join('');
-        // Ensure "Uncategorized" exists as a fallback during population
-        if (!appState.categories.find(c => c.id === 'cat-uncategorized')) {
-             appState.categories.push({ id: 'cat-uncategorized', name: 'Uncategorized', iconId: '#icon-default' });
-             // Re-populating immediately if added
-             categorySelect.innerHTML = appState.categories
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(cat => `<option value="${cat.id}">${cat.name}</option>`)
-                .join('');
-        }
-    }
+    // This part is now fixed because appState.categories exists
+    populateCategoryDropdown(appState.categories);
+
 
     // --- 4. Get Form Elements ---
     const modalTitle = document.getElementById('transactionModalTitle');
     const form = document.getElementById('transactionForm');
     const submitBtn = document.getElementById('transactionSubmitBtn');
-    const tagsInput = document.getElementById('transactionTags');
 
     // --- 5. Handle Edit vs. Add Mode ---
     if (transactionToEdit) {
@@ -143,40 +127,28 @@ export function showTransactionModal(appState, transactionToEdit = null) {
         if(modalTitle) modalTitle.textContent = 'Edit Transaction';
         if(submitBtn) submitBtn.textContent = 'Save Changes';
 
-        // Populate basic fields
         if(form) {
             form.elements.id.value = transactionToEdit.id;
-            form.elements.accountId.value = transactionToEdit.accountId; // Will select bank or 'cash'
+            form.elements.accountId.value = transactionToEdit.accountId;
             form.elements.description.value = transactionToEdit.description;
             form.elements.amount.value = transactionToEdit.amount;
-            // Set radio button for type
             const typeRadio = form.querySelector(`input[name="type"][value="${transactionToEdit.type}"]`);
             if (typeRadio) typeRadio.checked = true;
-
-            // Pre-fill Category (default if missing)
             form.elements.categoryId.value = transactionToEdit.categoryId || 'cat-uncategorized';
 
-            // Pre-fill Tags (simple join)
-            if (tagsInput) {
-                tagsInput.value = (transactionToEdit.tagIds || [])
-                    .map(tagId => appState.tags.find(t => t.id === tagId)?.name)
-                    .filter(Boolean)
-                    .join(', ');
-            }
+            setSelectedTags(transactionToEdit.tagIds || []);
         }
     } else {
         // --- ADD MODE ---
         if(modalTitle) modalTitle.textContent = 'Add Transaction';
         if(submitBtn) submitBtn.textContent = 'Add Transaction';
         if(form) {
-            form.reset(); // Reset all fields
-            form.elements.id.value = ''; // Clear hidden ID
-            // Default category selection
+            form.reset();
+            form.elements.id.value = '';
             form.elements.categoryId.value = 'cat-uncategorized';
-            // Explicitly check 'expense' type
             const expenseRadio = form.querySelector('input[name="type"][value="expense"]');
             if (expenseRadio) expenseRadio.checked = true;
-            if (tagsInput) tagsInput.value = ''; // Clear tags
+            setSelectedTags([]); // Clear tags for new transaction
         }
     }
 
@@ -192,20 +164,36 @@ export function showTransactionModal(appState, transactionToEdit = null) {
     toggleModal('transactionModal', true);
 }
 
+/**
+ * Populates the category dropdown in the modal.
+ * @param {Array} categories - The categories array from appState.
+ */
+export function populateCategoryDropdown(categories) {
+    const categorySelect = document.getElementById('transactionCategory');
+    if (!categorySelect) return;
+
+    const sortedCategories = [...categories].sort((a, b) => {
+        if (a.id === 'cat-uncategorized') return -1;
+        if (b.id === 'cat-uncategorized') return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    categorySelect.innerHTML = sortedCategories
+        .map(cat => `<option value="${cat.id}">${cat.name}</option>`)
+        .join('');
+}
+
 // --- Modified populateAccountDropdown to include "Cash" ---
 export function populateAccountDropdown(accounts) {
-    const accountSelect = document.getElementById('transactionAccount'); // Use correct ID
+    const accountSelect = document.getElementById('transactionAccount');
     if (!accountSelect) return;
 
     const sortedAccounts = [...accounts].sort((a, b) => a.name.localeCompare(b.name));
     let optionsHtml = sortedAccounts.map(account =>
-        // Use account.id for value
         `<option value="${account.id}">${account.name} (Current: ₹${account.balance.toLocaleString('en-IN')})</option>`
     ).join('');
 
-    // Add the "Cash" option manually
     optionsHtml += `<option value="cash">Cash</option>`;
-
     accountSelect.innerHTML = optionsHtml;
 }
 
@@ -264,7 +252,8 @@ export function renderTransactionStructure(transactions) {
 }
 
 // --- Populates the transaction data asynchronously ---
-export function loadTransactionData(transactions, accounts, categories, tags) { // Added categories & tags params
+// *** This is the function that had the first error ***
+export function loadTransactionData(transactions, accounts, categories = [], tags = []) {
     const allGroupElements = document.querySelectorAll('#transactionList .transaction-group');
     if (allGroupElements.length === 0 || transactions.length === 0) return;
 
@@ -310,39 +299,51 @@ export function loadTransactionData(transactions, accounts, categories, tags) { 
             const transactionCardsHtml = dayGroup.transactions
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map(t => {
-                    // Find account (handle 'cash' potentially)
-                    const account = t.accountId === 'cash' ? { name: 'Cash' } : accounts.find(a => a.id === t.accountId);
-                    // Find category and icon ID
+                    const account = t.accountId === 'cash' ? { name: 'Cash', type: 'Cash' } : accounts.find(a => a.id === t.accountId); // Handle cash better
                     const category = categories.find(c => c.id === t.categoryId) || categories.find(c => c.id === 'cat-uncategorized');
-                    const iconId = category?.iconId || '#icon-default'; // Use category's iconId
-
+                    const categoryName = category?.name || 'Uncategorized';
+                    const iconId = category?.iconId || '#icon-default';
+                
                     const isPositive = t.type === 'income';
                     const amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
-
-                    // Generate tag color spans
+                    const amountColor = isPositive ? 'text-positive-value' : 'text-negative-value';
+                
+                    // Tag dots remain the same
                     const tagColorsHtml = (t.tagIds || [])
                         .map(tagId => tags.find(tag => tag.id === tagId)?.color)
-                        .filter(Boolean) // Ensure color exists
-                        .map(color => `<span class="inline-block w-2 h-2 rounded-full mr-1" style="background-color: ${color}"></span>`)
+                        .filter(Boolean)
+                        .map(color => `<span class="inline-block w-1.5 h-1.5 rounded-full" style="background-color: ${color}"></span>`) // Slightly smaller dots
                         .join('');
-
+                
                     return `
-                        <a href="#" class="transaction-card" data-transaction-id="${t.id}">
-                            <div class="transaction-icon-wrapper">
+                        <a href="#" class="transaction-card group" data-transaction-id="${t.id}">
+                         
+                            <div class="transaction-icon-wrapper flex-shrink-0">
                                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <use href="${iconId}"></use>
                                 </svg>
                             </div>
+                            
+                            
                             <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-text-primary truncate">${t.description}</p>
-                                <div class="flex items-center text-sm text-text-secondary">
-                                    ${tagColorsHtml} {/* Display tag colors */}
-                                    <span>${account ? account.name : 'Unknown'}</span>
+                                <p class="font-semibold text-text-primary text-sm truncate">${t.description}</p>
+                                <div class="flex items-center gap-1.5 mt-1 text-xs text-text-secondary">
+                                    <span>${categoryName}</span>
+                                   
+                                    ${tagColorsHtml ? `<div class="flex gap-1 items-center ml-1">${tagColorsHtml}</div>` : ''}
                                 </div>
                             </div>
-                            <p class="font-semibold mono ${isPositive ? 'text-positive-value' : 'text-negative-value'}">
-                                ${amountFormatted}
-                            </p>
+                            
+                            
+                            <div class="text-right flex-shrink-0">
+                                <p class="font-semibold mono text-sm ${amountColor}">
+                                    ${amountFormatted}
+                                </p>
+                                
+                                <p class="text-xs text-text-secondary mt-1 truncate group-hover:text-text-primary transition-colors"> 
+                                    ${account ? account.name : 'Unknown'}
+                                </p>
+                            </div>
                         </a>`;
                 }).join('');
 
@@ -359,7 +360,6 @@ export function loadTransactionData(transactions, accounts, categories, tags) { 
                 </div>`;
         });
 
-        // Inject the generated day columns HTML into the list container
         if(listContainer) listContainer.innerHTML = dayColumnsHtml;
     });
 }

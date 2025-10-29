@@ -260,25 +260,51 @@
 /* 5. The Transaction Card (INSIDE Day Column) */
 .transaction-card {
     display: flex;
-    align-items: center; /* Vertical alignment */
-    gap: 0.75rem;
+    align-items: center; /* Vertical alignment still center */
+    gap: 0.75rem; /* 12px */
     background-color: var(--card-bg); /* The #1E1F20 card */
     border: 1px solid var(--border-color);
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem; /* 12px 16px */
     border-radius: var(--radius-md);
     transition: all 0.2s ease-out;
     cursor: pointer;
+    overflow: hidden; /* Added to help with potential overflow issues */
 }
 .transaction-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(29, 78, 216, 0.5);
+    border-color: rgba(29, 78, 216, 0.5); /* Keep hover effect */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* --- FIX: Left-align text in the middle section --- */
+/* Ensure icon wrapper size is consistent */
+.transaction-card .transaction-icon-wrapper {
+    flex-shrink: 0;
+    width: 2.5rem; height: 2.5rem;
+    /* ... keep other icon wrapper styles ... */
+}
+
+/* Center content area */
 .transaction-card .flex-1 {
-    min-w: 0; /* Fixes text overflow with flexbox */
+    min-width: 0; /* Fixes text overflow with flexbox */
     text-align: left; /* Explicitly align text to the left */
+}
+
+/* Right side content */
+.transaction-card .text-right {
+    margin-left: auto; /* Push amount/account to the far right */
+    padding-left: 0.5rem; /* Add some space */
+    text-align: right; /* Ensure text inside aligns right */
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Adjust truncation width if needed */
+.transaction-card .truncate {
+     max-width: 150px; /* Adjust as needed based on testing */
+}
+@media (min-width: 768px) {
+    .transaction-card .truncate {
+        max-width: 200px; /* Allow more space on larger screens */
+    }
 }
 /* --- End Fix --- */
 
@@ -345,4 +371,100 @@
     .transaction-group.is-open .transaction-group-list {
         max-height: 5000px; /* Allow dynamic height */
     }
+}
+
+/* --- Tag Input Component --- */
+#tag-input-wrapper {
+    /* We reuse form-input styles, but need to override padding for pills */
+    padding: 0.5rem 0.75rem; /* 8px 12px */
+    cursor: text; /* Make the whole area feel like an input */
+}
+
+#tagSearchInput {
+    /* Ensure the text input has no bg/border and blends in */
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0.25rem 0 !important; /* 4px 0 */
+    min-height: auto !important;
+    min-width: 150px; /* Ensure it has some space to type */
+    height: 30px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+#tagSearchInput::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem; /* 6px */
+    padding: 0.25rem 0.75rem; /* 4px 12px */
+    padding-left: 0.625rem; /* 10px */
+    border-radius: 9999px; /* Full pill */
+    font-size: 0.8rem; /* 13px */
+    font-weight: 500;
+    color: #FFFFFF;
+    white-space: nowrap;
+    animation: zoom-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tag-pill .remove-tag-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem; /* 16px */
+    height: 1rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.tag-pill .remove-tag-btn:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#tag-suggestions-list {
+    /* Styles are mostly on the element itself in dashboard.html */
+    opacity: 0;
+    transform: translateY(5px);
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+#tag-suggestions-list.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.tag-suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 1rem; /* 10px 16px */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.tag-suggestion-item:hover,
+.tag-suggestion-item.highlighted {
+    background-color: var(--card-hover-bg);
+}
+.tag-suggestion-item .suggestion-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+.tag-suggestion-item .suggestion-new {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+@keyframes zoom-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }

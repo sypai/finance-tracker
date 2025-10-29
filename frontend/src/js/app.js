@@ -22,6 +22,9 @@ import {
     showPortfolioModal,
     createHoldingRow,
     renderHoldingsView,
+    populateCategoryDropdown,
+    initTagInput, // <-- ADD THIS IMPORT
+    setSelectedTags // <-- ADD THIS IMPORT (for submit handler)
 } from './utils/ui/index.js';
 
 const App = {
@@ -31,6 +34,7 @@ const App = {
         appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
         appState.hasDashboardLoaded = false;
         initUI();
+        initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
         this.bindEvents();
         this.render(); // Initial render
 
@@ -68,6 +72,67 @@ const App = {
     },
 
     bindEvents() {
+
+        // --- *** NEW: "+ New Category" LOGIC *** ---
+        const newCategoryBtn = document.getElementById('newCategoryBtn');
+        const categorySelect = document.getElementById('transactionCategory');
+        const newCategoryInputGroup = document.getElementById('newCategoryInputGroup');
+        const newCategoryNameInput = document.getElementById('newCategoryNameInput');
+        const saveNewCategoryBtn = document.getElementById('saveNewCategoryBtn');
+        const cancelNewCategoryBtn = document.getElementById('cancelNewCategoryBtn');
+
+        if (newCategoryBtn && categorySelect && newCategoryInputGroup && newCategoryNameInput && saveNewCategoryBtn && cancelNewCategoryBtn) {
+
+            const showInput = () => {
+                categorySelect.classList.add('hidden');
+                newCategoryBtn.classList.add('hidden');
+                newCategoryInputGroup.classList.remove('hidden');
+                newCategoryNameInput.focus();
+            };
+
+            const hideInput = () => {
+                newCategoryInputGroup.classList.add('hidden');
+                categorySelect.classList.remove('hidden');
+                newCategoryBtn.classList.remove('hidden');
+                newCategoryNameInput.value = ''; // Clear input
+            };
+
+            newCategoryBtn.addEventListener('click', showInput);
+            cancelNewCategoryBtn.addEventListener('click', hideInput);
+
+            saveNewCategoryBtn.addEventListener('click', () => {
+                const newName = newCategoryNameInput.value.trim();
+                if (!newName) {
+                    alert('Please enter a category name.');
+                    return;
+                }
+                // Basic duplicate check (case-insensitive)
+                if (appState.categories.some(cat => cat.name.toLowerCase() === newName.toLowerCase())) {
+                    alert(`Category "${newName}" already exists.`);
+                    return;
+                }
+
+                // Create new category
+                const newCategory = {
+                    id: `cat-${Date.now()}`, // Simple unique ID
+                    name: newName,
+                    iconId: '#icon-default' // Assign default icon for now
+                };
+
+                // Add to state
+                appState.categories.push(newCategory);
+
+                // Re-populate dropdown (using the function from transactions.js)
+                populateCategoryDropdown(appState.categories); // Ensure this is imported/accessible
+
+                // Select the new category
+                categorySelect.value = newCategory.id;
+
+                // Hide input, show select
+                hideInput();
+            });
+        }
+        // --- *** END "+ New Category" LOGIC *** ---
 
         const entryModeSwitcher = document.getElementById('entry-mode-switcher');
         const manualView = document.getElementById('manual-entry-view');
@@ -468,16 +533,18 @@ const App = {
 
             // 2. Schedule the heavy data loading using requestAnimationFrame
             requestAnimationFrame(() => {
-                // This code will run just before the next repaint,
-                // ensuring the structure is likely ready in the DOM.
-                loadTransactionData(appState.transactions, appState.accounts);
+                // *** MODIFICATION HERE ***
+                loadTransactionData(
+                    appState.transactions, 
+                    appState.accounts, 
+                    appState.categories, // Pass categories
+                    appState.tags         // Pass tags
+                );
+                // *** END MODIFICATION ***
 
-                // We can also render insights and charts here if they are fast enough
-                // or schedule them separately if needed.
                 renderTransactionInsights(appState);
                 createCharts(appState);
             });
-
         } else {
             // For other tabs, render everything synchronously
             this.render();
@@ -594,20 +661,142 @@ const App = {
     handleTransactionSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const accountId = parseInt(formData.get('accountId'));
-        const account = appState.accounts.find(acc => acc.id === accountId);
-        if (account) {
-            const amount = parseFloat(formData.get('amount'));
-            const type = formData.get('type');
-            account.balance += type === 'income' ? amount : -amount;
+        // *** MODIFICATION: Get accountId based on selected value (could be 'cash') ***
+        const accountIdOrCash = formData.get('accountId');
+        let transactionAccountId;
+        let account;
+
+        if (accountIdOrCash === 'cash') {
+            transactionAccountId = 'cash'; // Store 'cash' literally
+            // No specific account object needed for balance update here
+        } else {
+            transactionAccountId = parseInt(accountIdOrCash); // Store the ID
+            account = appState.accounts.find(acc => acc.id === transactionAccountId);
+            if (!account) {
+                 console.error("Selected account not found!");
+                 return; // Prevent submission if account invalid
+            }
+        }
+        // *** END MODIFICATION ***
+
+        const amount = parseFloat(formData.get('amount'));
+        const type = formData.get('type');
+        const transactionId = formData.get('id') ? parseInt(formData.get('id')) : null; // Get ID for editing
+
+        // --- NEW TAG HANDLING ---
+        // Read the comma-separated IDs from our hidden input
+        const tagIds = formData.get('tagIds') 
+            ? formData.get('tagIds').split(',').filter(id => id.length > 0) 
+            : [];
+        // --- END NEW TAG HANDLING ---
+
+        // if (transactionId) {
+        //     // --- EDIT LOGIC ---
+        //     const existingTransactionIndex = appState.transactions.findIndex(t => t.id === transactionId);
+        //     if (existingTransactionIndex > -1) {
+        //         const oldTransaction = appState.transactions[existingTransactionIndex];
+
+        //         // Revert old balance change
+        //         const oldAccount = appState.accounts.find(acc => acc.id === oldTransaction.accountId);
+        //          if (oldAccount && oldTransaction.accountId !== 'cash') {
+        //             oldAccount.balance -= oldTransaction.type === 'income' ? oldTransaction.amount : -oldTransaction.amount;
+        //         }
+
+        //         // Apply new balance change
+        //         if (account && transactionAccountId !== 'cash') {
+        //             account.balance += type === 'income' ? amount : -amount;
+        //         }
+
+        //         // Update transaction object
+        //         appState.transactions[existingTransactionIndex] = {
+        //             ...oldTransaction, // Keep original date, id
+        //             accountId: transactionAccountId,
+        //             description: formData.get('description'),
+        //             amount,
+        //             type,
+        //             categoryId: formData.get('categoryId'),
+        //             tagIds: tagIds, // Update tags
+        //         };
+
+        //     } else {
+        //         console.error("Transaction to edit not found!");
+        //         // Optionally handle this error, maybe close modal and refresh list
+        //     }
+
+        // } else {
+        //     // --- ADD NEW LOGIC ---
+        //     // Update balance only if it's not a 'cash' transaction
+        //     if (account && transactionAccountId !== 'cash') {
+        //         account.balance += type === 'income' ? amount : -amount;
+        //     }
+
+        //     appState.transactions.unshift({
+        //         id: Date.now(),
+        //         accountId: transactionAccountId, // Use the determined ID or 'cash'
+        //         date: new Date(),
+        //         description: formData.get('description'),
+        //         amount,
+        //         type,
+        //         categoryId: formData.get('categoryId'),
+        //         tagIds: tagIds, // Save the tag IDs
+        //     });
+        // }
+
+        if (transactionId) {
+            // --- EDIT LOGIC ---
+            const transaction = appState.transactions.find(t => t.id === parseInt(transactionId));
+            if (transaction) {
+                // Note: We need to revert balance changes before applying new ones
+                const oldAmount = transaction.amount;
+                const oldType = transaction.type;
+                const oldAccountId = transaction.accountId;
+
+                // Revert old balance
+                const oldAccount = appState.accounts.find(acc => acc.id === oldAccountId);
+                if (oldAccount) {
+                    oldAccount.balance += (oldType === 'income' ? -oldAmount : oldAmount);
+                }
+
+                // Apply new balance
+                const newAccount = appState.accounts.find(acc => acc.id === accountId);
+                if (newAccount) {
+                    newAccount.balance += (type === 'income' ? amount : -amount);
+                }
+
+                // Update transaction object
+                transaction.accountId = accountId;
+                transaction.description = formData.get('description');
+                transaction.amount = amount;
+                transaction.type = type;
+                transaction.categoryId = formData.get('categoryId');
+                transaction.tagIds = tagIds; // <-- Save the new tag IDs
+            }
+        } else {
+            // --- ADD NEW LOGIC ---
+            if (accountId === 'cash') {
+                // No balance to update for 'cash'
+            } else {
+                const account = appState.accounts.find(acc => acc.id === accountId);
+                if (account) {
+                    account.balance += type === 'income' ? amount : -amount;
+                }
+            }
             appState.transactions.unshift({
-                id: Date.now(), accountId, date: new Date(),
-                description: formData.get('description'), amount, type,
+                id: Date.now(),
+                accountId,
+                date: new Date().toISOString(), // Use ISO string for consistency
+                description: formData.get('description'),
+                amount,
+                type,
+                categoryId: formData.get('categoryId'),
+                tagIds: tagIds, // <-- Save the new tag IDs
             });
         }
+        
         toggleModal('transactionModal', false);
         event.target.reset();
-        this.render();
+        setSelectedTags([]); // Manually clear pills after form reset
+        this.render(); // Re-render everything
     },
 
     handleAccountSubmit(event) {

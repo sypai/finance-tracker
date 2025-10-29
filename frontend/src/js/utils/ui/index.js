@@ -8,3 +8,4 @@ export * from './accounts.js';
 export * from './investments.js';
 export * from './transactions.js';
 export * from './expenseCard.js';
+export * from './tags.js';

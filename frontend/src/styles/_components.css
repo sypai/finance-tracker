@@ -207,10 +207,15 @@ form label.form-label { /* Target specifically */
 
 /* Adjust select height to match */
 select.form-input {
-    /* Keep appearance, background-image, padding-right */
-    height: 48px; /* Match min-height */
-    padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Add custom arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23969696' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem; /* Make space for the arrow */
 }
 /* Hide number spinners */
 input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
