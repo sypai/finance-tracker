@@ -69,6 +69,27 @@ const App = {
 
     bindEvents() {
 
+        const entryModeSwitcher = document.getElementById('entry-mode-switcher');
+        const manualView = document.getElementById('manual-entry-view');
+        const importView = document.getElementById('import-view');
+        const modalTitle = document.getElementById('transactionModalTitle'); // Keep title update
+
+        if (entryModeSwitcher && manualView && importView && modalTitle) {
+            entryModeSwitcher.addEventListener('change', (event) => {
+                if (event.target.value === 'manual') {
+                    // Slide Manual IN, Import OUT (to the right)
+                    manualView.classList.add('active-view');
+                    importView.classList.remove('active-view'); // Ensure only one is active
+                    // modalTitle.textContent = document.getElementById('transactionId').value ? 'Edit Transaction' : 'Add Transaction';
+                } else if (event.target.value === 'import') {
+                    // Slide Import IN, Manual OUT (to the left)
+                    importView.classList.add('active-view');
+                    manualView.classList.remove('active-view'); // Ensure only one is active
+                    // modalTitle.textContent = 'Import Transactions';
+                }
+            });
+        }
+        
         // --- "INSET JOURNAL" ACCORDION CLICK ---
         elements.transactionList.addEventListener('click', (event) => {
             const header = event.target.closest('.transaction-group-header');

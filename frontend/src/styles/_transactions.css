@@ -1,0 +1,348 @@
+/* Transaction Search/Filter */
+.form-input.pl-10 {
+    padding-left: 2.75rem; /* Make room for search icon */
+}
+
+/* Upgraded Transaction List Styling */
+.transaction-group {
+    margin-bottom: 1.5rem; /* 24px */
+}
+
+.transaction-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.75rem 0.5rem; /* 12px 8px */
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 0.5rem;
+}
+
+.transaction-group-header .month-total {
+    font-family: var(--font-mono);
+    font-size: 1rem; /* 16px */
+}
+
+.transaction-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* 4px space between rows */
+}
+
+/* Make the row a clickable element */
+.transaction-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* 12px */
+    padding: 0.75rem 0.5rem;
+    border-radius: var(--radius-md); /* 12px */
+    transition: background-color var(--transition-fast);
+    cursor: pointer;
+}
+
+.transaction-row:hover {
+    background-color: var(--card-hover-bg);
+}
+
+.transaction-icon-wrapper {
+    flex-shrink: 0;
+    width: 2.5rem; /* 40px */
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--card-hover-bg);
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+/* Animation Classes */
+@keyframes subtle-fade-in-up {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+.animate-fade-in {
+    animation: subtle-fade-in-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0; /* Start invisible */
+}
+
+/* --- Add this to main.css --- */
+
+/* Chart container for cash flow */
+.chart-container-medium {
+    position: relative;
+    width: 100%;
+    height: 300px; /* This height works well on both mobile and desktop */
+}
+
+/* --- NEW Insight List Styles --- */
+.insight-list-item {
+    /* Each item is a flex-col group */
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* 4px space between title and text */
+    padding-bottom: 1.25rem; /* 20px */
+    border-bottom: 1px solid var(--card-border);
+}
+.insight-list-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.insight-list-title {
+    font-family: var(--font-mono); /* Use mono font for the title */
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary); /* Subdued color */
+}
+
+.insight-list-text {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5;
+    color: var(--text-primary); /* Brighter text for the main insight */
+}
+.insight-list-text strong {
+    font-weight: 600;
+    color: var(--text-primary); /* Keep strong text bright */
+}
+.insight-list-text .positive {
+    color: var(--positive-color);
+}
+.insight-list-text .negative {
+    color: var(--negative-color);
+}
+/* --- End New Insight Styles --- */
+
+/* Ensure form-input padding is consistent */
+.form-input.pl-10 {
+    padding-left: 2.75rem;
+}
+
+/* --- "Perfectified" Inset Journal --- */
+#journal-command-bar {
+    position: relative; /* Required for the pseudo-element */
+}
+
+#journal-command-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.25rem;  /* 20px */
+    right: 1.25rem; /* 20px */
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.15) 80%,
+        transparent
+    );
+}
+
+/* 1. The Month Accordion Group */
+.transaction-group {
+    border-bottom: 1px solid var(--border-color);
+}
+.transaction-group:last-child {
+    border-bottom: none;
+}
+
+.transaction-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2.5rem 1rem 0.5rem;
+    cursor: pointer;
+    position: relative;
+    transition: background-color var(--transition-fast);
+}
+.transaction-group-header span:first-child {
+    font-size: 1rem; font-weight: 600; color: var(--text-primary);
+}
+.transaction-group-header .month-total {
+    font-family: var(--font-mono); font-weight: 500; font-size: 1rem;
+}
+.transaction-group:not(.is-open):hover .transaction-group-header {
+    background-color: var(--card-hover-bg);
+}
+.transaction-group-header .chevron-icon {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-secondary);
+}
+
+/* 2. The "Inset" Content Area (Holds the horizontal scroller) */
+.transaction-group-list {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    background-color: var(--background); /* The #131314 inset */
+    border-radius: var(--radius-md);
+
+    /* Remove vertical padding, added back in .is-open */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin: 0 0.5rem 0 0.5rem;
+
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease-in-out,
+                padding 0.4s ease-in-out,
+                margin 0.4s ease-in-out;
+}
+
+/* 3. The Horizontal Scroller (INSIDE the inset area) */
+.horizontal-stream-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 1.5rem; /* 24px space between day columns */
+    padding: 1.5rem 0.5rem; /* Give the columns vertical space */
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.horizontal-stream-container::-webkit-scrollbar { height: 8px; }
+.horizontal-stream-container::-webkit-scrollbar-track { background: transparent; }
+.horizontal-stream-container::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+.horizontal-stream-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+
+/* 4. The Day Column (INSIDE horizontal scroller) */
+.day-column {
+    flex-shrink: 0;
+    width: 320px; /* A bit narrower */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: fade-in-row 0.5s ease-out forwards;
+    opacity: 0;
+}
+.day-header {
+    padding: 0 0.5rem;
+}
+.day-header h4 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.day-header span {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+}
+
+/* Day Stream container (holds cards) */
+.day-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* Removed max-height, overflow-y, padding-right, scrollbar styles */
+}
+
+/* 5. The Transaction Card (INSIDE Day Column) */
+.transaction-card {
+    display: flex;
+    align-items: center; /* Vertical alignment */
+    gap: 0.75rem;
+    background-color: var(--card-bg); /* The #1E1F20 card */
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+}
+.transaction-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(29, 78, 216, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* --- FIX: Left-align text in the middle section --- */
+.transaction-card .flex-1 {
+    min-w: 0; /* Fixes text overflow with flexbox */
+    text-align: left; /* Explicitly align text to the left */
+}
+/* --- End Fix --- */
+
+.transaction-card .transaction-icon-wrapper {
+    flex-shrink: 0;
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--background); /* The #131314 bg */
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all 0.2s ease-out;
+}
+.transaction-card:hover .transaction-icon-wrapper {
+    color: var(--primary-accent);
+    border-color: rgba(29, 78, 216, 0.5);
+}
+
+/* 6. The "Open" State */
+.transaction-group.is-open .chevron-icon {
+    transform: translateY(-50%) rotate(-180deg);
+    /* Color remains default (text-secondary) */
+}
+.transaction-group.is-open .transaction-group-list {
+    max-height: 5000px; /* Use a very large number for dynamic height */
+    opacity: 1;
+    /* Add vertical padding back when open */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin: 0 0.5rem 1rem 0.5rem;
+}
+
+/* 7. Animation */
+@keyframes fade-in-row {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Corrected Mobile Stacking --- */
+@media (max-width: 767px) {
+    /* Target the container INSIDE the open list */
+    .transaction-group-list .horizontal-stream-container {
+        flex-direction: column; /* Stack days vertically */
+        overflow-x: hidden;    /* Disable horizontal scroll */
+        gap: 2rem;             /* Space between stacked days */
+        padding: 1rem 0.5rem;  /* Vertical padding */
+    }
+
+    /* Ensure day columns take full width */
+    .transaction-group-list .day-column {
+        width: 100%;
+    }
+
+    /* Day stream height is dynamic on mobile */
+    .transaction-group-list .day-stream {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+
+    /* Ensure open group list can expand fully */
+    .transaction-group.is-open .transaction-group-list {
+        max-height: 5000px; /* Allow dynamic height */
+    }
+}

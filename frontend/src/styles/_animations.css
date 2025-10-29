@@ -1,0 +1,45 @@
+/* src/styles/_animations.css */
+
+/* --- Keyframes --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtle-fade-in-up {
+    from { opacity: 0; transform: translateY(10px); } /* Adjusted transform */
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Animation Utility Classes --- */
+.animate-fade-in {
+    animation: subtle-fade-in-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0; /* Start invisible */
+}
+
+/* Staggered delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* --- Tab Content Transition --- */
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+    /* Consider using subtle-fade-in-up or a simple fade */
+    animation: fadeIn var(--transition-slow);
+}
+
+/* --- General Transition Variables (from variables.css) --- */
+/* Add these if not already in _variables.css */
+/*
+:root {
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+*/

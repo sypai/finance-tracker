@@ -1,0 +1,142 @@
+/* src/styles/_responsive.css */
+
+@media (max-width: 767px) { /* Mobile Specific */
+    /* Transaction Journal Mobile Stacking */
+    .transaction-group-list .horizontal-stream-container {
+        flex-direction: column;
+        overflow-x: hidden;
+        gap: 2rem;
+        padding: 1rem 0.5rem;
+    }
+    .transaction-group-list .day-column {
+        width: 100%;
+    }
+    .transaction-group-list .day-stream {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+    /* Ensure open group list can expand fully */
+    .transaction-group.is-open .transaction-group-list {
+        max-height: 5000px;
+    }
+
+    /* Modal layout adjustments if needed */
+    #transactionForm .grid.md\:grid-cols-2 {
+        grid-template-columns: 1fr; /* Stack columns */
+    }
+}
+
+/* --- DEFINITIVE RESPONSIVE OVERRIDES --- */
+@media (max-width: 1024px) {
+    body {
+        /* Add padding to the body to create the "safe area" for scrolling */
+        /* 4rem for top bar, 4rem for bottom bar */
+        padding-top: 4rem;
+        padding-bottom: 5rem;
+    }
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .content {
+        margin-left: 0;
+        padding: var(--spacing-lg); /* Reset to simple padding */
+    }
+    /* Hide the original desktop header */
+    main > header {
+        display: none;
+    }
+    .desktop-table { display: none; }
+    .mobile-cards { display: block; }
+
+    .sidebar {
+        /* 1. Add padding to the top to clear the fixed mobile header */
+        padding-top: 4rem; /* Height of the header */
+    }
+
+    .sidebar > .p-4 {
+        /* 2. This targets the profile card's container and pushes it to the bottom */
+        margin-top: auto;
+    }
+
+    #bottom-nav {
+        margin-bottom: 0; /* Make sure it's not overriding anything */
+    }
+
+
+    /* --- Floating Action Button (FAB) & Action Sheet --- */
+    #fab-container {
+        position: fixed;
+        bottom: 6rem; /* 24px from the screen edge */
+        right: 1.5rem;  /* 24px from the screen edge */
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    #fab-action-sheet {
+        /* Uses the .card styles for the glass effect */
+        background-color: rgba(20, 20, 20, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+        transition: all var(--transition-medium);
+        visibility: hidden;
+        pointer-events: none;
+        margin-bottom: 1rem; /* Space between the card and the main button */
+    }
+
+    .action-sheet-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        color: var(--text-primary); /* Use primary text color for readability */
+        transition: all var(--transition-fast);
+    }
+
+    .action-sheet-btn svg {
+        stroke: var(--primary-accent); /* Color the icon with our primary accent */
+        flex-shrink: 0;
+    }
+
+    .action-sheet-btn:hover {
+        background-color: var(--card-hover-bg);
+        color: var(--primary-accent); /* On hover, text also becomes accent color */
+    }
+
+    #fab-main-btn {
+        width: 4rem; height: 4rem; /* 64px */
+        border-radius: 50%;
+        background-color: var(--primary-accent);
+        color: #FFFFFF;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform var(--transition-medium);
+    }
+    #fab-main-btn:hover {
+        transform: scale(1.05);
+    }
+    #fab-main-btn svg {
+        transition: transform var(--transition-medium);
+    }
+
+    /* Active (Open) State */
+    #fab-container.active #fab-main-btn svg {
+        transform: rotate(45deg);
+    }
+    #fab-container.active #fab-action-sheet {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+        pointer-events: auto;
+    }
+}

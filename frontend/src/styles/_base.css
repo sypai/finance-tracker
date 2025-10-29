@@ -1,0 +1,43 @@
+/* src/styles/_base.css */
+
+/* Typography & Base Styles */
+h1, h2, h3, .btn, .sidebar-item, .font-heading {
+    font-family: var(--font-primary); /* Assuming --font-primary is Satoshi/Manrope */
+}
+body, p, span, div, label, input, select, button, .font-sans { /* Apply Inter widely */
+    font-family: var(--font-secondary); /* Assuming --font-secondary is Inter */
+}
+.mono {
+    font-family: var(--font-mono); /* Noto Sans Mono / JetBrains Mono */
+}
+
+/* Base body styles */
+body {
+    background: var(--background);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* General Text Styles */
+.text-positive-value { color: var(--positive-color); }
+.text-negative-value { color: var(--negative-color); }
+.text-metric { color: var(--text-metric); } /* Added from config */
+
+/* Basic Link Style (if needed) */
+a {
+    color: var(--primary-accent);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+a:hover {
+    color: var(--primary-accent-hover);
+}
+
+/* Hide spinner arrows on number inputs */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+input[type=number] { -moz-appearance: textfield; }
