@@ -22,9 +22,10 @@ import {
     showPortfolioModal,
     createHoldingRow,
     renderHoldingsView,
-    populateCategoryDropdown,
     initTagInput, // <-- ADD THIS IMPORT
-    setSelectedTags // <-- ADD THIS IMPORT (for submit handler)
+    setSelectedTags, // <-- ADD THIS IMPORT (for submit handler)
+    initCategorySelect, // <-- ADD
+    setSelectedCategory // <-- ADD
 } from './utils/ui/index.js';
 
 const App = {
@@ -35,6 +36,7 @@ const App = {
         appState.hasDashboardLoaded = false;
         initUI();
         initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
+        initCategorySelect();
         this.bindEvents();
         this.render(); // Initial render
 
@@ -688,59 +690,9 @@ const App = {
         const tagIds = formData.get('tagIds') 
             ? formData.get('tagIds').split(',').filter(id => id.length > 0) 
             : [];
+
         // --- END NEW TAG HANDLING ---
-
-        // if (transactionId) {
-        //     // --- EDIT LOGIC ---
-        //     const existingTransactionIndex = appState.transactions.findIndex(t => t.id === transactionId);
-        //     if (existingTransactionIndex > -1) {
-        //         const oldTransaction = appState.transactions[existingTransactionIndex];
-
-        //         // Revert old balance change
-        //         const oldAccount = appState.accounts.find(acc => acc.id === oldTransaction.accountId);
-        //          if (oldAccount && oldTransaction.accountId !== 'cash') {
-        //             oldAccount.balance -= oldTransaction.type === 'income' ? oldTransaction.amount : -oldTransaction.amount;
-        //         }
-
-        //         // Apply new balance change
-        //         if (account && transactionAccountId !== 'cash') {
-        //             account.balance += type === 'income' ? amount : -amount;
-        //         }
-
-        //         // Update transaction object
-        //         appState.transactions[existingTransactionIndex] = {
-        //             ...oldTransaction, // Keep original date, id
-        //             accountId: transactionAccountId,
-        //             description: formData.get('description'),
-        //             amount,
-        //             type,
-        //             categoryId: formData.get('categoryId'),
-        //             tagIds: tagIds, // Update tags
-        //         };
-
-        //     } else {
-        //         console.error("Transaction to edit not found!");
-        //         // Optionally handle this error, maybe close modal and refresh list
-        //     }
-
-        // } else {
-        //     // --- ADD NEW LOGIC ---
-        //     // Update balance only if it's not a 'cash' transaction
-        //     if (account && transactionAccountId !== 'cash') {
-        //         account.balance += type === 'income' ? amount : -amount;
-        //     }
-
-        //     appState.transactions.unshift({
-        //         id: Date.now(),
-        //         accountId: transactionAccountId, // Use the determined ID or 'cash'
-        //         date: new Date(),
-        //         description: formData.get('description'),
-        //         amount,
-        //         type,
-        //         categoryId: formData.get('categoryId'),
-        //         tagIds: tagIds, // Save the tag IDs
-        //     });
-        // }
+        const categoryId = formData.get('categoryId');
 
         if (transactionId) {
             // --- EDIT LOGIC ---
@@ -768,8 +720,9 @@ const App = {
                 transaction.description = formData.get('description');
                 transaction.amount = amount;
                 transaction.type = type;
-                transaction.categoryId = formData.get('categoryId');
+        
                 transaction.tagIds = tagIds; // <-- Save the new tag IDs
+                transaction.categoryId = categoryId;
             }
         } else {
             // --- ADD NEW LOGIC ---
@@ -788,14 +741,15 @@ const App = {
                 description: formData.get('description'),
                 amount,
                 type,
-                categoryId: formData.get('categoryId'),
+                categoryId: categoryId,
                 tagIds: tagIds, // <-- Save the new tag IDs
             });
         }
         
         toggleModal('transactionModal', false);
         event.target.reset();
-        setSelectedTags([]); // Manually clear pills after form reset
+        setSelectedTags([]);
+        setSelectedCategory('cat-uncategorized'); // Manually clear pills after form reset
         this.render(); // Re-render everything
     },
 

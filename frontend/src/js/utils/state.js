@@ -1,7 +1,51 @@
 // src/js/utils/state.js
 
-// This helper function generates a large, realistic dataset.
-function generateDenseData() {
+// --- 1. DEFINE PREDEFINED DATA FIRST ---
+
+function getRandomTagColor() {
+    const colors = [
+        '#F0857D', // --negative-color
+        '#5BB974', // --positive-color
+        '#1D4ED8', // --primary-accent
+        '#A78BFA', // A purple
+        '#FBBF24', // A yellow
+        '#FB7185'  // A pink
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Master list of tags available to the generator
+const PREDEFINED_TAGS = [
+    { id: 'tag-1', name: 'Singapore Trip', color: getRandomTagColor() },
+    { id: 'tag-2', name: 'Office', color: getRandomTagColor() },
+    { id: 'tag-3', name: 'Freelance', color: getRandomTagColor() },
+    { id: 'tag-salary', name: 'Salary', color: getRandomTagColor() },
+    { id: 'tag-travel', name: 'Travel', color: getRandomTagColor() },
+    { id: 'tag-foodie', name: 'Foodie', color: getRandomTagColor() }
+];
+
+// Master list of categories
+const PREDEFINED_CATEGORIES = [
+    { id: 'cat-uncategorized', name: 'Uncategorized', iconId: '#icon-default' },
+    { id: 'cat-income', name: 'Income', iconId: '#icon-income' },
+    { id: 'cat-food', name: 'Food & Dining', iconId: '#icon-food' },
+    { id: 'cat-shopping', name: 'Shopping', iconId: '#icon-shopping' },
+    { id: 'cat-groceries', name: 'Groceries', iconId: '#icon-groceries' },
+    { id: 'cat-transport', name: 'Transport', iconId: '#icon-transport' },
+    { id: 'cat-bills', name: 'Bills & Utilities', iconId: '#icon-bills' },
+    { id: 'cat-home', name: 'Home & Rent', iconId: '#icon-home' },
+    { id: 'cat-fuel', name: 'Fuel', iconId: '#icon-fuel' }
+    // Add other categories from icons.js if you want them pre-defined
+];
+
+
+// --- 2. DATA GENERATOR ---
+
+/**
+ * Generates a large, realistic dataset.
+ * @param {Array} masterTags - The predefined tags to randomly assign.
+ */
+function generateDenseData(masterTags) {
     const accounts = [
         { id: 1, name: 'State Bank of India', type: 'Savings', startingBalance: 50000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
         { id: 2, name: 'HDFC Bank', type: 'Savings', startingBalance: 25000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
@@ -21,8 +65,7 @@ function generateDenseData() {
         if (date < accounts[0].createdAt) continue;
 
         const dayOfMonth = date.getDate();
-        // *** CHANGE: Increase number of transactions per day ***
-        const numTransactions = Math.floor(Math.random() * 5) + 4; // Now 4 to 8 transactions per day
+        const numTransactions = Math.floor(Math.random() * 5) + 4; // 4 to 8 transactions per day
 
         // --- Realistic Income ---
         if (dayOfMonth === 1) {
@@ -31,17 +74,18 @@ function generateDenseData() {
         if (Math.random() < 0.05) {
              const incomeDesc = incomeDescriptions[Math.floor(Math.random() * incomeDescriptions.length)];
              const incomeAccId = accounts[Math.floor(Math.random() * accounts.length)].id;
-             transactions.push({ id: Date.now() + i + 20000, accountId: incomeAccId, description: incomeDesc, type: 'income', amount: Math.floor(Math.random() * 15000) + 1000, date, categoryId: 'cat-income' });
+             const tagIds = (incomeDesc === 'Freelance' && Math.random() < 0.5) ? ['tag-3'] : []; // Randomly tag 'Freelance'
+             transactions.push({ id: Date.now() + i + 20000, accountId: incomeAccId, description: incomeDesc, type: 'income', amount: Math.floor(Math.random() * 15000) + 1000, date, categoryId: 'cat-income', tagIds: tagIds });
         }
 
         // --- Regular Expenses (Updated Descriptions) ---
         for (let j = 0; j < numTransactions; j++) {
+            // ... (keep all existing description generation logic) ...
             const accountIndex = Math.floor(Math.random() * accounts.length);
             const accountId = accounts[accountIndex].id;
             const categoryKeyword = expenseDescriptions[Math.floor(Math.random() * expenseDescriptions.length)];
-            let description = categoryKeyword; // Start with the keyword
+            let description = categoryKeyword;
             
-            // Add more detail based on keyword
             if (categoryKeyword === 'Groceries') description = `Grocery shopping at ${['Big Bazaar', 'Reliance Fresh', 'Local Market'][Math.floor(Math.random() * 3)]}`;
             else if (categoryKeyword === 'Shopping') description = `${['Clothes', 'Electronics', 'Books'][Math.floor(Math.random()*3)]} from ${['Myntra', 'Amazon', 'Flipkart'][Math.floor(Math.random()*3)]}`;
             else if (categoryKeyword === 'Swiggy' || categoryKeyword === 'Dinner' || categoryKeyword === 'Coffee') description = `${categoryKeyword} from ${['Cafe Coffee Day', 'Starbucks', 'Local Restaurant', 'Pizza Hut'][Math.floor(Math.random()*4)]}`;
@@ -57,7 +101,7 @@ function generateDenseData() {
 
             const amount = Math.floor(Math.random() * (categoryKeyword === 'Rent' ? 15000 : 4000)) + 50;
 
-            // Simple auto-categorization based on ORIGINAL keyword
+            // ... (keep existing categoryId logic) ...
             let categoryId = 'cat-uncategorized';
             if (categoryKeyword.match(/swiggy|dinner|coffee/i)) categoryId = 'cat-food';
             else if (categoryKeyword.match(/shopping|amazon|movies/i)) categoryId = 'cat-shopping';
@@ -67,7 +111,39 @@ function generateDenseData() {
             else if (categoryKeyword.match(/rent/i)) categoryId = 'cat-home';
             else if (categoryKeyword.match(/fuel|petrol/i)) categoryId = 'cat-fuel';
 
-            transactions.push({ id: Date.now() + i + j, accountId, description, type: 'expense', amount, date, categoryId });
+            // --- *** THIS IS THE FIX *** ---
+            // Randomly assign some tags
+            let assignedTagIds = [];
+            // 25% chance of getting a tag
+            if (Math.random() < 0.25) {
+                // Pick a random tag from the master list (that isn't 'Salary')
+                const randomTag = masterTags[Math.floor(Math.random() * masterTags.length)];
+                if (randomTag.id !== 'tag-salary') {
+                    assignedTagIds.push(randomTag.id);
+                }
+            }
+            // Add specific tags based on category
+            if (categoryKeyword === 'Travel' && !assignedTagIds.includes('tag-travel')) {
+                assignedTagIds.push('tag-travel');
+            }
+            if (categoryKeyword === 'Uber' && description.includes('Office') && !assignedTagIds.includes('tag-2')) {
+                assignedTagIds.push('tag-2'); // 'tag-2' is 'Office'
+            }
+            if ((categoryKeyword === 'Swiggy' || categoryKeyword === 'Dinner') && Math.random() < 0.3 && !assignedTagIds.includes('tag-foodie')) {
+                assignedTagIds.push('tag-foodie');
+            }
+            // --- *** END FIX *** ---
+
+            transactions.push({ 
+                id: Date.now() + i + j, 
+                accountId, 
+                description, 
+                type: 'expense', 
+                amount, 
+                date, 
+                categoryId,
+                tagIds: assignedTagIds // <-- Pass the assigned tag IDs
+            });
         }
     }
     
@@ -86,26 +162,20 @@ function generateDenseData() {
     return { accounts, transactions };
 }
 
-// Generate the extensive data
-const { accounts, transactions } = generateDenseData();
 
+// --- 3. GENERATE DATA & EXPORT appState ---
 
-function getRandomTagColor() {
-    const colors = ['#F0857D', '#5BB974', '#FBBF24', '#818CF8', '#A78BFA', '#F472B6'];
-    return colors[Math.floor(Math.random() * colors.length)];
-}
-
-// --- END ADD SECTION ---
+// Generate data *using* the predefined lists
+const { accounts, transactions } = generateDenseData(PREDEFINED_TAGS);
 
 // Export the final state object
 export const appState = {
     accounts,
     transactions,
-    tags: [
-        { id: 'tag-1', name: 'singapore trip', color: getRandomTagColor() },
-        { id: 'tag-2', name: 'coimbatore with fam', color: getRandomTagColor() },
-        { id: 'tag-3', name: 'dehradun', color: getRandomTagColor() }
-    ],
+    tags: PREDEFINED_TAGS, // Use the master list
+    categories: PREDEFINED_CATEGORIES, // Use the master list
+    
+    // --- Keep the rest of the state as is ---
     investments: [],
     investmentAccounts: [
         { id: 1, name: 'Zerodha - Suyash Bajpai', type: 'Brokerage', provider: 'zerodha', holdings: [ { type: 'equity', name: 'Reliance Industries', ticker: 'RELIANCE', quantity: 50, buyValue: 125000, currentValue: 142500 }, { type: 'equity', name: 'Tata Consultancy Services', ticker: 'TCS', quantity: 100, buyValue: 330000, currentValue: 385000 }, { type: 'mutual_fund', name: 'Parag Parikh Flexi Cap', quantity: 250, buyValue: 150000, currentValue: 185000 }, { type: 'gold', name: 'Sovereign Gold Bond', grams: 20, buyValue: 100000, currentValue: 124000 } ] },
@@ -114,20 +184,6 @@ export const appState = {
     ],
     investmentGrowth: [],
     
-    // *** NEWLY ADDED ***
-    categories: [
-        { id: 'cat-uncategorized', name: 'Uncategorized', iconId: '#icon-default' },
-        { id: 'cat-income', name: 'Income', iconId: '#icon-income' },
-        { id: 'cat-food', name: 'Food & Dining', iconId: '#icon-food' },
-        { id: 'cat-shopping', name: 'Shopping', iconId: '#icon-shopping' },
-        { id: 'cat-groceries', name: 'Groceries', iconId: '#icon-groceries' },
-        { id: 'cat-transport', name: 'Transport', iconId: '#icon-transport' },
-        { id: 'cat-bills', name: 'Bills & Utilities', iconId: '#icon-bills' },
-        { id: 'cat-home', name: 'Home & Rent', iconId: '#icon-home' },
-        { id: 'cat-fuel', name: 'Fuel', iconId: '#icon-fuel' }
-    ],
-    // *** END NEWLY ADDED ***
-
     activeExpensePeriod: 'month',
     activeBalancePeriod: 'max',
     activePortfolioView: 'holdings',

@@ -46,6 +46,7 @@
     background-color: var(--card-hover-bg);
 }
 
+/* This is the old icon wrapper rule, it will be overridden by the new card-specific one below */
 .transaction-icon-wrapper {
     flex-shrink: 0;
     width: 2.5rem; /* 40px */
@@ -254,86 +255,85 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    /* Removed max-height, overflow-y, padding-right, scrollbar styles */
 }
+
+/* --- START REPLACEMENT ---
+(Replacing old .transaction-card and related rules) 
+*/
 
 /* 5. The Transaction Card (INSIDE Day Column) */
 .transaction-card {
     display: flex;
-    align-items: center; /* Vertical alignment still center */
-    gap: 0.75rem; /* 12px */
+    align-items: center; /* Vertical alignment */
+    gap: 0.75rem; /* 12px gap between icon, middle, and right */
     background-color: var(--card-bg); /* The #1E1F20 card */
     border: 1px solid var(--border-color);
     padding: 0.75rem 1rem; /* 12px 16px */
     border-radius: var(--radius-md);
     transition: all 0.2s ease-out;
     cursor: pointer;
-    overflow: hidden; /* Added to help with potential overflow issues */
+    overflow: hidden; /* Prevent content overflow */
 }
 .transaction-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(29, 78, 216, 0.5); /* Keep hover effect */
+    border-color: rgba(29, 78, 216, 0.5);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Ensure icon wrapper size is consistent */
+/* 1. Icon Wrapper (Left) */
 .transaction-card .transaction-icon-wrapper {
     flex-shrink: 0;
-    width: 2.5rem; height: 2.5rem;
-    /* ... keep other icon wrapper styles ... */
-}
-
-/* Center content area */
-.transaction-card .flex-1 {
-    min-width: 0; /* Fixes text overflow with flexbox */
-    text-align: left; /* Explicitly align text to the left */
-}
-
-/* Right side content */
-.transaction-card .text-right {
-    margin-left: auto; /* Push amount/account to the far right */
-    padding-left: 0.5rem; /* Add some space */
-    text-align: right; /* Ensure text inside aligns right */
-    flex-shrink: 0; /* Prevent shrinking */
-}
-
-/* Adjust truncation width if needed */
-.transaction-card .truncate {
-     max-width: 150px; /* Adjust as needed based on testing */
-}
-@media (min-width: 768px) {
-    .transaction-card .truncate {
-        max-width: 200px; /* Allow more space on larger screens */
-    }
-}
-/* --- End Fix --- */
-
-.transaction-card .transaction-icon-wrapper {
-    flex-shrink: 0;
-    width: 2.5rem; height: 2.5rem;
+    width: 2.5rem; /* 40px */
+    height: 2.5rem;
     border-radius: 50%;
     background-color: var(--background); /* The #131314 bg */
     border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-secondary);
+    color: var(--text-secondary); /* Default icon color */
     transition: all 0.2s ease-out;
 }
 .transaction-card:hover .transaction-icon-wrapper {
-    color: var(--primary-accent);
+    color: var(--primary-accent); /* Icon color on hover */
     border-color: rgba(29, 78, 216, 0.5);
 }
+
+/* 2. Middle Content */
+.transaction-card .flex-1 {
+    min-width: 0; /* Critical for flex truncation */
+    text-align: left;
+}
+.transaction-card .flex-1 .truncate {
+     max-width: 150px; /* Truncate long descriptions */
+}
+@media (min-width: 768px) {
+    .transaction-card .flex-1 .truncate {
+        max-width: 100%; /* Allow more space on desktop */
+    }
+}
+
+/* 3. Right Content */
+.transaction-card .text-right {
+    margin-left: auto; /* Push this block to the far right */
+    padding-left: 0.5rem; /* Space between middle and right */
+    text-align: right;
+    flex-shrink: 0; /* Prevent this block from shrinking */
+}
+.transaction-card .text-right .truncate {
+    max-width: 100px; /* Truncate long account names if needed */
+}
+
+/* --- END REPLACEMENT --- */
+
 
 /* 6. The "Open" State */
 .transaction-group.is-open .chevron-icon {
     transform: translateY(-50%) rotate(-180deg);
-    /* Color remains default (text-secondary) */
 }
 .transaction-group.is-open .transaction-group-list {
     max-height: 5000px; /* Use a very large number for dynamic height */
     opacity: 1;
-    /* Add vertical padding back when open */
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
     margin: 0 0.5rem 1rem 0.5rem;
@@ -347,51 +347,61 @@
 
 /* --- Corrected Mobile Stacking --- */
 @media (max-width: 767px) {
-    /* Target the container INSIDE the open list */
     .transaction-group-list .horizontal-stream-container {
-        flex-direction: column; /* Stack days vertically */
-        overflow-x: hidden;    /* Disable horizontal scroll */
-        gap: 2rem;             /* Space between stacked days */
-        padding: 1rem 0.5rem;  /* Vertical padding */
+        flex-direction: column;
+        overflow-x: hidden;
+        gap: 2rem;
+        padding: 1rem 0.5rem;
     }
-
-    /* Ensure day columns take full width */
     .transaction-group-list .day-column {
         width: 100%;
     }
-
-    /* Day stream height is dynamic on mobile */
     .transaction-group-list .day-stream {
         max-height: none;
         overflow-y: visible;
         padding-right: 0;
     }
-
-    /* Ensure open group list can expand fully */
     .transaction-group.is-open .transaction-group-list {
-        max-height: 5000px; /* Allow dynamic height */
+        max-height: 5000px;
     }
 }
 
 /* --- Tag Input Component --- */
 #tag-input-wrapper {
-    /* We reuse form-input styles, but need to override padding for pills */
-    padding: 0.5rem 0.75rem; /* 8px 12px */
-    cursor: text; /* Make the whole area feel like an input */
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.5rem 0.75rem;
+    cursor: text;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+#tag-input-wrapper::-webkit-scrollbar { height: 4px; }
+#tag-input-wrapper::-webkit-scrollbar-track { background: transparent; }
+#tag-input-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 2px;
+}
+#tag-input-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 #tagSearchInput {
-    /* Ensure the text input has no bg/border and blends in */
+    flex-grow: 1;
     background: transparent !important;
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-    padding: 0.25rem 0 !important; /* 4px 0 */
+    padding: 0.25rem 0 !important;
     min-height: auto !important;
-    min-width: 150px; /* Ensure it has some space to type */
+    min-width: 150px;
     height: 30px;
     font-size: 0.9rem;
     color: var(--text-primary);
+    max-width: 100%; 
 }
 #tagSearchInput::placeholder {
     color: var(--text-secondary);
@@ -401,22 +411,23 @@
 .tag-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem; /* 6px */
-    padding: 0.25rem 0.75rem; /* 4px 12px */
-    padding-left: 0.625rem; /* 10px */
-    border-radius: 9999px; /* Full pill */
-    font-size: 0.8rem; /* 13px */
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    padding-left: 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
     font-weight: 500;
     color: #FFFFFF;
     white-space: nowrap;
     animation: zoom-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
 }
 
 .tag-pill .remove-tag-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1rem; /* 16px */
+    width: 1rem;
     height: 1rem;
     border-radius: 50%;
     background-color: rgba(0, 0, 0, 0.3);
@@ -431,11 +442,23 @@
 }
 
 #tag-suggestions-list {
-    /* Styles are mostly on the element itself in dashboard.html */
     opacity: 0;
     transform: translateY(5px);
     visibility: hidden;
     transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    /* --- Styles from HTML --- */
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem; /* 8px */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* shadow-xl */
+    z-index: 50;
+    max-height: 12rem; /* 192px */
+    overflow-y: auto;
 }
 #tag-suggestions-list.active {
     opacity: 1;
@@ -447,7 +470,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.625rem 1rem; /* 10px 16px */
+    padding: 0.625rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -467,4 +490,110 @@
 @keyframes zoom-in {
     from { transform: scale(0.8); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
+}
+
+/* --- Custom Category Select --- */
+#category-select-trigger svg:first-child {
+    transition: color 0.2s ease;
+}
+#category-select-trigger:hover svg:first-child {
+    color: var(--text-primary);
+}
+
+#category-select-popover {
+    position: absolute;
+    z-index: 60;
+    background-color: var(--card-bg);
+    opacity: 0;
+    transform: translateY(5px) scale(0.98);
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    transform-origin: top center;
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+
+#category-select-popover.is-flipped {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    transform-origin: bottom center;
+    transform: translateY(-5px) scale(0.98);
+    margin-bottom: 0.5rem; /* Added this from JS logic */
+    margin-top: 0;
+}
+#category-select-popover.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+}
+#category-select-popover.is-flipped {
+    transform: translateY(-5px) scale(0.98);
+}
+#category-select-popover.is-flipped.active {
+    transform: translateY(0) scale(1);
+}
+#category-select-container.open #category-select-chevron {
+    transform: rotate(180deg);
+}
+
+.category-select-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease;
+}
+.category-select-item:hover,
+.category-select-item.highlighted {
+    background-color: var(--card-hover-bg);
+}
+.category-select-item svg {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.5;
+    color: var(--text-secondary);
+}
+.category-select-item span {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+/* Icon Picker in Create View */
+#new-category-icon-picker button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+#new-category-icon-picker button:hover {
+    background-color: var(--card-hover-bg);
+    border-color: var(--border-color);
+}
+#new-category-icon-picker button.selected {
+    background-color: var(--primary-accent);
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 2px var(--primary-accent);
+}
+#new-category-icon-picker button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.5;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+#new-category-icon-picker button:hover svg {
+    color: var(--text-primary);
+}
+#new-category-icon-picker button.selected svg {
+    color: #FFFFFF;
 }

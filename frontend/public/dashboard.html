@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet"> 
-    <link rel="stylesheet" href="../src/styles/main.css">
+    <link rel="stylesheet" href="../src/styles/combined_main.css">
 
 </head>
 
@@ -452,7 +452,7 @@
                 </div>
             </div>
     
-            <div class="p-8 relative overflow-hidden"> <div id="modal-view-container" class="relative"> 
+            <div class="p-8 relative z-10"> <div id="modal-view-container" class="relative overflow-hidden"> 
                 <div id="manual-entry-view" class="modal-view active-view transition-all duration-300 ease-in-out">
                         <div id="transactionZeroState" class="hidden text-center py-8">
                              <h3 class="text-xl font-bold mb-4 font-heading">Create an Account First</h3>
@@ -490,27 +490,67 @@
                                     </div>
                     
                                     <div>
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label for="transactionCategory" class="form-label" style="margin-bottom: 0;">Category</label>
-                                            <button type="button" id="newCategoryBtn" class="text-xs text-primary-accent hover:text-white font-semibold">+ New</button>
-                                        </div>
-                                        <select id="transactionCategory" name="categoryId" class="form-input" required></select>
+                                        <label class="form-label">Category</label>
+                                        
+                                        <input type="hidden" id="transactionCategoryId" name="categoryId" value="cat-uncategorized"> 
+                                        
+                                        <div id="category-select-container" class="relative">
+                                            
+                                            <button type="button" id="category-select-trigger" class="form-input flex items-center justify-between w-full text-left">
+                                                <span class="flex items-center gap-2">
+                                                    <svg id="category-select-icon" class="h-5 w-5 text-text-secondary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <use href="#icon-default"></use> 
+                                                    </svg>
+                                                    <span id="category-select-name" class="text-text-primary">Uncategorized</span>
+                                                </span>
+                                                <svg class="h-4 w-4 text-text-secondary transition-transform duration-200" id="category-select-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </button>
 
-                                        <div id="newCategoryInputGroup" class="hidden mt-2 flex items-center gap-2">
-                                            <input type="text" id="newCategoryNameInput" placeholder="New category name..." class="form-input flex-grow !min-h-[40px] !text-sm !py-1.5">
-                                            <button type="button" id="saveNewCategoryBtn" class="btn btn-secondary !py-1.5 !px-3 !text-xs">Save</button>
-                                            <button type="button" id="cancelNewCategoryBtn" class="text-xs text-text-secondary hover:text-white">Cancel</button>
+                                            <div id="category-select-popover" class="absolute left-0 right-0 border border-border-color rounded-lg shadow-xl z-50 overflow-hidden hidden">
+                                                
+                                                <div id="category-list-view">
+                                                    <div class="p-2 border-b border-border-color">
+                                                        <input type="text" id="category-search-input" placeholder="Search categories..." class="form-input !text-sm !min-h-[36px] !py-1 !bg-background">
+                                                    </div>
+                                                    <div id="category-select-list" class="max-h-48 overflow-y-auto p-1">
+                                                        </div>
+                                                    <div class="p-2 border-t border-border-color">
+                                                        <button type="button" id="category-create-new-btn" class="btn btn-secondary w-full justify-center !text-xs !py-1.5">
+                                                            + Create New Category
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div id="category-create-view" class="hidden p-4 space-y-4">
+                                                    <h4 class="text-sm font-semibold text-center text-text-secondary mb-2">Create New Category</h4>
+                                                    <div>
+                                                        <label for="new-category-name" class="form-label !text-xs !mb-1">Category Name</label>
+                                                        <input type="text" id="new-category-name" class="form-input !text-sm !min-h-[40px] !py-1.5" placeholder="e.g., Coffee Shops">
+                                                    </div>
+                                                    <div>
+                                                        <label class="form-label !text-xs !mb-1">Choose Icon</label>
+                                                        <div id="new-category-icon-picker" class="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto bg-background p-2 rounded-md border border-border-color">
+                                                            </div>
+                                                        <input type="hidden" id="new-category-selected-icon">
+                                                    </div>
+                                                    <div class="flex gap-2 pt-2">
+                                                        <button type="button" id="category-cancel-create-btn" class="btn bg-transparent hover:bg-white/5 w-full justify-center !text-xs !py-1.5 text-text-secondary">Cancel</button>
+                                                        <button type="button" id="category-save-create-btn" class="btn btn-secondary w-full justify-center !text-xs !py-1.5">Save</button>
+                                                    </div>
+                                                </div>
+
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="md:col-span-2">
+                                    <div>
                                         <label for="tagSearchInput" class="form-label">Tags <span class="form-label-optional">(Optional)</span></label>
                                         
                                         <input type="hidden" id="transactionTags" name="tagIds">
                                         
                                         <div id="tag-input-container" class="relative">
                                             
-                                            <div id="tag-input-wrapper" class_name="form-input flex items-center flex-wrap gap-2 min-h-[48px] py-2">
+                                            <div id="tag-input-wrapper" class="form-input flex items-center flex-wrap gap-2 min-h-[48px] py-2">
                                                 <input type="text" id="tagSearchInput" class="flex-1 bg-transparent border-none outline-none p-0 text-sm" placeholder="Add tags (e.g., Office, Travel)...">
                                             </div>
                                             

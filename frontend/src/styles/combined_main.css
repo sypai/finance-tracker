@@ -1,0 +1,1528 @@
+/* src/styles/main.css */
+
+/* @import url('./_variables.css');   Loads CSS Variables */
+
+:root {
+    /* Colors */
+   
+    --background: #131314;
+    --sidebar-bg: #1E1F20;
+    --text-primary: #E3E3E3;
+    --text-secondary: #969696;
+    --card-bg: #1E1F20;
+    --card-border: rgba(255, 255, 255, 0.1);
+    --card-hover-bg: rgba(255, 255, 255, 0.05);
+    --card-hover-border: rgba(29, 78, 216, 0.4);
+    --primary-accent: #1D4ED8;
+    --positive-color: #5BB974;
+    --negative-color: #F0857D;
+    --text-metric: #C5CBD3;
+ 
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    /* Shadows */
+    --shadow-sm: 0 4px 14px rgba(184, 184, 242, 0.25);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.2);
+    
+    /* Typography */
+    --font-primary: 'Manrope', sans-serif;
+    --font-secondary: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.5s ease-out;
+}
+
+
+
+/* @import url('./_base.css');        Loads Base Styles & Typography */
+
+/* src/styles/_base.css */
+
+/* Typography & Base Styles */
+h1, h2, h3, .btn, .sidebar-item, .font-heading {
+    font-family: var(--font-primary); /* Assuming --font-primary is Satoshi/Manrope */
+}
+body, p, span, div, label, input, select, button, .font-sans { /* Apply Inter widely */
+    font-family: var(--font-secondary); /* Assuming --font-secondary is Inter */
+}
+.mono {
+    font-family: var(--font-mono); /* Noto Sans Mono / JetBrains Mono */
+}
+
+/* Base body styles */
+body {
+    background: var(--background);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* General Text Styles */
+.text-positive-value { color: var(--positive-color); }
+.text-negative-value { color: var(--negative-color); }
+.text-metric { color: var(--text-metric); } /* Added from config */
+
+/* Basic Link Style (if needed) */
+a {
+    color: var(--primary-accent);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+a:hover {
+    color: var(--primary-accent-hover);
+}
+
+/* Hide spinner arrows on number inputs */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+input[type=number] { -moz-appearance: textfield; }
+
+
+
+/* @import url('./_layout.css');       Loads Sidebar, Content, Grid */
+
+/* src/styles/_layout.css */
+
+/* Sidebar Layout */
+.sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    z-index: 100;
+    transition: transform var(--transition-medium);
+    display: flex; /* Added for flex structure */
+    flex-direction: column; /* Added */
+}
+
+.sidebar nav {
+    flex-grow: 1; /* Allows nav to fill space */
+}
+
+.sidebar > .p-4 { /* Targets profile card container */
+     margin-top: auto; /* Pushes profile card to bottom */
+}
+
+
+/* --- Sidebar Navigation Items --- */
+.sidebar-item {
+    position: relative; /* This ensures the button is on top of the pill */
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin: 0.25rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.sidebar-item svg {
+    stroke: var(--text-secondary);
+    transition: stroke var(--transition-fast);
+}
+
+/* Hover State */
+.sidebar-item:not(.active):hover {
+    color: var(--text-primary);
+}
+.sidebar-item:not(.active):hover svg {
+    stroke: var(--text-primary);
+}
+
+/* Active State (Text and Icon only) */
+.sidebar-item.active {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.sidebar-item.active svg {
+    stroke: var(--primary-accent);
+}
+
+/* Content Area Layout */
+.content {
+    margin-left: 260px; /* Default desktop margin */
+    padding: var(--spacing-xl);
+    position: relative; /* For stacking context if needed */
+    z-index: 1; /* Ensure content is above grid-bg */
+}
+
+/* Sidebar Indicator (Visual Element) */
+#sidebar-indicator {
+    position: absolute;
+    left: var(--spacing-md); /* 1rem or 16px */
+    width: calc(100% - (2 * var(--spacing-md)));
+    background-color: var(--card-hover-bg); /* Use subtle hover bg */
+    border-radius: var(--radius-md);
+    transition: transform var(--transition-medium), height var(--transition-medium);
+    z-index: 0; /* Behind the items */
+    height: 44px; /* Default height, JS will override */
+}
+
+/* --- Mobile Header --- */
+#mobile-header {
+    /* Styles are mostly handled by Tailwind classes */
+    z-index: 101; /* Ensure it's above content but below open sidebar */
+}
+
+/* --- Bottom Navigation --- */
+#bottom-nav {
+    /* Styles are mostly handled by Tailwind classes */
+    z-index: 100; /* Ensure it's above content */
+}
+
+.nav-item {
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+.nav-item.active {
+    color: var(--primary-accent);
+}
+
+
+/* General Typography */
+.metric-value { 
+    font-size: 2.25rem; 
+    font-weight: 700; 
+    color: var(--text-metric); 
+}
+.text-positive-value { 
+    color: var(--positive-color); 
+}
+.text-negative-value { 
+    color: var(--negative-color); 
+}
+
+/* Add this new rule for the expanded metric state */
+.metric-value.is-expanded {
+    font-size: 1.875rem; /* This is Tailwind's text-3xl */
+    line-height: 2.25rem;
+}
+
+
+@media (min-width: 1024px) { 
+    .chart-container { height: 200px; } 
+    .chart-container-large { height: 350px; } 
+    .metric-value.is-expanded {
+        font-size: 2.25rem; /* text-4xl */
+        line-height: 2.5rem;
+    }
+}
+@media (max-width: 1023px) { 
+    .chart-container { height: 250px; } 
+    .chart-container-large { height: 300px; } 
+}
+
+/* --- Profile Pop-up Menu --- */
+.profile-menu {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    visibility: hidden;
+    /* Ensure z-index is high enough */
+    z-index: 50; 
+}
+
+.profile-menu.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+
+/* @import url('./_components.css');  Loads Cards, Buttons, Modals, Forms */
+
+/* src/styles/_components.css */
+
+/* Cards */
+.card { 
+    background: var(--card-bg); 
+    border: 1px solid var(--card-border); 
+    border-radius: var(--radius-lg); 
+    transition: all var(--transition-medium); 
+    position: relative; 
+    overflow: hidden; 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px); 
+}
+
+.card:hover { 
+    border-color: var(--card-hover-border); 
+    background: var(--card-hover-bg); 
+    transform: translateY(-4px); 
+    box-shadow: var(--shadow-md), 0 0 0 1px var(--card-hover-border); 
+}
+
+/* --- Buttons --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.25rem; /* 10px 20px */
+    border-radius: var(--radius-md); /* 8px */
+    border: 1px solid transparent;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    white-space: nowrap; /* Prevent wrapping */
+}
+/* Primary Button (Filled by default) */
+.btn-primary {
+    background-color: var(--primary-accent);
+    border-color: var(--primary-accent);
+    color: #FFFFFF; /* Changed back to white */
+    font-weight: 600; /* Use a slightly less bold font */
+}
+.btn-primary:hover {
+    background-color: transparent;
+    color: var(--primary-accent);
+}
+
+/* Secondary Button (Outline by default) */
+.btn-secondary {
+    background-color: transparent;
+    border-color: var(--primary-accent);
+    color: var(--primary-accent);
+}
+.btn-secondary:hover {
+    background-color: var(--primary-accent);
+    color: #FFFFFF; /* Changed back to white */
+    font-weight: 600;
+}
+
+/* --- Chart Containers --- */
+.chart-container, .chart-container-medium, .chart-container-large {
+    position: relative;
+    width: 100%;
+}
+.chart-container { height: 200px; } /* Default small */
+.chart-container-medium { height: 300px; }
+.chart-container-large { height: 350px; }
+/* Adjust heights for different screen sizes if needed */
+@media (max-width: 1023px) {
+    .chart-container { height: 250px; }
+    .chart-container-medium { height: 300px; }
+    .chart-container-large { height: 300px; }
+}
+
+/* ----------------- MODALS */
+
+
+
+
+
+/* --- Modals (FRESH START - Consistent Base) --- */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-medium), visibility var(--transition-medium);
+}
+.modal-backdrop.active {
+    opacity: 1;
+    visibility: visible;
+}
+.modal-content {
+    background: var(--card-bg); /* Use card background */
+    border-radius: var(--radius-lg); /* Use card radius */
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    border: none; /* Remove base card border */
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05), /* Inner shadow */
+                0 20px 50px rgba(0, 0, 0, 0.4); /* Outer shadow */
+
+    /* Entry animation */
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform var(--transition-medium), opacity var(--transition-medium);
+}
+.modal-backdrop.active .modal-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* Gradient Border Effect */
+.modal-content::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+}
+
+/* Distinct Modal Header (Animated Blue Line) */
+.modal-header { /* Use a class for the header div now */
+    background-color: var(--card-hover-bg);
+    padding: 1rem 1.25rem;
+    position: relative;
+    transition: box-shadow 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+.modal-header::after { /* Animated Line */
+    content: ''; position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%); width: 0; height: 1px;
+    background-color: var(--primary-accent); transition: width 0.3s ease-out;
+}
+/* Trigger animation on modal hover/focus */
+.modal-content:hover .modal-header::after,
+.modal-content:focus-within .modal-header::after {
+    width: 100%;
+}
+.modal-header h3 { /* Header Title */
+    font-family: var(--font-heading); font-weight: 700; font-size: 1.125rem;
+}
+.close-modal-btn { /* Close button */
+    color: var(--text-secondary); font-size: 1.75rem; line-height: 1;
+    padding: 0.25rem; transition: color var(--transition-fast);
+}
+.close-modal-btn:hover { color: var(--text-primary); }
+
+
+/* --- Forms (Consistent Styling - Modernized) --- */
+form label.form-label { /* Target specifically */
+    font-size: 0.8rem; /* ~13px - Slightly larger */
+    font-weight: 500;
+    color: var(--text-metric); /* Use the slightly brighter --text-metric color */
+    /* text-transform: uppercase; */ /* Keep non-uppercase */
+    /* letter-spacing: 0.025em; */
+    margin-bottom: 0.5rem; /* Increase bottom margin slightly (8px) */
+    display: block;
+}
+.form-label-optional { /* Adjust optional text */
+    font-size: 0.75rem; /* 12px */
+    font-weight: 400;
+    color: var(--text-secondary); /* Keep secondary */
+    opacity: 0.8;
+    margin-left: 0.25rem; /* Add a little space */
+}
+
+.form-input {
+    /* --- CHANGE: Use card-bg for better contrast --- */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 1rem; /* Slightly increase vertical padding */
+    line-height: 1.5;
+    min-height: 48px; /* Slightly increase min-height */
+    width: 100%;
+    font-size: 0.9rem; /* Slightly increase font size */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.form-input:focus {
+    outline: none;
+    /* Keep a subtle background change on focus */
+    background-color: var(--card-hover-bg);
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}
+.form-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5; /* Make placeholder slightly fainter */
+}
+
+/* Adjust select height to match */
+select.form-input {
+    appearance: none; /* Remove default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* Add custom arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23969696' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem; /* Make space for the arrow */
+}
+/* Hide number spinners */
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+/* Segmented Controls */
+.segmented-control {
+    background-color: var(--background);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem;
+    display: inline-flex; /* Keep for centering mode switcher */
+    align-items: stretch;
+    min-height: 48px; /* Match new input height */
+}
+
+/* --- NEW: Make Type Switcher Full Width --- */
+.segmented-control.type-switcher {
+    display: flex; /* Override inline-flex */
+    width: 100%;
+}
+/* --- End New --- */
+
+.segmented-control label {
+    margin-bottom: 0;
+    font-size: 0.875rem; /* Keep size */
+    font-weight: 600;
+    padding: 0.5rem 1rem; /* Adjust padding if needed */
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-grow: 1; /* Make labels take equal space */
+}
+
+
+/* src/styles/_components.css */
+
+/* --- Refined Mode Switcher (Sliding Indicator) --- */
+#entry-mode-switcher {
+    background-color: var(--background);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem; /* 4px */
+    display: inline-flex;
+    position: relative; /* Crucial for the absolute indicator */
+    min-height: 44px; /* Maintain height */
+    align-items: stretch; /* Ensure labels fill height */
+}
+
+/* Style for the labels */
+#entry-mode-switcher label {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 600;
+    color: var(--text-secondary); /* Default inactive color */
+    padding: 0.5rem 1.25rem; /* Adjust padding as needed */
+    border-radius: var(--radius-md);
+    transition: color 0.3s ease; /* Only transition color */
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative; /* Needed for z-index */
+    z-index: 10; /* Above the indicator */
+    flex-basis: 50%; /* Ensure equal width */
+    flex-shrink: 0;
+}
+
+/* Style for the ACTIVE label's text */
+#entry-mode-switcher input:checked + label {
+    color: var(--text-primary); /* Active text color */
+    /* Remove background/shadow from label itself */
+    background-color: transparent;
+    box-shadow: none;
+}
+
+/* The Sliding Indicator Element */
+#entry-mode-switcher .sliding-indicator {
+    position: absolute;
+    top: 0.25rem; /* Match container padding */
+    bottom: 0.25rem; /* Match container padding */
+    left: 0.25rem; /* Start positioned at the first item */
+    width: calc(50% - 0.25rem); /* Width of one item minus half gap */
+    background-color: var(--card-bg); /* Use card bg for the pill */
+    border-radius: var(--radius-md); /* Match label radius */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth slide */
+    z-index: 5; /* Below the labels */
+}
+
+/* Move the indicator when the SECOND item (Import) is checked */
+#entry-mode-switcher input#modeImport:checked ~ .sliding-indicator {
+    transform: translateX(calc(100% + 0.25rem)); /* Move it one full width + gap */
+}
+
+/* Active state (applies to both switchers) */
+.segmented-control input:checked + label {
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary); /* Default active text */
+}
+
+/* --- CHANGE: Apply Type-specific colors directly --- */
+.segmented-control input#typeExpense:checked + label { color: var(--negative-color) !important; }
+.segmented-control input#typeIncome:checked + label { color: var(--positive-color) !important; }
+/* Remove the old peer-checked utility classes from the HTML label elements */
+
+/* src/styles/_components.css */
+
+/* --- Modal View Switching Animation (ULTRA-SIMPLIFIED) --- */
+#modal-view-container {
+    position: relative; /* Establishes positioning context */
+    min-height: 450px;
+    overflow: visible; /* Allow content to be visible */
+}
+
+.modal-view {
+    /* Views overlay each other when inactive */
+    width: 100%;
+    opacity: 0; /* Hidden by default */
+    pointer-events: none; /* Non-interactive by default */
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Inactive views are positioned absolutely and off-screen */
+.modal-view:not(.active-view) {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#manual-entry-view:not(.active-view) {
+    transform: translateX(-100%);
+}
+
+#import-view:not(.active-view) {
+    transform: translateX(100%);
+}
+
+/* --- State When Active --- */
+.modal-view.active-view {
+    opacity: 1;
+    transform: translateX(0); /* Bring onto the screen */
+    pointer-events: auto;
+    position: relative; /* Takes up space in the flow */
+}
+
+
+
+/* --- Profile Pop-up Menu --- */
+#profileModal .modal-content {
+    /* Position relative to the sidebar */
+    position: absolute;
+    /* Adjust these values based on actual sidebar padding and profile card height */
+    bottom: calc(var(--spacing-lg) + 1rem); /* Distance from bottom of sidebar */
+    left: var(--spacing-lg); /* Distance from left of sidebar */
+    width: 230px;
+    max-width: none;
+    max-height: none;
+    overflow: visible; /* Allow shadow */
+    /* Remove transforms inherited from general modal */
+    transform: none !important;
+    opacity: 0; /* Still handle fade with backdrop */
+    visibility: hidden;
+    transition: opacity var(--transition-medium), visibility var(--transition-medium); /* Only fade */
+}
+#profileModal.active .modal-content { /* Use backdrop active class to show */
+     opacity: 1;
+     visibility: visible;
+}
+
+
+
+/* @import url('./_animations.css');  Loads Animations */
+
+/* src/styles/_animations.css */
+
+/* --- Keyframes --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtle-fade-in-up {
+    from { opacity: 0; transform: translateY(10px); } /* Adjusted transform */
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Animation Utility Classes --- */
+.animate-fade-in {
+    animation: subtle-fade-in-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0; /* Start invisible */
+}
+
+/* Staggered delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* --- Tab Content Transition --- */
+.tab-content {
+    display: none;
+}
+.tab-content.active {
+    display: block;
+    /* Consider using subtle-fade-in-up or a simple fade */
+    animation: fadeIn var(--transition-slow);
+}
+
+/* --- General Transition Variables (from variables.css) --- */
+/* Add these if not already in _variables.css */
+/*
+:root {
+    --transition-fast: 0.2s ease;
+    --transition-medium: 0.3s ease;
+    --transition-slow: 0.5s ease;
+}
+*/
+
+/* @import url('./_responsive.css');  Loads ALL Media Queries */
+
+/* src/styles/_responsive.css */
+
+@media (max-width: 767px) { /* Mobile Specific */
+    /* Transaction Journal Mobile Stacking */
+    .transaction-group-list .horizontal-stream-container {
+        flex-direction: column;
+        overflow-x: hidden;
+        gap: 2rem;
+        padding: 1rem 0.5rem;
+    }
+    .transaction-group-list .day-column {
+        width: 100%;
+    }
+    .transaction-group-list .day-stream {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+    /* Ensure open group list can expand fully */
+    .transaction-group.is-open .transaction-group-list {
+        max-height: 5000px;
+    }
+
+    /* Modal layout adjustments if needed */
+    #transactionForm .grid.md\:grid-cols-2 {
+        grid-template-columns: 1fr; /* Stack columns */
+    }
+}
+
+/* --- DEFINITIVE RESPONSIVE OVERRIDES --- */
+@media (max-width: 1024px) {
+    body {
+        /* Add padding to the body to create the "safe area" for scrolling */
+        /* 4rem for top bar, 4rem for bottom bar */
+        padding-top: 4rem;
+        padding-bottom: 5rem;
+    }
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .content {
+        margin-left: 0;
+        padding: var(--spacing-lg); /* Reset to simple padding */
+    }
+    /* Hide the original desktop header */
+    main > header {
+        display: none;
+    }
+    .desktop-table { display: none; }
+    .mobile-cards { display: block; }
+
+    .sidebar {
+        /* 1. Add padding to the top to clear the fixed mobile header */
+        padding-top: 4rem; /* Height of the header */
+    }
+
+    .sidebar > .p-4 {
+        /* 2. This targets the profile card's container and pushes it to the bottom */
+        margin-top: auto;
+    }
+
+    #bottom-nav {
+        margin-bottom: 0; /* Make sure it's not overriding anything */
+    }
+
+
+    /* --- Floating Action Button (FAB) & Action Sheet --- */
+    #fab-container {
+        position: fixed;
+        bottom: 6rem; /* 24px from the screen edge */
+        right: 1.5rem;  /* 24px from the screen edge */
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    #fab-action-sheet {
+        /* Uses the .card styles for the glass effect */
+        background-color: rgba(20, 20, 20, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+        transition: all var(--transition-medium);
+        visibility: hidden;
+        pointer-events: none;
+        margin-bottom: 1rem; /* Space between the card and the main button */
+    }
+
+    .action-sheet-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        color: var(--text-primary); /* Use primary text color for readability */
+        transition: all var(--transition-fast);
+    }
+
+    .action-sheet-btn svg {
+        stroke: var(--primary-accent); /* Color the icon with our primary accent */
+        flex-shrink: 0;
+    }
+
+    .action-sheet-btn:hover {
+        background-color: var(--card-hover-bg);
+        color: var(--primary-accent); /* On hover, text also becomes accent color */
+    }
+
+    #fab-main-btn {
+        width: 4rem; height: 4rem; /* 64px */
+        border-radius: 50%;
+        background-color: var(--primary-accent);
+        color: #FFFFFF;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform var(--transition-medium);
+    }
+    #fab-main-btn:hover {
+        transform: scale(1.05);
+    }
+    #fab-main-btn svg {
+        transition: transform var(--transition-medium);
+    }
+
+    /* Active (Open) State */
+    #fab-container.active #fab-main-btn svg {
+        transform: rotate(45deg);
+    }
+    #fab-container.active #fab-action-sheet {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+/* @import url('./_transactions.css');Loads Transaction Journal Styles */
+
+/* Transaction Search/Filter */
+.form-input.pl-10 {
+    padding-left: 2.75rem; /* Make room for search icon */
+}
+
+/* Upgraded Transaction List Styling */
+.transaction-group {
+    margin-bottom: 1.5rem; /* 24px */
+}
+
+.transaction-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.75rem 0.5rem; /* 12px 8px */
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 0.5rem;
+}
+
+.transaction-group-header .month-total {
+    font-family: var(--font-mono);
+    font-size: 1rem; /* 16px */
+}
+
+.transaction-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* 4px space between rows */
+}
+
+/* Make the row a clickable element */
+.transaction-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* 12px */
+    padding: 0.75rem 0.5rem;
+    border-radius: var(--radius-md); /* 12px */
+    transition: background-color var(--transition-fast);
+    cursor: pointer;
+}
+
+.transaction-row:hover {
+    background-color: var(--card-hover-bg);
+}
+
+/* This is the old icon wrapper rule, it will be overridden by the new card-specific one below */
+.transaction-icon-wrapper {
+    flex-shrink: 0;
+    width: 2.5rem; /* 40px */
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--card-hover-bg);
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+/* Animation Classes */
+@keyframes subtle-fade-in-up {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+.animate-fade-in {
+    animation: subtle-fade-in-up 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    opacity: 0; /* Start invisible */
+}
+
+/* --- Add this to main.css --- */
+
+/* Chart container for cash flow */
+.chart-container-medium {
+    position: relative;
+    width: 100%;
+    height: 300px; /* This height works well on both mobile and desktop */
+}
+
+/* --- NEW Insight List Styles --- */
+.insight-list-item {
+    /* Each item is a flex-col group */
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* 4px space between title and text */
+    padding-bottom: 1.25rem; /* 20px */
+    border-bottom: 1px solid var(--card-border);
+}
+.insight-list-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.insight-list-title {
+    font-family: var(--font-mono); /* Use mono font for the title */
+    font-size: 0.75rem; /* 12px */
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-secondary); /* Subdued color */
+}
+
+.insight-list-text {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.5;
+    color: var(--text-primary); /* Brighter text for the main insight */
+}
+.insight-list-text strong {
+    font-weight: 600;
+    color: var(--text-primary); /* Keep strong text bright */
+}
+.insight-list-text .positive {
+    color: var(--positive-color);
+}
+.insight-list-text .negative {
+    color: var(--negative-color);
+}
+/* --- End New Insight Styles --- */
+
+/* Ensure form-input padding is consistent */
+.form-input.pl-10 {
+    padding-left: 2.75rem;
+}
+
+/* --- "Perfectified" Inset Journal --- */
+#journal-command-bar {
+    position: relative; /* Required for the pseudo-element */
+}
+
+#journal-command-bar::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.25rem;  /* 20px */
+    right: 1.25rem; /* 20px */
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        transparent,
+        rgba(255, 255, 255, 0.15) 20%,
+        rgba(255, 255, 255, 0.15) 80%,
+        transparent
+    );
+}
+
+/* 1. The Month Accordion Group */
+.transaction-group {
+    border-bottom: 1px solid var(--border-color);
+}
+.transaction-group:last-child {
+    border-bottom: none;
+}
+
+.transaction-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2.5rem 1rem 0.5rem;
+    cursor: pointer;
+    position: relative;
+    transition: background-color var(--transition-fast);
+}
+.transaction-group-header span:first-child {
+    font-size: 1rem; font-weight: 600; color: var(--text-primary);
+}
+.transaction-group-header .month-total {
+    font-family: var(--font-mono); font-weight: 500; font-size: 1rem;
+}
+.transaction-group:not(.is-open):hover .transaction-group-header {
+    background-color: var(--card-hover-bg);
+}
+.transaction-group-header .chevron-icon {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-secondary);
+}
+
+/* 2. The "Inset" Content Area (Holds the horizontal scroller) */
+.transaction-group-list {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    background-color: var(--background); /* The #131314 inset */
+    border-radius: var(--radius-md);
+
+    /* Remove vertical padding, added back in .is-open */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    margin: 0 0.5rem 0 0.5rem;
+
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease-in-out,
+                padding 0.4s ease-in-out,
+                margin 0.4s ease-in-out;
+}
+
+/* 3. The Horizontal Scroller (INSIDE the inset area) */
+.horizontal-stream-container {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 1.5rem; /* 24px space between day columns */
+    padding: 1.5rem 0.5rem; /* Give the columns vertical space */
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+.horizontal-stream-container::-webkit-scrollbar { height: 8px; }
+.horizontal-stream-container::-webkit-scrollbar-track { background: transparent; }
+.horizontal-stream-container::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 4px;
+}
+.horizontal-stream-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+
+/* 4. The Day Column (INSIDE horizontal scroller) */
+.day-column {
+    flex-shrink: 0;
+    width: 320px; /* A bit narrower */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: fade-in-row 0.5s ease-out forwards;
+    opacity: 0;
+}
+.day-header {
+    padding: 0 0.5rem;
+}
+.day-header h4 {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.day-header span {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+}
+
+/* Day Stream container (holds cards) */
+.day-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* --- START REPLACEMENT ---
+(Replacing old .transaction-card and related rules) 
+*/
+
+/* 5. The Transaction Card (INSIDE Day Column) */
+.transaction-card {
+    display: flex;
+    align-items: center; /* Vertical alignment */
+    gap: 0.75rem; /* 12px gap between icon, middle, and right */
+    background-color: var(--card-bg); /* The #1E1F20 card */
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem; /* 12px 16px */
+    border-radius: var(--radius-md);
+    transition: all 0.2s ease-out;
+    cursor: pointer;
+    overflow: hidden; /* Prevent content overflow */
+}
+.transaction-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(29, 78, 216, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 1. Icon Wrapper (Left) */
+.transaction-card .transaction-icon-wrapper {
+    flex-shrink: 0;
+    width: 2.5rem; /* 40px */
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: var(--background); /* The #131314 bg */
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary); /* Default icon color */
+    transition: all 0.2s ease-out;
+}
+.transaction-card:hover .transaction-icon-wrapper {
+    color: var(--primary-accent); /* Icon color on hover */
+    border-color: rgba(29, 78, 216, 0.5);
+}
+
+/* 2. Middle Content */
+.transaction-card .flex-1 {
+    min-width: 0; /* Critical for flex truncation */
+    text-align: left;
+}
+.transaction-card .flex-1 .truncate {
+     max-width: 150px; /* Truncate long descriptions */
+}
+@media (min-width: 768px) {
+    .transaction-card .flex-1 .truncate {
+        max-width: 100%; /* Allow more space on desktop */
+    }
+}
+
+/* 3. Right Content */
+.transaction-card .text-right {
+    margin-left: auto; /* Push this block to the far right */
+    padding-left: 0.5rem; /* Space between middle and right */
+    text-align: right;
+    flex-shrink: 0; /* Prevent this block from shrinking */
+}
+.transaction-card .text-right .truncate {
+    max-width: 100px; /* Truncate long account names if needed */
+}
+
+/* --- END REPLACEMENT --- */
+
+
+/* 6. The "Open" State */
+.transaction-group.is-open .chevron-icon {
+    transform: translateY(-50%) rotate(-180deg);
+}
+.transaction-group.is-open .transaction-group-list {
+    max-height: 5000px; /* Use a very large number for dynamic height */
+    opacity: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin: 0 0.5rem 1rem 0.5rem;
+}
+
+/* 7. Animation */
+@keyframes fade-in-row {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Corrected Mobile Stacking --- */
+@media (max-width: 767px) {
+    .transaction-group-list .horizontal-stream-container {
+        flex-direction: column;
+        overflow-x: hidden;
+        gap: 2rem;
+        padding: 1rem 0.5rem;
+    }
+    .transaction-group-list .day-column {
+        width: 100%;
+    }
+    .transaction-group-list .day-stream {
+        max-height: none;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+    .transaction-group.is-open .transaction-group-list {
+        max-height: 5000px;
+    }
+}
+
+/* --- Tag Input Component --- */
+#tag-input-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.5rem 0.75rem;
+    cursor: text;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) transparent;
+}
+#tag-input-wrapper::-webkit-scrollbar { height: 4px; }
+#tag-input-wrapper::-webkit-scrollbar-track { background: transparent; }
+#tag-input-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 2px;
+}
+#tag-input-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+#tagSearchInput {
+    flex-grow: 1;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 0.25rem 0 !important;
+    min-height: auto !important;
+    min-width: 150px;
+    height: 30px;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    max-width: 100%; 
+}
+#tagSearchInput::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    padding-left: 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    white-space: nowrap;
+    animation: zoom-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.tag-pill .remove-tag-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.tag-pill .remove-tag-btn:hover {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#tag-suggestions-list {
+    opacity: 0;
+    transform: translateY(5px);
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    /* --- Styles from HTML --- */
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem; /* 8px */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem; /* 8px */
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* shadow-xl */
+    z-index: 50;
+    max-height: 12rem; /* 192px */
+    overflow-y: auto;
+}
+#tag-suggestions-list.active {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.tag-suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.625rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.tag-suggestion-item:hover,
+.tag-suggestion-item.highlighted {
+    background-color: var(--card-hover-bg);
+}
+.tag-suggestion-item .suggestion-name {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+.tag-suggestion-item .suggestion-new {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+@keyframes zoom-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* --- Custom Category Select --- */
+#category-select-trigger svg:first-child {
+    transition: color 0.2s ease;
+}
+#category-select-trigger:hover svg:first-child {
+    color: var(--text-primary);
+}
+
+#category-select-popover {
+    position: absolute;
+    z-index: 60;
+    background-color: var(--card-bg);
+    opacity: 0;
+    transform: translateY(5px) scale(0.98);
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    transform-origin: top center;
+    top: calc(100% + 0.5rem);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+}
+
+#category-select-popover.is-flipped {
+    top: auto;
+    bottom: calc(100% + 0.5rem);
+    transform-origin: bottom center;
+    transform: translateY(-5px) scale(0.98);
+    margin-bottom: 0.5rem; /* Added this from JS logic */
+    margin-top: 0;
+}
+#category-select-popover.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+}
+#category-select-popover.is-flipped {
+    transform: translateY(-5px) scale(0.98);
+}
+#category-select-popover.is-flipped.active {
+    transform: translateY(0) scale(1);
+}
+#category-select-container.open #category-select-chevron {
+    transform: rotate(180deg);
+}
+
+.category-select-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s ease;
+}
+.category-select-item:hover,
+.category-select-item.highlighted {
+    background-color: var(--card-hover-bg);
+}
+.category-select-item svg {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.5;
+    color: var(--text-secondary);
+}
+.category-select-item span {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+/* Icon Picker in Create View */
+#new-category-icon-picker button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+#new-category-icon-picker button:hover {
+    background-color: var(--card-hover-bg);
+    border-color: var(--border-color);
+}
+#new-category-icon-picker button.selected {
+    background-color: var(--primary-accent);
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 2px var(--primary-accent);
+}
+#new-category-icon-picker button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.5;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+#new-category-icon-picker button:hover svg {
+    color: var(--text-primary);
+}
+#new-category-icon-picker button.selected svg {
+    color: #FFFFFF;
+}
+
+/* @import url('./_investments.css');Loads Transaction Journal Styles */
+
+
+/* --- Holdings View --- */
+.accent-primary { border-left-color: var(--primary-accent); }
+.accent-secondary { border-left-color: var(--secondary-accent); }
+.accent-neutral { border-left-color: var(--text-secondary); }
+.accent-subtle { border-left-color: var(--card-hover-border); }
+
+.holdings-account-card {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-left-width: 2px;
+    box-shadow: 0 0 0 0 transparent;
+    transition: all var(--transition-medium);
+}
+.holdings-account-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--card-hover-border);
+    box-shadow: var(--shadow-sm);
+}
+.holdings-account-header {
+    cursor: pointer;
+}
+.chevron-icon {
+    transition: transform var(--transition-medium);
+}
+.holdings-account-card.open .chevron-icon {
+    transform: rotate(180deg);
+}
+.holdings-list {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-top: 0;
+    padding-bottom: 0;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.holdings-account-card.open .holdings-list {
+    max-height: 5000px;
+    opacity: 1;
+    padding-top: 0.5rem;
+    padding-bottom: 1.25rem;
+}
+.holdings-list .mono {
+    font-family: 'Noto Sans Mono', monospace; /* Your chosen font */
+}
+
+.modal-content {
+    background-color: rgba(20, 20, 20, 0.7); /* Darker, more translucent background */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Responsive Table/Card Layout for Holdings */
+.desktop-table { display: none; }
+.mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
+@media (min-width: 768px) {
+    .desktop-table { display: block; }
+    .mobile-cards { display: none; }
+}
+
+table .group-divider {
+    border-right: 1px solid var(--card-border);
+}
+thead th.group-divider,
+tbody td.group-divider {
+    padding-right: 1rem;
+}
+.holding-mobile-card {
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    margin-top: 0.75rem;
+}
+.holding-mobile-card:first-child {
+    margin-top: 0;
+}
