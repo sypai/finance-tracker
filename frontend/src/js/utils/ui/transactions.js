@@ -10,6 +10,8 @@ import { setSelectedCategory } from './categorySelect.js';
 export function renderTransactionInsights(appState) {
     const container = document.getElementById('transaction-insights-list');
     if (!container) return;
+
+    // --- 1. Data Preparation ---
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
@@ -35,17 +37,49 @@ export function renderTransactionInsights(appState) {
 
     let html = '';
 
-    // Monthly Net Flow
+    // --- 2. Zero State Check ---
+    if (thisMonthTransactions.length === 0) {
+         html = `
+            <div class="insight-list-item">
+                <h4 class="insight-list-title">Monthly Briefing</h4>
+                <p class="insight-list-text">Add your first transaction this month to see your spending insights here.</p>
+            </div>
+        `;
+        container.innerHTML = html;
+        return;
+    }
+
+    // --- 3. Generate Insights ---
+
+    // Insight 1: Monthly Net Flow
+    const netFlow = totalEarned - totalSpent;
     html += `
         <div class="insight-list-item">
             <h4 class="insight-list-title">Monthly Net Flow</h4>
-            <p class="insight-list-text">Earned <strong class="positive">₹${totalEarned.toLocaleString('en-IN')}</strong> | Spent <strong class="negative">₹${totalSpent.toLocaleString('en-IN')}</strong></p>
+            <p class="insight-list-text">
+                You've earned <strong class="positive">₹${totalEarned.toLocaleString('en-IN')}</strong> and spent <strong class="negative">₹${totalSpent.toLocaleString('en-IN')}</strong>, 
+                for a net ${netFlow >= 0 ? 'gain' : 'loss'} of <strong class="${netFlow >= 0 ? 'positive' : 'negative'}">₹${Math.abs(netFlow).toLocaleString('en-IN')}</strong>.
+            </p>
         </div>
     `;
 
-    // Top Category
+    // Insight 2: Spending Pace vs. Last Month
+    if (lastMonthSpent > 0) {
+        const percentChange = Math.round(((totalSpent - lastMonthSpent) / lastMonthSpent) * 100);
+        const isDown = percentChange <= 0;
+        html += `
+             <div class="insight-list-item">
+                <h4 class="insight-list-title">Spending Pace</h4>
+                <p class="insight-list-text">
+                    Your spending is <strong class="${isDown ? 'positive' : 'negative'}">${isDown ? 'down' : 'up'} ${Math.abs(percentChange)}%</strong> compared to this time last month.
+                    ${isDown ? 'Great job!' : 'Keep an eye on it.'}
+                </p>
+            </div>
+        `;
+    }
+
+    // Insight 3: Top Spending Category
     if (thisMonthExpenses.length > 0) {
-        // Use categoryId for accurate grouping
         const categoryTotals = thisMonthExpenses.reduce((acc, t) => {
             const categoryId = t.categoryId || 'cat-uncategorized';
             const categoryName = appState.categories.find(c => c.id === categoryId)?.name || 'Uncategorized';
@@ -57,45 +91,26 @@ export function renderTransactionInsights(appState) {
         html += `
             <div class="insight-list-item">
                 <h4 class="insight-list-title">Top Category</h4>
-                <p class="insight-list-text"><strong>${topCategory[0]}</strong> leads spending at <strong>₹${topCategory[1].toLocaleString('en-IN')}</strong>.</p>
-            </div>
-        `;
-    }
-
-    // Largest Purchase
-    if (thisMonthExpenses.length > 0) {
-        const largestExpense = [...thisMonthExpenses].sort((a, b) => b.amount - a.amount)[0];
-        html += `
-            <div class="insight-list-item">
-                <h4 class="insight-list-title">Largest Purchase</h4>
-                <p class="insight-list-text"><strong>₹${largestExpense.amount.toLocaleString('en-IN')}</strong> for <strong>${largestExpense.description}</strong>.</p>
-            </div>
-        `;
-    }
-
-    // Spending Pace
-    if (lastMonthSpent > 0 && totalSpent >= 0) {
-        const percentChange = lastMonthSpent === 0 ? 100 : Math.round(((totalSpent - lastMonthSpent) / lastMonthSpent) * 100);
-        const isDown = percentChange <= 0;
-        html += `
-             <div class="insight-list-item">
-                <h4 class="insight-list-title">Spending Pace</h4>
                 <p class="insight-list-text">
-                    Spending is <strong class="${isDown ? 'positive' : 'negative'}">${isDown ? 'down' : 'up'} ${Math.abs(percentChange)}%</strong> vs last month.
+                    Your top spending category is <strong>${topCategory[0]}</strong>, with <strong>₹${topCategory[1].toLocaleString('en-IN')}</strong> in purchases.
                 </p>
             </div>
         `;
     }
 
-    // Zero State for Insights
-    if (thisMonthTransactions.length === 0) {
-         html = `
+    // Insight 5: Largest Purchase
+    if (thisMonthExpenses.length > 0) {
+        const largestExpense = [...thisMonthExpenses].sort((a, b) => b.amount - a.amount)[0];
+        html += `
             <div class="insight-list-item">
-                <h4 class="insight-list-title">Monthly Briefing</h4>
-                <p class="insight-list-text">No transactions yet this month. Add one to see insights.</p>
+                <h4 class="insight-list-title">Largest Purchase</h4>
+                <p class="insight-list-text">
+                    Your single largest purchase was <strong>₹${largestExpense.amount.toLocaleString('en-IN')}</strong> for <strong>${largestExpense.description}</strong>.
+                </p>
             </div>
         `;
     }
+
     container.innerHTML = html;
 }
 
