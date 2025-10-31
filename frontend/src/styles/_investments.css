@@ -1,4 +1,3 @@
-
 /* --- Holdings View --- */
 .accent-primary { border-left-color: var(--primary-accent); }
 .accent-secondary { border-left-color: var(--secondary-accent); }
@@ -47,12 +46,14 @@
     font-family: 'Noto Sans Mono', monospace; /* Your chosen font */
 }
 
+/* This rule is fine, it's for the main holdings page, not the modal */
 .modal-content {
-    background-color: rgba(20, 20, 20, 0.7); /* Darker, more translucent background */
+    background-color: rgba(20, 20, 20, 0.7);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 /* Responsive Table/Card Layout for Holdings */
 .desktop-table { display: none; }
 .mobile-cards { display: block; padding: 0 0.75rem 0.75rem; }
@@ -76,4 +77,291 @@ tbody td.group-divider {
 }
 .holding-mobile-card:first-child {
     margin-top: 0;
+}
+
+
+/* --- Smart Portfolio Modal --- */
+.portfolio-select-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background-color: var(--card-hover-bg);
+    border: 1px solid var(--card-border);
+    transition: all var(--transition-fast);
+    text-align: left;
+}
+.portfolio-select-card:hover {
+    background-color: var(--background);
+    border-color: var(--primary-accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Apply consistent min-height to ALL views inside this modal */
+#portfolio-modal-view-container .modal-view {
+    min-height: 500px;
+}
+
+/* Target the selection view *specifically* and use flexbox to center its content vertically. */
+#portfolio-selection-view {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* This new rule styles the icon wrapper */
+.portfolio-icon-wrapper {
+    flex-shrink: 0;
+    width: 3rem; /* 48px */
+    height: 3rem;
+    border-radius: var(--radius-md);
+    background-color: var(--primary-accent-hover);
+    border: 1px solid rgba(29, 78, 216, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-back-btn {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+    margin-bottom: 1.5rem; /* 24px */
+    display: inline-block;
+}
+.modal-back-btn:hover {
+    color: var(--text-primary);
+}
+
+/* This ensures the parent is a flex container */
+#brokerage-asset-switcher {
+    background-color: var(--background);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem;
+    display: flex;
+    align-items: stretch;
+    min-height: 48px;
+}
+/* This forces all labels to share space equally */
+#brokerage-asset-switcher label {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-grow: 1;
+}
+#brokerage-asset-switcher input:checked + label {
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+/* --- Holdings Table Wrapper --- */
+#holdingsListTitle {
+    margin-bottom: 1rem;
+}
+
+#holdings-table-wrapper {
+    background-color: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+#holdingsContainerHeader {
+    padding-right: calc(0.75rem + 8px); /* px-3 + scrollbar */
+    padding-left: 0.75rem; /* px-3 */
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Style the header labels */
+#holdingsContainerHeader .form-label {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 500;
+    padding: 0.75rem 0.5rem;
+    border-right: 1px solid var(--border-color); /* <-- ADD THIS LINE */
+    /* Borders are desktop-only */
+}
+
+/* Remove border from the last header label */
+#holdingsContainerHeader .grid > label:last-of-type {
+    border-right: none;
+}
+
+/* Style the container for the input rows */
+#holdingsContainer {
+    /* We'll pad the rows themselves */
+}
+
+/* Style each input row */
+.holding-input-row {
+    border-bottom: 1px solid var(--border-color);
+}
+#holdingsContainer .holding-input-row:last-child {
+    border-bottom: none; /* No border on the last row */
+}
+
+/* Base style for all children in the row */
+.holding-input-row > * {
+    border-right: 1px solid var(--border-color);
+    /* Set height by padding */
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+.holding-input-row > *:last-child {
+    border-right: none; /* No border on last child */
+}
+
+/* Text Align Headers */
+#holdingsContainerHeader #col-header-name { text-align: left; }
+#holdingsContainerHeader #col-header-ticker { text-align: center; }
+#holdingsContainerHeader #col-header-units { text-align: right; }
+#holdingsContainerHeader #col-header-price { text-align: right; }
+
+/* Style the container for the input rows */
+#holdingsContainer {
+    /* Padding is now applied to rows */
+}
+
+/* Style each input row */
+.holding-input-row {
+    border-bottom: 1px solid var(--border-color);
+    /* Mobile-first padding */
+    padding: 1rem 0.75rem;
+}
+#holdingsContainer .holding-input-row:last-child {
+    border-bottom: none;
+}
+
+/* Base style for all children in the row */
+.holding-input-row > * {
+    /* Desktop borders are applied via media query */
+}
+
+/* Minimalist input style */
+.form-input-row {
+    background-color: transparent;
+    border-width: 0 0 1px 0;
+    border-color: var(--border-color); /* <-- VISIBLE BORDER FIX */
+    border-radius: 0;
+    color: var(--text-primary);
+    padding: 0.5rem 0.25rem; /* Tighter padding for mobile */
+    width: 100%;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+.form-input-row:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    background-color: var(--card-hover-bg);
+}
+.form-input-row::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.4;
+}
+
+/* Minimalist input style */
+.form-input-row {
+    background-color: transparent;
+    border-width: 0 0 1px 0;
+    border-color: var(--border-color);
+    border-radius: 0;
+    color: var(--text-primary);
+    padding: 0.25rem 0.5rem; /* Use padding from JS (px-2) */
+    width: 100%;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+.form-input-row:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    background-color: var(--card-hover-bg); /* Add a subtle bg on focus */
+}
+/* ... */
+/* Align number inputs to the right */
+input[name="holdingUnits"],
+input[name="holdingBuyPrice"] {
+    text-align: right;
+}
+/* Center ticker input */
+input[name="holdingTicker"] {
+    text-align: center;
+}
+
+/* Style the remove button */
+.holding-input-row .remove-holding-btn {
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+    justify-self: center;
+    align-self: center;
+    padding-top: 0; /* Override cell padding */
+    padding-bottom: 0;
+}
+
+.holding-input-row .remove-holding-btn:hover {
+    color: var(--negative-color);
+}
+
+/* Style the Add Row button wrapper */
+#add-row-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+    /* Align with desktop table padding */
+    padding-right: calc(0.75rem + 8px); 
+}
+
+/* --- RESPONSIVE DESKTOP STYLES --- */
+@media (min-width: 768px) { /* Tailwind 'md' breakpoint */
+    
+    #holdingsContainerHeader .form-label {
+        border-right: 1px solid var(--border-color); /* Add column borders */
+    }
+    #holdingsContainerHeader .grid > label:last-of-type {
+        border-right: none;
+    }
+
+    /* Style each input row for desktop */
+    .holding-input-row {
+        padding: 0; /* Remove mobile padding */
+    }
+
+    /* Base style for all children in the row */
+    .holding-input-row > * {
+        border-right: 1px solid var(--border-color);
+        /* Set height by padding */
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    .holding-input-row > *:first-child {
+        padding-left: 0.75rem; /* Add padding to first cell */
+    }
+    .holding-input-row > *:last-child {
+        border-right: none;
+    }
+
+    /* On desktop, inputs have less padding (it's on the cell) */
+    .form-input-row {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .holding-input-row .remove-holding-btn {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
 }

@@ -25,7 +25,8 @@ import {
     initTagInput, // <-- ADD THIS IMPORT
     setSelectedTags, // <-- ADD THIS IMPORT (for submit handler)
     initCategorySelect, // <-- ADD
-    setSelectedCategory // <-- ADD
+    setSelectedCategory, // <-- ADD
+    updateBrokerageFormHeaders // <-- ADD THIS
 } from './utils/ui/index.js';
 
 const App = {
@@ -38,6 +39,7 @@ const App = {
         initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
         initCategorySelect();
         this.bindEvents();
+        this.bindPortfolioModalEvents(); // <-- ADD THIS CALL
         this.render(); // Initial render
 
         this.handleTabSwitch('dashboard'); 
@@ -231,9 +233,7 @@ const App = {
         elements.addAccountBtn.addEventListener('click', () => toggleModal('addAccountModal', true));
         
         elements.addInvestmentBtn.addEventListener('click', () => showPortfolioModal());
-        document.getElementById('addHoldingBtn')?.addEventListener('click', () => {
-            document.getElementById('holdingsContainer').appendChild(createHoldingRow());
-        });
+        
         document.getElementById('addPortfolioForm')?.addEventListener('submit', (e) => this.handlePortfolioSubmit(e));
 
         elements.sidebarItems.forEach(item => {
@@ -634,30 +634,59 @@ const App = {
         this.render(); // Re-render the UI to reflect the changes
     },
 
-    // --- ADD THIS NEW HANDLER FUNCTION ---
+    // *** REVISED handlePortfolioSubmit ***
     handlePortfolioSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
+        const portfolioType = formData.get('portfolioType'); // 'brokerage'
+        
+        // --- NEW: Read the *current* asset type from the switcher ---
+        const currentAssetType = document.getElementById('currentAssetType').value;
+
+        // Get all the dynamic holding rows
         const holdingNames = formData.getAll('holdingName');
-        const holdingValues = formData.getAll('holdingValue');
+        const holdingTickers = formData.getAll('holdingTicker');
+        const holdingUnits = formData.getAll('holdingUnits');
+        const holdingBuyPrices = formData.getAll('holdingBuyPrice');
+
+        // Process holdings
+        const newHoldings = holdingNames.map((name, index) => {
+            const units = parseFloat(holdingUnits[index]);
+            const buyPrice = parseFloat(holdingBuyPrices[index]);
+            return {
+                type: currentAssetType, // <-- SAVE THE CORRECT ASSET TYPE
+                name: name,
+                ticker: holdingTickers[index] || null,
+                quantity: units,
+                buyValue: units * buyPrice,
+                // In a real app, API would fetch this. For now, set to buy value.
+                currentValue: units * buyPrice 
+            };
+        });
 
         const newAccount = {
             id: Date.now(),
             name: formData.get('name'),
-            type: formData.get('type'),
-            totalValue: holdingValues.reduce((sum, val) => sum + parseFloat(val), 0),
-            holdings: holdingNames.map((name, index) => ({
-                name: name,
-                value: parseFloat(holdingValues[index])
-            }))
+            type: formData.get('type'), // This is the old dropdown, let's fix
+            // --- FIX: Use the value from the hidden input ---
+            // type: formData.get('portfolioType'), // This is 'brokerage'
+            holdings: newHoldings
+        };
+
+        // --- Let's correct the 'type' field ---
+        // The *Portfolio's* type (e.g., "Brokerage", "Retirement") is what matters
+        const newPortfolio = {
+            id: Date.now(),
+            name: formData.get('name'),
+            type: portfolioType, // 'brokerage', 'fixed_income', 'employee'
+            holdings: newHoldings
         };
         
-        // This is where you would add the newAccount to your appState.investmentAccounts
-        console.log("New Portfolio Account:", newAccount);
-        appState.investmentAccounts.push(newAccount);
+        appState.investmentAccounts.push(newPortfolio);
+        console.log("New Portfolio Account:", newPortfolio);
 
         toggleModal('addPortfolioModal', false);
-        this.render(); // Re-render the app to show the new data
+        this.render(); // Re-render the app
     },
 
     handleTransactionSubmit(event) {
@@ -813,13 +842,80 @@ const App = {
         this.render();
     },
 
-    // handlePortfolioViewClick(event){
-    //     const clickedTab = event.target.closest('button');
-    //     if (!clickedTab || clickedTab.dataset.tab === appState.activePortfolioView) return;
+    bindPortfolioModalEvents() {
+        const modal = document.getElementById('addPortfolioModal');
+        if (!modal) return;
+
+        const viewContainer = document.getElementById('portfolio-modal-view-container');
+        const modalTitle = document.getElementById('portfolioModalTitle');
+        const selectionView = document.getElementById('portfolio-selection-view');
         
-    //     appState.activePortfolioView = clickedTab.dataset.tab;
-    //     this.render();
-    // }
+        // --- NEW: Get Brokerage Form Elements ---
+        const assetSwitcher = document.getElementById('brokerage-asset-switcher');
+        const hiddenAssetType = document.getElementById('currentAssetType');
+        const holdingsContainer = document.getElementById('holdingsContainer');
+        const addHoldingBtn = document.getElementById('addHoldingBtn');
+
+        // Function to switch views
+        const switchView = (viewId, title) => {
+            viewContainer.querySelectorAll('.modal-view').forEach(view => {
+                view.classList.remove('active-view');
+            });
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.add('active-view');
+            }
+            if (modalTitle) modalTitle.textContent = title;
+        };
+
+        // 1. Listen for clicks on the selection cards
+        modal.addEventListener('click', (e) => {
+            const selectBtn = e.target.closest('.portfolio-select-card');
+            if (selectBtn) {
+                const viewName = selectBtn.dataset.view;
+                if (viewName === 'brokerage') {
+                    switchView('portfolio-brokerage-view', 'Add Brokerage Account');
+                } else if (viewName === 'fixed-income') {
+                    switchView('portfolio-fixed-income-view', 'Add Fixed Income');
+                } else if (viewName === 'employee') {
+                    switchView('portfolio-employee-view', 'Add Employee Benefits');
+                } else if (viewName === 'other') {
+                    switchView('portfolio-other-view', 'Add Other Assets');
+                }
+            }
+        });
+
+        // 2. Listen for clicks on any "Back" button
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-back-btn')) {
+                switchView('portfolio-selection-view', 'Add Portfolio');
+            }
+        });
+
+        // --- NEW 3: Listen for Asset Type change ---
+        if (assetSwitcher) {
+            assetSwitcher.addEventListener('change', (e) => {
+                const newAssetType = e.target.value; // 'stock', 'mutual_fund', or 'bond'
+                hiddenAssetType.value = newAssetType;
+                
+                // Update headers and placeholders
+                updateBrokerageFormHeaders(newAssetType);
+
+                // Clear existing rows and add a new one of the correct type
+                holdingsContainer.innerHTML = '';
+                holdingsContainer.appendChild(createHoldingRow(newAssetType));
+            });
+        }
+
+        // --- NEW 4: Update Add Row button listener ---
+        if (addHoldingBtn) {
+            addHoldingBtn.addEventListener('click', () => {
+                const currentAssetType = hiddenAssetType.value;
+                holdingsContainer.appendChild(createHoldingRow(currentAssetType));
+            });
+        }
+    },
+    // *** END NEW FUNCTION ***
 };
 
 document.addEventListener('DOMContentLoaded', () => {

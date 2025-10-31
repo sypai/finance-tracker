@@ -337,6 +337,14 @@ input[type=number] { -moz-appearance: textfield; }
     overflow: visible; /* Allow content to be visible */
 }
 
+/* --- ADD THIS NEW RULE --- */
+#portfolio-modal-view-container {
+    position: relative;
+    /* Set a taller min-height to accommodate the brokerage form */
+    min-height: 500px; 
+    /* The overflow-hidden is now set on this in dashboard.html */
+}
+
 .modal-view {
     /* Views overlay each other when inactive */
     width: 100%;
@@ -368,7 +376,20 @@ input[type=number] { -moz-appearance: textfield; }
     position: relative; /* Takes up space in the flow */
 }
 
+/* --- ADD THESE NEW RULES FOR THE PORTFOLIO MODAL --- */
 
+/* 1. The main selection screen slides LEFT when it's NOT active */
+#portfolio-selection-view:not(.active-view) {
+    transform: translateX(-100%);
+}
+
+/* 2. ALL other form views slide in from the RIGHT by default */
+#portfolio-brokerage-view:not(.active-view),
+#portfolio-fixed-income-view:not(.active-view),
+#portfolio-employee-view:not(.active-view),
+#portfolio-other-view:not(.active-view) {
+    transform: translateX(100%);
+}
 
 /* --- Profile Pop-up Menu --- */
 #profileModal .modal-content {
