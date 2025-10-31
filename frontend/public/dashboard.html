@@ -784,7 +784,115 @@
 
                 <div id="portfolio-employee-view" class="modal-view p-8">
                     <button type="button" class="modal-back-btn">&larr; Back to Types</button>
-                    <p class="text-center text-text-secondary mt-4">Employee Benefits form coming soon...</p>
+
+                    <div id="employee-asset-switcher" class="segmented-control mt-4">
+                        <input type="radio" id="asset-retirement" name="employeeAssetType" value="retirement" class="sr-only" checked>
+                        <label for="asset-retirement">Retirement Fund</label>
+                        
+                        <input type="radio" id="asset-stock-grant" name="employeeAssetType" value="stock_grant" class="sr-only">
+                        <label for="asset-stock-grant">Stock Grant</label>
+                    </div>
+
+                    <form id="addRetirementForm" class="space-y-6 mt-6">
+                        <input type="hidden" name="portfolioType" value="employee_benefit">
+                        <input type="hidden" name="assetType" value="retirement_fund">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                            <div>
+                                <label for="rf-provider-name" class="form-label">Provider Name</label>
+                                <input type="text" id="rf-provider-name" name="name" class="form-input" placeholder="e.g., EPFO, HDFC NPS" required>
+                            </div>
+                            <div>
+                                <label for="rf-asset-type" class="form-label">Asset Type</label>
+                                <select id="rf-asset-type" name="type" class="form-input">
+                                    <option value="epf">EPF</option>
+                                    <option value="nps">NPS</option>
+                                    <option value="superannuation">Superannuation</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                                <div>
+                                    <label for="rf-current-balance" class="form-label">Current Balance (₹)</label>
+                                    <input type="number" step="0.01" id="rf-current-balance" name="currentBalance" class="form-input" placeholder="100000" required>
+                                </div>
+                                <div>
+                                    <label for="rf-monthly-contribution" class="form-label">Est. Monthly Contribution (₹)</label>
+                                    <input type="number" step="0.01" id="rf-monthly-contribution" name="monthlyContribution" class="form-input" placeholder="1800">
+                                </div>
+                            </div>
+                        </div>
+            
+                        <div class="pt-6 border-t border-white/10">
+                            <button type="submit" class="btn btn-primary w-full justify-center">Save Retirement Fund</button>
+                        </div>
+                    </form>
+
+                    <form id="addStockGrantForm" class="hidden space-y-6 mt-6">
+                        <input type="hidden" name="portfolioType" value="employee_benefit">
+                        <input type="hidden" name="assetType" value="stock_grant">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                             <div>
+                                <label for="sg-company-name" class="form-label">Company Name</label>
+                                <input type="text" id="sg-company-name" name="name" class="form-input" placeholder="e.g., Your Company" required>
+                            </div>
+                            <div>
+                                <label for="sg-asset-type" class="form-label">Asset Type</label>
+                                <select id="sg-asset-type" name="type" class="form-input">
+                                    <option value="rsu">RSUs (Restricted Stock Units)</option>
+                                    <option value="esop">ESOPs (Employee Stock Options)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="sg-ticker" class="form-label">Ticker <span class="form-label-optional">(If listed)</span></label>
+                                <input type="text" id="sg-ticker" name="ticker" class="form-input" placeholder="e.g., GOOGL">
+                            </div>
+                             <div>
+                                <label for="sg-market-price" class="form-label">Current Market Price (₹)</label>
+                                <input type="number" step="0.01" id="sg-market-price" name="marketPrice" class="form-input" placeholder="175.50" required>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <h4 class="text-md font-semibold text-text-primary mb-4">Vesting Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                                <fieldset class="border border-border-color p-4 rounded-md">
+                                    <legend class="text-sm font-medium text-text-secondary px-1">Vested</legend>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="sg-vested-units" class="form-label !text-xs !mb-1">Vested Units</label>
+                                            <input type="number" step="any" id="sg-vested-units" name="vestedUnits" class="form-input" placeholder="100" required>
+                                        </div>
+                                        <div>
+                                            <label for="sg-grant-price" class="form-label !text-xs !mb-1">Average Grant Price (₹)</label>
+                                            <input type="number" step="0.01" id="sg-grant-price" name="grantPrice" class="form-input" placeholder="50.00" required>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border border-border-color p-4 rounded-md">
+                                    <legend class="text-sm font-medium text-text-secondary px-1">Unvested</legend>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="sg-unvested-units" class="form-label !text-xs !mb-1">Unvested Units</label>
+                                            <input type="number" step="any" id="sg-unvested-units" name="unvestedUnits" class="form-input" placeholder="300">
+                                        </div>
+                                        <div>
+                                            <label for="sg-next-vesting" class="form-label !text-xs !mb-1">Next Vesting Date <span class="form-label-optional">(Optional)</span></label>
+                                            <input type="date" id="sg-next-vesting" name="nextVestingDate" class="form-input">
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+            
+                        <div class="pt-6 border-t border-white/10">
+                            <button type="submit" class="btn btn-primary w-full justify-center">Save Stock Grant</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div id="portfolio-other-view" class="modal-view p-8">

@@ -383,3 +383,57 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
     filter: invert(1) brightness(1); /* Makes the icon white */
 }
+
+/* Starting styles for EeB form in Modal */
+/* --- NEW: Employee Asset Type Switcher (inside modal) --- */
+#employee-asset-switcher {
+    background-color: var(--background);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem;
+    display: flex;
+    align-items: stretch;
+    min-height: 48px;
+}
+#employee-asset-switcher label {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    user-select: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-grow: 1;
+}
+#employee-asset-switcher input:checked + label {
+    background-color: var(--card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: var(--text-primary);
+}
+
+/* Style for the <fieldset> <legend> */
+fieldset {
+    padding: 1.5rem;
+}
+fieldset legend {
+    /* Tailwind 'text-sm font-medium text-text-secondary px-1' */
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: 0 0.25rem;
+    margin-left: 0.75rem; /* Indent legend slightly */
+}
+
+/* --- Asset Class Grouping --- */
+.asset-class-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem; /* 12px */
+    border-bottom: 1px solid var(--card-border);
+}

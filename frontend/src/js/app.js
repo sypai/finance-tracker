@@ -21,7 +21,7 @@ import {
     showTransactionModal,
     showPortfolioModal,
     createHoldingRow,
-    renderHoldingsView,
+    renderSmartStackView, // <-- ADD THIS
     initTagInput, // <-- ADD THIS IMPORT
     setSelectedTags, // <-- ADD THIS IMPORT (for submit handler)
     initCategorySelect, // <-- ADD
@@ -276,6 +276,8 @@ const App = {
             if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
             if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
             if (event.target.id === 'addFixedIncomeForm') this.handleFixedIncomeSubmit(event);
+            if (event.target.id === 'addRetirementForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
+            if (event.target.id === 'addStockGrantForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
         });
 
         // --- THIS IS THE KEY CHANGE ---
@@ -591,12 +593,13 @@ const App = {
 
         // --- Render content based on the selected view ---
         if (viewName === 'holdings') {
-            renderHoldingsView(appState.investmentAccounts);
+            // --- THIS IS THE CHANGE ---
+            renderSmartStackView(appState.investmentAccounts);
         } else if (viewName === 'allocation') {
             document.getElementById('investmentTabContent').innerHTML = `<div class="p-6"><div class="chart-container h-80"><canvas id="allocationChart"></canvas></div></div>`;
             createCharts(appState);
         } else if (viewName === 'performance') {
-            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-gray-400">Performance Chart Coming Soon!</div>`;
+            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-text-secondary">Performance Chart Coming Soon!</div>`;
         }
     },
 
@@ -723,6 +726,67 @@ const App = {
         
         appState.investmentAccounts.push(newPortfolio);
         console.log("New Fixed Income Portfolio:", newPortfolio);
+
+        toggleModal('addPortfolioModal', false);
+        this.render(); // Re-render the app
+    },
+
+    /**
+     * Handles submission for BOTH Employee Benefit forms.
+     */
+    handleEmployeeBenefitSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const assetType = formData.get('assetType'); // 'retirement_fund' or 'stock_grant'
+
+        let holding;
+        if (assetType === 'retirement_fund') {
+            holding = {
+                type: formData.get('type'), // 'epf', 'nps'
+                name: formData.get('type').toUpperCase(), // e.g., "EPF"
+                quantity: 1,
+                buyValue: parseFloat(formData.get('currentBalance')),
+                currentValue: parseFloat(formData.get('currentBalance')),
+                meta: {
+                    monthlyContribution: parseFloat(formData.get('monthlyContribution')) || 0
+                }
+            };
+        } else if (assetType === 'stock_grant') {
+            const vestedUnits = parseFloat(formData.get('vestedUnits')) || 0;
+            const grantPrice = parseFloat(formData.get('grantPrice')) || 0;
+            const marketPrice = parseFloat(formData.get('marketPrice')) || 0;
+            const unvestedUnits = parseFloat(formData.get('unvestedUnits')) || 0;
+
+            holding = {
+                type: formData.get('type'), // 'rsu', 'esop'
+                name: formData.get('name'), // Company Name
+                ticker: formData.get('ticker') || null,
+                quantity: vestedUnits + unvestedUnits, // Total shares in grant
+                
+                // Buy value is what *vested* shares cost
+                buyValue: vestedUnits * grantPrice,
+                // Current value is what *vested* shares are worth
+                currentValue: vestedUnits * marketPrice,
+
+                meta: {
+                    vestedUnits: vestedUnits,
+                    unvestedUnits: unvestedUnits,
+                    grantPrice: grantPrice,
+                    marketPrice: marketPrice,
+                    nextVestingDate: formData.get('nextVestingDate') || null
+                }
+            };
+        }
+
+        const newPortfolio = {
+            id: Date.now(),
+            name: formData.get('name'), // Provider or Company Name
+            type: formData.get('portfolioType'), // 'employee_benefit'
+            holdings: [holding]
+        };
+        
+        appState.investmentAccounts.push(newPortfolio);
+        console.log("New Employee Benefit Portfolio:", newPortfolio);
 
         toggleModal('addPortfolioModal', false);
         this.render(); // Re-render the app
@@ -1000,6 +1064,23 @@ const App = {
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     maturityDateInput.min = tomorrow.toISOString().split('T')[0];
+                }
+            });
+        }
+
+        // --- NEW: Employee View Logic ---
+        const employeeSwitcher = document.getElementById('employee-asset-switcher');
+        const retirementForm = document.getElementById('addRetirementForm');
+        const stockGrantForm = document.getElementById('addStockGrantForm');
+
+        if (employeeSwitcher && retirementForm && stockGrantForm) {
+            employeeSwitcher.addEventListener('change', (e) => {
+                if (e.target.value === 'retirement') {
+                    retirementForm.classList.remove('hidden');
+                    stockGrantForm.classList.add('hidden');
+                } else if (e.target.value === 'stock_grant') {
+                    retirementForm.classList.add('hidden');
+                    stockGrantForm.classList.remove('hidden');
                 }
             });
         }

@@ -134,6 +134,17 @@ export function showPortfolioModal() {
     updateBrokerageFormHeaders('stock');
     // --- End Form Reset ---
 
+    // --- NEW: Reset Employee Benefits Form ---
+    const retirementRadio = document.getElementById('asset-retirement');
+    if (retirementRadio) retirementRadio.checked = true;
+    
+    const retirementForm = document.getElementById('addRetirementForm');
+    if (retirementForm) retirementForm.classList.remove('hidden');
+    
+    const stockGrantForm = document.getElementById('addStockGrantForm');
+    if (stockGrantForm) stockGrantForm.classList.add('hidden');
+    // --- End Reset ---
+
     toggleModal('addPortfolioModal', true);
 }
 
@@ -164,7 +175,9 @@ export function updateBrokerageFormHeaders(assetType) {
         if(unitsCol) unitsCol.textContent = 'Units / Qty';
     }
 }
+
 // (This function is unchanged)
+// Master function to render the entire investments tab
 // Master function to render the entire investments tab
 export function renderInvestmentsTab(appState) {
     const normalView = elements.investmentsNormalView;
@@ -216,8 +229,16 @@ export function renderInvestmentsTab(appState) {
         elements.investmentsTotalGainPercent.textContent = `(${gainSign}${totalGainPercent.toFixed(2)}%)`;
         elements.investmentsTotalGainPercent.className = `text-sm mt-2 ${totalGain >= 0 ? 'text-positive-value' : 'text-negative-value'}`;
         
-        // Render the active tab content (defaults to holdings)
-        renderHoldingsView(appState.investmentAccounts);
+        // --- THIS IS THE KEY CHANGE ---
+        // Render the active tab content based on appState
+        if (appState.activePortfolioView === 'holdings') {
+            renderSmartStackView(appState.investmentAccounts);
+        } else if (appState.activePortfolioView === 'allocation') {
+            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6"><div class="chart-container-large"><canvas id="allocationChart"></canvas></div></div>`;
+            // createCharts(appState) will be called by the main render() function
+        } else if (appState.activePortfolioView === 'performance') {
+            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-text-secondary">Performance Chart Coming Soon!</div>`;
+        }
     }
 }
 
@@ -295,123 +316,246 @@ function renderAccountCardContent(account) {
     `;
 }
 
+
 /**
- * [REFACTORED]
- * Renders the "Holdings" view, now grouped by Asset Type,
- * using the "Inset Journal" pattern.
+ * Maps a fine-grained holding type (e.g., 'rsu', 'fd') to a high-level asset class.
+ * @param {string} type - The holding.type from appState
+ * @returns {string} The asset class (e.g., "Equity", "Fixed Income")
  */
-export function renderHoldingsView(accounts) {
+function getAssetClass(type) {
+    switch (type) {
+        case 'equity':
+        case 'rsu':
+        case 'esop':
+            return 'Equity';
+        case 'mutual_fund':
+            return 'Mutual Funds';
+        case 'fd':
+        case 'p2p':
+        case 'bond':
+        case 'epf':
+        case 'nps':
+            return 'Fixed Income';
+        case 'gold':
+            return 'Gold';
+        default:
+            return 'Other Assets';
+    }
+}
+
+/**
+ * Calculates the total value and buy value for a portfolio.
+ * @param {object} portfolio - A portfolio object from appState.investmentAccounts
+ * @returns {object} { currentValue, buyValue }
+ */
+function getPortfolioTotals(portfolio) {
+    return portfolio.holdings.reduce((acc, h) => {
+        acc.currentValue += h.currentValue || 0;
+        acc.buyValue += h.buyValue || 0;
+        return acc;
+    }, { currentValue: 0, buyValue: 0 });
+}
+
+/**
+ * Renders the new "Smart Stack" view for the Investments tab.
+ * Groups all portfolios by their primary asset class.
+ * @param {Array} accounts - appState.investmentAccounts
+ */
+export function renderSmartStackView(accounts) {
     const container = document.getElementById('investmentTabContent');
     if (!container) return;
 
-    // 1. Data Transformation: Group accounts by asset type
-    const assetGroups = accounts.reduce((acc, account) => {
-        account.holdings.forEach(holding => {
-            const type = holding.type || 'other';
-            
-            // Standardize type names
-            let groupName = 'Other';
-            if (type === 'equity') groupName = 'Equity';
-            if (type === 'mutual_fund') groupName = 'Mutual Funds';
-            if (type ==='epf') groupName = 'Retirement';
-            if (type === 'gold') groupName = 'Gold';
-
-            if (!acc[groupName]) {
-                acc[groupName] = {
-                    name: groupName,
-                    accounts: new Map(), // Use a Map to store accounts uniquely
-                    totalValue: 0,
-                    totalPandL: 0
-                };
-            }
-
-            // Add or update the account in the Map
-            let accountData = acc[groupName].accounts.get(account.id);
-            if (!accountData) {
-                accountData = {
-                    ...account, // Spread account info (name, type, etc.)
-                    holdings: [] // Reset holdings to only store relevant ones
-                };
-                acc[groupName].accounts.set(account.id, accountData);
-            }
-            
-            // Add the specific holding to this group
-            accountData.holdings.push(holding);
-            
-            // Update totals for the asset group
-            acc[groupName].totalValue += holding.currentValue;
-            acc[groupName].totalPandL += (holding.currentValue - holding.buyValue);
-        });
+    // --- 1. Group Portfolios by Asset Class ---
+    const portfoliosByClass = accounts.reduce((acc, portfolio) => {
+        // Determine the portfolio's dominant asset class (or 'Mixed')
+        const types = portfolio.holdings.map(h => getAssetClass(h.type));
+        const primaryType = types.every(t => t === types[0]) ? types[0] : 'Mixed Assets';
+        
+        if (!acc[primaryType]) {
+            acc[primaryType] = [];
+        }
+        acc[primaryType].push(portfolio);
         return acc;
     }, {});
 
-    // Sort asset groups by total value (descending)
-    const sortedAssetGroups = Object.values(assetGroups).sort((a, b) => b.totalValue - a.totalValue);
+    // --- 2. Build the HTML ---
+    let html = '<div class="space-y-8">'; // Main container for all classes
 
-    // 2. Render the "Inset Journal" Structure
-    container.innerHTML = sortedAssetGroups.map((group, index) => {
-        const isOpenClass = index === 0 ? 'is-open' : ''; // Open the first group by default
-        const pAndLColor = group.totalPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
-        const pAndLSign = group.totalPandL >= 0 ? '+' : '';
+    // Sort asset classes for consistent order
+    const sortedClasses = Object.keys(portfoliosByClass).sort();
 
-        // Convert Map values to array for rendering
-        const accountsInGroup = Array.from(group.accounts.values());
+    for (const assetClass of sortedClasses) {
+        const portfolios = portfoliosByClass[assetClass];
 
-        return `
-            <div class="investment-asset-group ${isOpenClass}" data-asset-group="${group.name}">
-                
-                <h3 class="investment-group-header">
-                    <div class="flex-1">
-                        <span class="text-lg">${group.name}</span>
-                        <span class="text-sm text-text-secondary ml-2">(${accountsInGroup.length} ${accountsInGroup.length === 1 ? 'Account' : 'Accounts'})</span>
-                    </div>
+        // Calculate totals for this asset class
+        const classTotals = portfolios.reduce((acc, p) => {
+            const { currentValue, buyValue } = getPortfolioTotals(p);
+            acc.currentValue += currentValue;
+            acc.buyValue += buyValue;
+            return acc;
+        }, { currentValue: 0, buyValue: 0 });
+        
+        const classPandL = classTotals.currentValue - classTotals.buyValue;
+        const classPandLColor = classPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
+        const classPandLSign = classPandL >= 0 ? '+' : '';
+
+        // --- Render the Asset Class Header (Level 1) ---
+        html += `
+            <section class="asset-class-group">
+                <div class="asset-class-header">
+                    <h3 class="text-xl font-heading font-semibold">${assetClass}</h3>
                     <div class="text-right">
-                        <span class="group-total-value">${formatIndianCurrency(group.totalValue)}</span>
-                        <span class="group-total-pnl ${pAndLColor}">${pAndLSign}${formatIndianCurrency(Math.abs(group.totalPandL))}</span>
+                        <p class="text-xl font-mono font-semibold text-text-primary">₹${classTotals.currentValue.toLocaleString('en-IN')}</p>
+                        <p class="text-sm font-mono ${classPandLColor}">${classPandLSign}₹${classPandL.toLocaleString('en-IN')}</p>
                     </div>
-                    <svg class="chevron-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </h3>
+                </div>
+                
+                <div class="space-y-4 mt-4">
+        `;
 
-                <div class="investment-group-list">
-                    <div class="horizontal-stream-container">
-                        
-                        ${accountsInGroup.map((account, accIndex) => {
-                            // Calculate totals for *this specific account* within *this specific group*
-                            const accountGroupTotalValue = account.holdings.reduce((sum, h) => sum + h.currentValue, 0);
-                            const accountGroupBuyValue = account.holdings.reduce((sum, h) => sum + h.buyValue, 0);
-                            const accountGroupPandL = accountGroupTotalValue - accountGroupBuyValue;
-                            const accountPandLColor = accountGroupPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
-                            const accountPandLSign = accountGroupPandL >= 0 ? '+' : '';
+        // --- Render Portfolio Cards for this class (Level 2) ---
+        portfolios.forEach(portfolio => {
+            const portfolioTotals = getPortfolioTotals(portfolio);
+            const portfolioPandL = portfolioTotals.currentValue - portfolioTotals.buyValue;
+            const pAndLColor = portfolioPandL >= 0 ? 'text-positive-value' : 'text-negative-value';
+            const pAndLSign = portfolioPandL >= 0 ? '+' : '';
 
-                            return `
-                                <div class="investment-account-column" style="animation-delay: ${accIndex * 50}ms">
-                                    <div class="holdings-account-card open">
-                                        <div class="holdings-account-header p-4">
-                                            <div class="flex flex-col">
-                                                <div>
-                                                    <p class="font-medium text-white text-base">${account.name}</p>
-                                                    <p class="text-sm text-gray-400 mt-0.5">${account.type}</p>
-                                                </div>
-                                                <div class="mt-3">
-                                                    <p class="mono text-base text-white text-left">₹${accountGroupTotalValue.toLocaleString('en-IN')}</p>
-                                                    <p class="mono text-sm ${accountPandLColor} mt-0.5 text-left">
-                                                        ${accountPandLSign}₹${accountGroupPandL.toLocaleString('en-IN')}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        ${renderAccountCardContent(account)}
-                                    </div>
+            // We are re-using the .holdings-account-card styles
+            html += `
+                <div class="holdings-account-card rounded-lg overflow-hidden accent-primary" data-account-id="${portfolio.id}">
+                    <div class="holdings-account-header p-5">
+                        <div class="flex flex-col md:flex-row md:justify-between">
+                            <div class="mb-3 md:mb-0">
+                                <p class="font-medium text-white text-lg">${portfolio.name}</p>
+                                <p class="text-sm text-text-secondary mt-1">${portfolio.type} • ${portfolio.holdings.length} Holding(s)</p>
+                            </div>
+                            <div class="flex items-center justify-between md:justify-end md:gap-4">
+                                <div>
+                                    <p class="mono text-lg text-white text-right">₹${portfolioTotals.currentValue.toLocaleString('en-IN')}</p>
+                                    <p class="mono text-sm ${pAndLColor} mt-0.5 md:text-right">${pAndLSign}₹${portfolioPandL.toLocaleString('en-IN')}</p>
                                 </div>
+                                <svg class="chevron-icon h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="holdings-list">
+                        ${renderHoldingsList(portfolio)}
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div></section>`; // Close .space-y-4 and .asset-class-group
+    }
+
+    html += `</div>`; // Close .space-y-8
+    container.innerHTML = html;
+}
+
+/**
+ * Renders the *content* inside an expanded portfolio card.
+ * This is where we show different UIs for stocks, FDs, etc.
+ * @param {object} portfolio - The portfolio object
+ * @returns {string} HTML string of the holdings
+ */
+function renderHoldingsList(portfolio) {
+    // For now, we only have detailed renderers for brokerage holdings
+    // We can add "else if (holding.type === 'fd')" etc. later
+    
+    // Filter for holdings we know how to render in a table
+    const brokerageHoldings = portfolio.holdings.filter(h => ['equity', 'mutual_fund', 'bond'].includes(h.type));
+    // Filter for simple "pot of money" holdings
+    const retirementHoldings = portfolio.holdings.filter(h => ['epf', 'nps'].includes(h.type));
+
+    let listHtml = '';
+
+    // --- Renderer for Stocks, MFs, Bonds ---
+    if (brokerageHoldings.length > 0) {
+        listHtml += `
+            <div class="desktop-table">
+                <table class="w-full">
+                    <thead class="text-xs text-gray-500"><tr class="border-t border-b border-white/10">
+                        <th class="p-4 text-left font-normal group-divider">Instrument</th>
+                        <th class="p-4 text-right font-normal">Units/Qty</th>
+                        <th class="p-4 text-right font-normal">Avg. (₹)</th>
+                        <th class="p-4 text-right font-normal group-divider">LTP (₹)</th>
+                        <th class="p-4 text-right font-normal group-divider">Invested (₹)</th>
+                        <th class="p-4 text-right font-normal">Total P&L (₹)</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-white/10">
+                        ${brokerageHoldings.map(holding => {
+                            const pAndL = holding.currentValue - holding.buyValue;
+                            const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
+                            const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
+                            const unit = holding.quantity || 0;
+                            const avgCost = unit > 0 ? holding.buyValue / unit : 0;
+                            const ltp = unit > 0 ? holding.currentValue / unit : 0;
+                            return `
+                                <tr class="hover:bg-white/5">
+                                    <td class="p-4 group-divider text-base">${holding.name}</td>
+                                    <td class="p-4 text-right mono text-base">${unit.toLocaleString('en-IN')}</td>
+                                    <td class="p-4 text-right mono text-base">${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                    <td class="p-4 text-right mono text-base group-divider">${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+                                    <td class="p-4 text-right mono text-base group-divider">${holding.buyValue.toLocaleString('en-IN')}</td>
+                                    <td class="p-4 text-right mono text-base ${pAndLColor}">
+                                        <div>${pAndL >= 0 ? '+' : ''}${pAndL.toLocaleString('en-IN')}</div>
+                                        <div class="text-xs">(${pAndLPercent.toFixed(2)}%)</div>
+                                    </td>
+                                </tr>
                             `;
                         }).join('')}
-
+                    </tbody>
+                </table>
+            </div>
+            <div class="mobile-cards">
+                ${brokerageHoldings.map(holding => {
+                     const pAndL = holding.currentValue - holding.buyValue;
+                     const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
+                     const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
+                     const unit = holding.quantity || 0;
+                     const avgCost = unit > 0 ? holding.buyValue / unit : 0;
+                     const ltp = unit > 0 ? holding.currentValue / unit : 0;
+                    return `
+                        <div class="holding-mobile-card">
+                            <p class="font-medium text-white mb-3">${holding.name}</p>
+                            <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-base">
+                                <span class="text-gray-400">Qty.</span><span class="mono text-right">${unit.toLocaleString('en-IN')}</span>
+                                <span class="text-gray-400">Avg. Cost</span><span class="mono text-right">${avgCost.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                <span class="text-gray-400">LTP</span><span class="mono text-right">${ltp.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                                <span class="text-gray-400">Invested</span><span class="mono text-right">${holding.buyValue.toLocaleString('en-IN')}</span>
+                                <span class="text-gray-400">Total P&L</span>
+                                <span class="mono text-right ${pAndLColor}">
+                                    ${pAndL >= 0 ? '+' : ''}${pAndL.toLocaleString('en-IN')}
+                                    <span class="text-xs ml-1">(${pAndLPercent.toFixed(1)}%)</span>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    // --- Renderer for EPF, NPS ---
+    if (retirementHoldings.length > 0) {
+        listHtml += retirementHoldings.map(holding => `
+            <div class="p-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-card-hover-bg p-4 rounded-md">
+                        <p class="text-sm text-text-secondary mb-1">Current Balance</p>
+                        <p class="text-xl font-mono font-semibold text-text-primary">₹${holding.currentValue.toLocaleString('en-IN')}</p>
+                    </div>
+                    <div class="bg-card-hover-bg p-4 rounded-md">
+                        <p class="text-sm text-text-secondary mb-1">Est. Monthly Contribution</p>
+                        <p class="text-xl font-mono font-semibold text-text-primary">₹${holding.meta.monthlyContribution.toLocaleString('en-IN')}</p>
                     </div>
                 </div>
             </div>
-        `;
-    }).join('');
+        `).join('');
+    }
+
+    // TODO: Add renderers for 'fd', 'esop', etc.
+
+    return listHtml;
 }
