@@ -365,3 +365,21 @@ input[name="holdingTicker"] {
         padding-bottom: 0;
     }
 }
+
+/* Starting styles for FI form in Modal */
+
+/* --- Fix for Date Inputs in Dark Mode --- */
+input[type="date"] {
+    color-scheme: dark;
+    /* On non-webkit, this helps. */
+}
+
+/* On Webkit (Chrome/Safari), style the calendar picker icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.6) brightness(1); /* Makes the icon light gray */
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1) brightness(1); /* Makes the icon white */
+}

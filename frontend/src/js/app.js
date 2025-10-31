@@ -275,6 +275,7 @@ const App = {
             if (event.target.id === 'addAccountForm') this.handleAccountSubmit(event);
             if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
             if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
+            if (event.target.id === 'addFixedIncomeForm') this.handleFixedIncomeSubmit(event);
         });
 
         // --- THIS IS THE KEY CHANGE ---
@@ -689,6 +690,44 @@ const App = {
         this.render(); // Re-render the app
     },
 
+    /**
+     * Handles the submission of the Fixed Income form.
+     */
+    handleFixedIncomeSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        // For Fixed Income, the entire investment is a single "holding"
+        const holding = {
+            type: formData.get('type'), // 'fd', 'p2p', 'bond'
+            name: formData.get('type') === 'fd' ? 'Fixed Deposit' : 
+                  formData.get('type') === 'p2p' ? 'P2P Investment' : 'Bond',
+            quantity: 1, // Represents a single investment
+            buyValue: parseFloat(formData.get('investedAmount')),
+            currentValue: parseFloat(formData.get('investedAmount')), // Starts at buy value
+            
+            // Store the extra metadata specific to fixed income
+            meta: {
+                rate: parseFloat(formData.get('interestRate')),
+                investmentDate: formData.get('investmentDate'),
+                maturityDate: formData.get('maturityDate')
+            }
+        };
+
+        const newPortfolio = {
+            id: Date.now(),
+            name: formData.get('name'), // e.g., "HDFC Bank"
+            type: formData.get('portfolioType'), // 'fixed_income'
+            holdings: [holding] // This portfolio contains this one investment
+        };
+        
+        appState.investmentAccounts.push(newPortfolio);
+        console.log("New Fixed Income Portfolio:", newPortfolio);
+
+        toggleModal('addPortfolioModal', false);
+        this.render(); // Re-render the app
+    },
+
     handleTransactionSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
@@ -856,6 +895,10 @@ const App = {
         const holdingsContainer = document.getElementById('holdingsContainer');
         const addHoldingBtn = document.getElementById('addHoldingBtn');
 
+        // --- NEW: Get Fixed Income Date Pickers ---
+        const investmentDateInput = document.getElementById('fi-investment-date');
+        const maturityDateInput = document.getElementById('fi-maturity-date');
+
         // Function to switch views
         const switchView = (viewId, title) => {
             viewContainer.querySelectorAll('.modal-view').forEach(view => {
@@ -866,6 +909,27 @@ const App = {
                 targetView.classList.add('active-view');
             }
             if (modalTitle) modalTitle.textContent = title;
+
+            // --- NEW: Set date rules when switching to Fixed Income view ---
+            if (viewId === 'portfolio-fixed-income-view' && investmentDateInput && maturityDateInput) {
+                // 1. Get today's date in YYYY-MM-DD format
+                const today = new Date().toISOString().split('T')[0];
+                
+                // 2. Set the max for Investment Date to today
+                investmentDateInput.max = today;
+                
+                // 3. If investment date is already filled, set maturity date's min
+                if (investmentDateInput.value) {
+                    const minMaturity = new Date(investmentDateInput.value);
+                    minMaturity.setDate(minMaturity.getDate() + 1);
+                    maturityDateInput.min = minMaturity.toISOString().split('T')[0];
+                } else {
+                    // 4. If investment date is empty, set maturity min to tomorrow (as a fallback)
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    maturityDateInput.min = tomorrow.toISOString().split('T')[0];
+                }
+            }
         };
 
         // 1. Listen for clicks on the selection cards
@@ -912,6 +976,31 @@ const App = {
             addHoldingBtn.addEventListener('click', () => {
                 const currentAssetType = hiddenAssetType.value;
                 holdingsContainer.appendChild(createHoldingRow(currentAssetType));
+            });
+        }
+
+        // --- NEW 5: Add listener for Investment Date change ---
+        if (investmentDateInput && maturityDateInput) {
+            investmentDateInput.addEventListener('change', () => {
+                if (investmentDateInput.value) {
+                    // Create a new date object from the investment date
+                    const minMaturity = new Date(investmentDateInput.value);
+                    // Set it to the next day
+                    minMaturity.setDate(minMaturity.getDate() + 1);
+                    
+                    // Set the min attribute of the maturity date picker
+                    maturityDateInput.min = minMaturity.toISOString().split('T')[0];
+
+                    // (Optional) If maturity date is now invalid, clear it
+                    if (maturityDateInput.value && maturityDateInput.value < maturityDateInput.min) {
+                        maturityDateInput.value = '';
+                    }
+                } else {
+                    // If investment date is cleared, reset maturity date min
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    maturityDateInput.min = tomorrow.toISOString().split('T')[0];
+                }
             });
         }
     },

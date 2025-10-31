@@ -735,13 +735,57 @@
 
                 <div id="portfolio-fixed-income-view" class="modal-view p-8">
                     <button type="button" class="modal-back-btn">&larr; Back to Types</button>
-                    <p class="text-center text-text-secondary mt-4">Fixed Income form coming soon...</p>
+                    
+                    <form id="addFixedIncomeForm" class="space-y-6">
+                        <input type="hidden" name="portfolioType" value="fixed_income">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                            <div>
+                                <label for="fi-provider-name" class="form-label">Provider / Platform</label>
+                                <input type="text" id="fi-provider-name" name="name" class="form-input" placeholder="e.g., HDFC Bank, Cred" required>
+                            </div>
+                            <div>
+                                <label for="fi-asset-type" class="form-label">Asset Type</label>
+                                <select id="fi-asset-type" name="type" class="form-input">
+                                    <option value="fd">Fixed Deposit (FD)</option>
+                                    <option value="p2p">P2P Lending</option>
+                                    <option value="bond">Bond</option>
+                                    <option value="other">Other Fixed Income</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                                <div>
+                                    <label for="fi-invested-amount" class="form-label">Invested Amount (₹)</label>
+                                    <input type="number" step="0.01" id="fi-invested-amount" name="investedAmount" class="form-input" placeholder="50000" required>
+                                </div>
+                                <div>
+                                    <label for="fi-interest-rate" class="form-label">Interest Rate (% p.a.)</label>
+                                    <input type="number" step="0.01" id="fi-interest-rate" name="interestRate" class="form-input" placeholder="7.5" required>
+                                </div>
+                                <div>
+                                    <label for="fi-investment-date" class="form-label">Investment Date</label>
+                                    <input type="date" id="fi-investment-date" name="investmentDate" class="form-input" required>
+                                </div>
+                                <div>
+                                    <label for="fi-maturity-date" class="form-label">Maturity Date</label>
+                                    <input type="date" id="fi-maturity-date" name="maturityDate" class="form-input" required>
+                                </div>
+                            </div>
+                        </div>
+            
+                        <div class="pt-6 border-t border-white/10">
+                            <button type="submit" class="btn btn-primary w-full justify-center">Save Fixed Income</button>
+                        </div>
+                    </form>
                 </div>
 
                 <div id="portfolio-employee-view" class="modal-view p-8">
                     <button type="button" class="modal-back-btn">&larr; Back to Types</button>
                     <p class="text-center text-text-secondary mt-4">Employee Benefits form coming soon...</p>
-                    </div>
+                </div>
 
                 <div id="portfolio-other-view" class="modal-view p-8">
                     <button type="button" class="modal-back-btn">&larr; Back to Types</button>
