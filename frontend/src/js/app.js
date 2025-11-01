@@ -9,7 +9,7 @@ import {
     renderAccountsPage,
     renderTransactionInsights,
     renderTransactionStructure,
-    loadTransactionData,        // Kept
+    loadTransactionData,
     // populateAccountDropdown,
     renderInvestmentCard,
     renderInvestmentsTab,
@@ -21,12 +21,11 @@ import {
     showTransactionModal,
     showPortfolioModal,
     createHoldingRow,
-    renderSmartStackView, // <-- ADD THIS
-    initTagInput, // <-- ADD THIS IMPORT
-    setSelectedTags, // <-- ADD THIS IMPORT (for submit handler)
-    initCategorySelect, // <-- ADD
-    setSelectedCategory, // <-- ADD
-    updateBrokerageFormHeaders // <-- ADD THIS
+    initTagInput,
+    setSelectedTags, 
+    initCategorySelect, 
+    setSelectedCategory, 
+    updateBrokerageFormHeaders 
 } from './utils/ui/index.js';
 
 const App = {
@@ -350,24 +349,33 @@ const App = {
             }
         });
 
-        // --- UPGRADED EVENT LISTENER FOR ACCORDION BEHAVIOR ---
-        const investmentTabContent = document.getElementById('investmentTabContent');
-        if (investmentTabContent) {
-            investmentTabContent.addEventListener('click', (event) => {
-                const card = event.target.closest('.holdings-account-card');
-                if (card) {
-                    const currentlyOpen = card.classList.contains('open');
+        // --- NEW "INVESTMENT JOURNAL" ACCORDION CLICK ---
+        // This listener now targets the #investmentJournalContent container
+        const investmentJournalContent = document.getElementById('investmentJournalContent');
+        if (investmentJournalContent) {
+            investmentJournalContent.addEventListener('click', (event) => {
+                // Find the clicked header
+                const header = event.target.closest('.portfolio-accordion-header');
+                if (!header) return;
 
-                    // Close all other open cards
-                    investmentTabContent.querySelectorAll('.holdings-account-card.open').forEach(openCard => {
-                        if (openCard !== card) {
-                            openCard.classList.remove('open');
-                        }
-                    });
+                const group = header.closest('.portfolio-accordion-group');
+                if (!group) return;
 
-                    // Toggle the clicked card
-                    card.classList.toggle('open');
-                }
+                // Find the parent Asset Class Card (for closing others)
+                const parentCard = group.closest('.investment-journal-card');
+                if (!parentCard) return;
+
+                const currentlyOpen = group.classList.contains('is-open');
+
+                // Elite Touch: Close other accordions *within the same asset class card*
+                parentCard.querySelectorAll('.portfolio-accordion-group.is-open').forEach(openGroup => {
+                    if (openGroup !== group) {
+                        openGroup.classList.remove('is-open');
+                    }
+                });
+
+                // Toggle the clicked group
+                group.classList.toggle('is-open', !currentlyOpen);
             });
         }
 
