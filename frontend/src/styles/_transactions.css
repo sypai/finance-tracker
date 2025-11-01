@@ -3,63 +3,6 @@
     padding-left: 2.75rem; /* Make room for search icon */
 }
 
-/* Upgraded Transaction List Styling */
-.transaction-group {
-    margin-bottom: 1.5rem; /* 24px */
-}
-
-.transaction-group-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: 1rem; /* 16px */
-    font-weight: 600;
-    color: var(--text-primary);
-    padding: 0.75rem 0.5rem; /* 12px 8px */
-    border-bottom: 1px solid var(--card-border);
-    margin-bottom: 0.5rem;
-}
-
-.transaction-group-header .month-total {
-    font-family: var(--font-mono);
-    font-size: 1rem; /* 16px */
-}
-
-.transaction-group-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem; /* 4px space between rows */
-}
-
-/* Make the row a clickable element */
-.transaction-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem; /* 12px */
-    padding: 0.75rem 0.5rem;
-    border-radius: var(--radius-md); /* 12px */
-    transition: background-color var(--transition-fast);
-    cursor: pointer;
-}
-
-.transaction-row:hover {
-    background-color: var(--card-hover-bg);
-}
-
-/* This is the old icon wrapper rule, it will be overridden by the new card-specific one below */
-.transaction-icon-wrapper {
-    flex-shrink: 0;
-    width: 2.5rem; /* 40px */
-    height: 2.5rem;
-    border-radius: 50%;
-    background-color: var(--card-hover-bg);
-    border: 1px solid var(--card-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-}
-
 /* Animation Classes */
 @keyframes subtle-fade-in-up {
     from { 
@@ -153,7 +96,8 @@
 
 /* 1. The Month Accordion Group */
 .transaction-group {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 1.5rem; /* 24px */
 }
 .transaction-group:last-child {
     border-bottom: none;
@@ -214,12 +158,12 @@
 
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
+    scrollbar-color: var(--card-border) transparent;
 }
 .horizontal-stream-container::-webkit-scrollbar { height: 8px; }
 .horizontal-stream-container::-webkit-scrollbar-track { background: transparent; }
 .horizontal-stream-container::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
+    background-color: var(--card-border);
     border-radius: 4px;
 }
 .horizontal-stream-container::-webkit-scrollbar-thumb:hover {
@@ -267,7 +211,7 @@
     align-items: center; /* Vertical alignment */
     gap: 0.75rem; /* 12px gap between icon, middle, and right */
     background-color: var(--card-bg); /* The #1E1F20 card */
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     padding: 0.75rem 1rem; /* 12px 16px */
     border-radius: var(--radius-md);
     transition: all 0.2s ease-out;
@@ -287,7 +231,7 @@
     height: 2.5rem;
     border-radius: 50%;
     background-color: var(--background); /* The #131314 bg */
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -377,12 +321,12 @@
     cursor: text;
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
+    scrollbar-color: var(--card-border) transparent;
 }
 #tag-input-wrapper::-webkit-scrollbar { height: 4px; }
 #tag-input-wrapper::-webkit-scrollbar-track { background: transparent; }
 #tag-input-wrapper::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
+    background-color: var(--card-border);
     border-radius: 2px;
 }
 #tag-input-wrapper::-webkit-scrollbar-thumb:hover {
@@ -453,7 +397,7 @@
     top: 100%;
     margin-top: 0.5rem; /* 8px */
     background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     border-radius: 0.5rem; /* 8px */
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); /* shadow-xl */
     z-index: 50;
@@ -577,7 +521,7 @@
 }
 #new-category-icon-picker button:hover {
     background-color: var(--card-hover-bg);
-    border-color: var(--border-color);
+    border-color: var(--card-border);
 }
 #new-category-icon-picker button.selected {
     background-color: var(--primary-accent);

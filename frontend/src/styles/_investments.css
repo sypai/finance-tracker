@@ -176,31 +176,24 @@ tbody td.group-divider {
 
 #holdings-table-wrapper {
     background-color: var(--background);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
 
 #holdingsContainerHeader {
-    padding-right: calc(0.75rem + 8px); /* px-3 + scrollbar */
-    padding-left: 0.75rem; /* px-3 */
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--card-border);
 }
 
-/* Style the header labels */
 #holdingsContainerHeader .form-label {
     font-family: var(--font-mono);
     text-transform: uppercase;
     color: var(--text-secondary);
     font-weight: 500;
-    padding: 0.75rem 0.5rem;
-    border-right: 1px solid var(--border-color); /* <-- ADD THIS LINE */
-    /* Borders are desktop-only */
+    padding: 0.75rem 0.75rem; /* py-3 px-3 */
 }
-
-/* Remove border from the last header label */
-#holdingsContainerHeader .grid > label:last-of-type {
-    border-right: none;
+#holdingsContainerHeader .form-label:not(:last-child) {
+    border-right: 1px solid var(--card-border); 
 }
 
 /* Style the container for the input rows */
@@ -210,21 +203,18 @@ tbody td.group-divider {
 
 /* Style each input row */
 .holding-input-row {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--card-border);
 }
 #holdingsContainer .holding-input-row:last-child {
     border-bottom: none; /* No border on the last row */
 }
 
-/* Base style for all children in the row */
 .holding-input-row > * {
-    border-right: 1px solid var(--border-color);
     /* Set height by padding */
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding: 0.75rem 0.75rem; /* py-3 px-3 */
 }
-.holding-input-row > *:last-child {
-    border-right: none; /* No border on last child */
+.holding-input-row > *:not(:last-child) {
+    border-right: 1px solid var(--card-border);
 }
 
 /* Text Align Headers */
@@ -240,7 +230,7 @@ tbody td.group-divider {
 
 /* Style each input row */
 .holding-input-row {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--card-border);
     /* Mobile-first padding */
     padding: 1rem 0.75rem;
 }
@@ -257,10 +247,10 @@ tbody td.group-divider {
 .form-input-row {
     background-color: transparent;
     border-width: 0 0 1px 0;
-    border-color: var(--border-color); /* <-- VISIBLE BORDER FIX */
+    border-color: var(--card-border); /* <-- VISIBLE BORDER FIX */
     border-radius: 0;
     color: var(--text-primary);
-    padding: 0.5rem 0.25rem; /* Tighter padding for mobile */
+    padding: 0.5rem 0; /* Tighter padding for mobile */
     width: 100%;
     font-size: 0.875rem;
     transition: all 0.3s ease;
@@ -279,7 +269,7 @@ tbody td.group-divider {
 .form-input-row {
     background-color: transparent;
     border-width: 0 0 1px 0;
-    border-color: var(--border-color);
+    border-color: var(--card-border);
     border-radius: 0;
     color: var(--text-primary);
     padding: 0.25rem 0.5rem; /* Use padding from JS (px-2) */
@@ -330,7 +320,7 @@ input[name="holdingTicker"] {
 @media (min-width: 768px) { /* Tailwind 'md' breakpoint */
     
     #holdingsContainerHeader .form-label {
-        border-right: 1px solid var(--border-color); /* Add column borders */
+        border-right: 1px solid var(--card-border); /* Add column borders */
     }
     #holdingsContainerHeader .grid > label:last-of-type {
         border-right: none;
@@ -343,7 +333,7 @@ input[name="holdingTicker"] {
 
     /* Base style for all children in the row */
     .holding-input-row > * {
-        border-right: 1px solid var(--border-color);
+        border-right: 1px solid var(--card-border);
         /* Set height by padding */
         padding-top: 0.75rem;
         padding-bottom: 0.75rem;
@@ -513,7 +503,8 @@ fieldset legend {
 
 /* 2. The Portfolio Accordion (Clones .transaction-group) */
 .portfolio-accordion-group {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 1.5rem; /* 24px */
 }
 .investment-journal-card .portfolio-accordion-group:last-child {
     border-bottom: none;
@@ -549,7 +540,7 @@ fieldset legend {
     border-radius: var(--radius-md);
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-    margin: 0 0.5rem 1rem 0.5rem; /* Margin on bottom */
+    margin: 0 0.5rem 0 0.5rem;
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity 0.3s ease-in-out,
                 padding 0.4s ease-in-out,
@@ -566,24 +557,24 @@ fieldset legend {
     padding: 1.25rem 0.5rem; /* Give the cards vertical space */
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: var(--border-color) transparent;
+    scrollbar-color: var(--card-border) transparent;
 }
 /* Scrollbar styles (same as transactions) */
 .portfolio-horizontal-stream::-webkit-scrollbar { height: 8px; }
 .portfolio-horizontal-stream::-webkit-scrollbar-track { background: transparent; }
 .portfolio-horizontal-stream::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
+    background-color: var(--card-border);
     border-radius: 4px;
 }
 
 /* Add this new rule */
 /* This rule adds the "margin" (padding) around the accordions */
 .portfolio-accordions-container {
-    padding: 0.5rem; /* p-2 (all-around) */
+    /* padding: 0.5rem; p-2 (all-around) */
 }
 @media (min-width: 768px) {
     .portfolio-accordions-container {
-        padding: 1rem; /* p-4 (all-around) */
+        /* padding: 1rem; p-4 (all-around) */
     }
 }
 
@@ -596,6 +587,7 @@ fieldset legend {
     opacity: 1;
     padding-top: 0.5rem; /* Add padding back when open */
     padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 /* 6. The Holding Card (Refined "Baseball Card") */
@@ -604,7 +596,7 @@ fieldset legend {
     flex-shrink: 0;
     width: 280px;
     background-color: var(--card-bg); /* #1E1F20 */
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--card-border);
     border-radius: var(--radius-md);
     padding: 1rem; /* 16px */
     display: flex;
@@ -661,29 +653,9 @@ fieldset legend {
     gap: 0.75rem; /* 12px */
 }
 
-/* Reusable Key-Value pair for card body */
-.holding-metric {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-}
-.holding-metric .label {
-    font-size: 0.875rem; /* 14px */
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.holding-metric .value {
-    font-family: var(--font-mono);
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500;
-    color: var(--text-primary);
-    text-align: right;
-    padding-left: 0.5rem; /* Space between label and value */
-}
+/* --- "Elevated" Holding Card Body --- */
 
-/* REFINED: P&L Metric (matches feedback 4) */
+/* 1. Main Metric Block (e.g., Current Value) */
 .holding-metric-main {
     display: flex;
     justify-content: space-between;
@@ -702,12 +674,43 @@ fieldset legend {
     font-size: 1.25rem; /* 20px */
     font-weight: 600;
     line-height: 1.1;
+    color: var(--text-primary);
 }
 .holding-metric-main .sub-value {
     font-family: var(--font-mono);
-    font-size: 0.75rem; /* 12px */
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    margin-top: 0.25rem;
 }
 
+/* 2. Secondary Metrics Grid */
+.holding-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem; /* 12px */
+    padding-top: 0.75rem; /* 12px */
+    border-top: 1px solid var(--card-border);
+    margin-top: 0.75rem; /* 12px */
+}
+
+.holding-metric-small {
+    display: flex;
+    flex-direction: column;
+}
+.holding-metric-small .label {
+    font-size: 0.75rem; /* 12px */
+    color: var(--text-secondary);
+    margin-bottom: 0.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.holding-metric-small .value {
+    font-family: var(--font-mono);
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    color: var(--text-primary);
+}
 
 /* --- Mobile Stacking for Investment Journal --- */
 @media (max-width: 767px) {

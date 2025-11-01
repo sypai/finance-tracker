@@ -267,60 +267,64 @@
         </div>
 
         <!-- INVESTMENTS TAB -->
-        <div id="investmentsNormalView" class="hidden">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card p-6">
-                    <h4 class="text-sm text-gray-400 mb-2">Current Value</h4>
-                    <p id="investmentsCurrentValue" class="text-3xl font-semibold mono"></p>
-                    <p id="investmentsMonthChange" class="text-sm mt-2"></p>
+        <div class="tab-content" id="investments">
+            <div id="investmentsNormalView" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Current Value</h4>
+                        <p id="investmentsCurrentValue" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsMonthChange" class="text-sm mt-2"></p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Total Invested</h4>
+                        <p id="investmentsTotalInvested" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsInvestedSubtext" class="text-sm mt-2"></p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-sm text-gray-400 mb-2">Total Gain/Loss</h4>
+                        <p id="investmentsTotalGain" class="text-3xl font-semibold mono"></p>
+                        <p id="investmentsTotalGainPercent" class="text-sm mt-2"></p>
+                    </div>
                 </div>
-                <div class="card p-6">
-                    <h4 class="text-sm text-gray-400 mb-2">Total Invested</h4>
-                    <p id="investmentsTotalInvested" class="text-3xl font-semibold mono"></p>
-                    <p id="investmentsInvestedSubtext" class="text-sm mt-2"></p>
-                </div>
-                <div class="card p-6">
-                    <h4 class="text-sm text-gray-400 mb-2">Total Gain/Loss</h4>
-                    <p id="investmentsTotalGain" class="text-3xl font-semibold mono"></p>
-                    <p id="investmentsTotalGainPercent" class="text-sm mt-2"></p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:items-start mb-8">
-
-                <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-200">
-                    <h3 class="text-xl font-semibold mb-6">Performance Insights</h3>
-                    <div id="performanceInsightsList" class="space-y-5">
-                        </div>
-                </div>
-
-                <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-100">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-xl font-semibold">Asset Allocation</h3>
-                        <div id="investmentViewSelector" class="relative">
-                            <button id="investmentViewBtn" class="flex items-center gap-2 text-sm p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                                <span id="currentInvestmentView" class="font-semibold text-white">By Asset</span>
-                                <svg class="chevron-icon h-4 w-4 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                            <div id="investmentViewDropdown" class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-lg shadow-xl p-1 z-20 hidden">
-                                <a href="#" class="investment-view-option block px-3 py-2 text-sm rounded-md hover:bg-white/10" data-view="asset">By Asset</a>
-                                <a href="#" class="investment-view-option block px-3 py-2 text-sm rounded-md hover:bg-white/10" data-view="portfolio">By Portfolio</a>
+    
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:items-start mb-8">
+    
+                    <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-200">
+                        <h3 class="text-xl font-semibold mb-6">Performance Insights</h3>
+                        <div id="performanceInsightsList" class="space-y-5">
+                            </div>
+                    </div>
+    
+                    <div class="card p-6 lg:p-8 flex flex-col animate-fade-in delay-100">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold">Asset Allocation</h3>
+                            <div id="investmentViewSelector" class="relative">
+                                <button id="investmentViewBtn" class="flex items-center gap-2 text-sm p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                                    <span id="currentInvestmentView" class="font-semibold text-white">By Asset</span>
+                                    <svg class="chevron-icon h-4 w-4 text-gray-400 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                                <div id="investmentViewDropdown" class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-lg shadow-xl p-1 z-20 hidden">
+                                    <a href="#" class="investment-view-option block px-3 py-2 text-sm rounded-md hover:bg-white/10" data-view="asset">By Asset</a>
+                                    <a href="#" class="investment-view-option block px-3 py-2 text-sm rounded-md hover:bg-white/10" data-view="portfolio">By Portfolio</a>
+                                </div>
                             </div>
                         </div>
+                        <div class="chart-container-medium">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-container-medium">
-                        <canvas id="allocationChart"></canvas>
-                    </div>
+    
                 </div>
-
+                <div id="investmentJournalContent" class="mt-4 space-y-6">
+                    </div>
+    
             </div>
-            <div id="investmentJournalContent" class="mt-4 space-y-6">
+    
+            <div id="investmentsZeroState">
                 </div>
-
         </div>
 
-        <div id="investmentsZeroState">
-            </div>
+        
 
     </div>
 
@@ -712,11 +716,12 @@
                         <div class="pt-4 border-t border-white/10">
                             <h4 id="holdingsListTitle" class="text-md font-semibold text-gray-200 mb-4">Add Your Stocks</h4> <div id="holdings-table-wrapper">
                                 <div id="holdingsContainerHeader" class="px-4">
-                                    <div class="hidden md:grid grid-cols-12 gap-3">
-                                        <label id="col-header-name" class="form-label !text-xs col-span-3">Name</label>
+                                    <div class="hidden md:grid grid-cols-12">
+                                        <label id="col-header-name" class="form-label !text-xs col-span-4">Name</label>
                                         <label id="col-header-ticker" class="form-label !text-xs col-span-2">Ticker</label>
                                         <label id="col-header-units" class="form-label !text-xs col-span-3">Units / Qty</label>
-                                        <label id="col-header-price" class="form-label !text-xs col-span-3">Avg. Buy Price</label>
+                                        <label id="col-header-price" class="form-label !text-xs col-span-2">Avg. Buy Price</label>
+                                        <label class="form-label !text-xs col-span-1"></label> 
                                     </div>
                                 </div>
 

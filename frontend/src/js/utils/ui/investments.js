@@ -52,7 +52,7 @@ export function renderInvestmentCard(appState) {
 // --- Add/Edit Portfolio Modal (Unchanged from original) ---
 export function createHoldingRow(assetType = 'stock') {
     const row = document.createElement('div');
-    row.className = 'holding-input-row grid grid-cols-6 md:grid-cols-12 gap-x-3 gap-y-4 md:gap-y-0 md:gap-3 items-center';
+    row.className = 'holding-input-row grid grid-cols-6 md:grid-cols-12 gap-x-3 gap-y-4 md:gap-y-0 items-center';
     let namePlaceholder = 'e.g., Reliance';
     let tickerPlaceholder = 'TICKER';
     let pricePlaceholder = 'Avg. Buy ₹';
@@ -259,10 +259,10 @@ function getAssetClass(type) {
 }
 
 /**
- * Calculates totals for a single portfolio.
+ * Calculates totals for a list of holdings.
  */
-function getPortfolioTotals(portfolio) {
-    return portfolio.holdings.reduce((acc, h) => {
+function getHoldingsTotals(holdings) {
+    return holdings.reduce((acc, h) => {
         acc.currentValue += h.currentValue || 0;
         acc.buyValue += h.buyValue || 0;
         return acc;
@@ -271,33 +271,61 @@ function getPortfolioTotals(portfolio) {
 
 /**
  * Renders the "Investment Journal" (Row 3+).
- * Creates a full-width card for each Asset Class.
+ * Creates a full-width card for each Asset Class, with portfolio accordions inside.
  */
 function renderHoldingsJournal(accounts) {
     const container = document.getElementById('investmentJournalContent');
     if (!container) return;
 
-    // 1. Group Portfolios by Asset Class
-    const portfoliosByClass = accounts.reduce((acc, portfolio) => {
-        const types = portfolio.holdings.map(h => getAssetClass(h.type));
-        const primaryType = types.every(t => t === types[0]) ? types[0] : 'Mixed Assets';
-        if (!acc[primaryType]) {
-            acc[primaryType] = [];
+    // 1. Get all holdings and enhance them with portfolio info
+    const allHoldingsWithPortfolio = accounts.flatMap(portfolio => 
+        portfolio.holdings.map(holding => ({
+            ...holding, // Spread the holding data (type, name, value, etc.)
+            portfolioName: portfolio.name,
+            portfolioTypeDisplay: {
+                'brokerage': 'Brokerage',
+                'fixed_income': 'Fixed Income',
+                'employee_benefit': 'Employee Benefit'
+            }[portfolio.type] || 'Portfolio',
+            portfolioId: portfolio.id
+        }))
+    );
+
+    // 2. Group these enhanced holdings by their Asset Class
+    const holdingsByClass = allHoldingsWithPortfolio.reduce((acc, holding) => {
+        const assetClass = getAssetClass(holding.type);
+        if (!acc[assetClass]) {
+            acc[assetClass] = [];
         }
-        acc[primaryType].push(portfolio);
+        acc[assetClass].push(holding);
         return acc;
     }, {});
 
     let html = '';
-    const sortedClasses = Object.keys(portfoliosByClass).sort();
+    const sortedClasses = Object.keys(holdingsByClass).sort();
 
-    // 2. Create an "Asset Class Card" for each class
+    // 3. Create an "Asset Class Card" for each class
     for (const assetClass of sortedClasses) {
-        const portfolios = portfoliosByClass[assetClass];
+        const holdingsInClass = holdingsByClass[assetClass];
         
-        // Create Portfolio Accordion Headers HTML
-        const portfolioHeadersHtml = portfolios.map((portfolio, index) => {
-            const totals = getPortfolioTotals(portfolio);
+        // 4. Group these holdings by their parent portfolio to create the accordions
+        const portfoliosInClass = holdingsInClass.reduce((acc, holding) => {
+            const pid = holding.portfolioId;
+            if (!acc[pid]) {
+                acc[pid] = {
+                    id: pid,
+                    name: holding.portfolioName,
+                    typeDisplay: holding.portfolioTypeDisplay,
+                    holdings: []
+                };
+            }
+            acc[pid].holdings.push(holding);
+            return acc;
+        }, {});
+
+        // 5. Create Portfolio Accordion Headers HTML
+        const portfolioHeadersHtml = Object.values(portfoliosInClass).map((portfolio, index) => {
+            const totals = getHoldingsTotals(portfolio.holdings); // <-- Use new helper
             const pAndL = totals.currentValue - totals.buyValue;
             const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
             const pAndLSign = pAndL >= 0 ? '+' : '';
@@ -309,11 +337,7 @@ function renderHoldingsJournal(accounts) {
                 .join('');
             
             // Map portfolio type to a user-friendly name
-            const portfolioTypeDisplay = {
-                'brokerage': 'Brokerage',
-                'fixed_income': 'Fixed Income',
-                'employee_benefit': 'Employee Benefit'
-            }[portfolio.type] || 'Portfolio';
+            const portfolioTypeDisplay = portfolio.typeDisplay; // <-- Use prepared display name
 
             return `
                 <div class="portfolio-accordion-group ${isOpenClass}" data-portfolio-id="${portfolio.id}">
@@ -355,7 +379,7 @@ function renderHoldingsJournal(accounts) {
                     </div>
                 </div>
 
-                <div class="portfolio-accordions-container">
+                <div class="portfolio-accordions-container flex flex-col p-2 md:p-4">
                     ${portfolioHeadersHtml}
                 </div>
             </div>
@@ -380,10 +404,25 @@ function renderHoldingCard(holding, portfolioId) {
         headerHtml += `<span class="holding-ticker">${holding.ticker}</span>`;
     }
 
-    let bodyHtml = '';
+    // --- (This logic replaces the large "if/else" block) ---
+
+    let primaryMetricHtml = '';
+    let detailsGridHtml = '';
+    let bodyHtml = ''; // <--- THIS WAS THE MISSING LINE
     const type = holding.type;
 
-    // --- Renderer for Equity / MF / Bond ---
+    // --- 1. Determine Primary Metric (Current Value) ---
+    // Default primary metric
+    primaryMetricHtml = `
+        <div class="holding-metric holding-metric-main">
+            <span class="label">Current Value</span>
+            <div class="value-stack">
+                <span class="value">₹${holding.currentValue.toLocaleString('en-IN')}</span>
+            </div>
+        </div>
+    `;
+
+    // --- 2. Build the Details Grid based on type ---
     if (['equity', 'mutual_fund', 'bond'].includes(type)) {
         const pAndL = holding.currentValue - holding.buyValue;
         const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
@@ -393,128 +432,132 @@ function renderHoldingCard(holding, portfolioId) {
         const avgCost = unit > 0 ? holding.buyValue / unit : 0;
         const ltp = unit > 0 ? holding.currentValue / unit : 0;
 
-        bodyHtml = `
-            <div class="holding-metric holding-metric-main">
-                <span class="label">Total P&L</span>
-                <div class="value-stack">
-                    <span class="value ${pAndLColor}">${pAndLSign}${formatIndianCurrency(pAndL)}</span>
-                    <div class="sub-value ${pAndLColor}">(${pAndLPercent.toFixed(1)}%)</div>
-                </div>
-            </div>
-            <div class="holding-metric">
-                <span class="label">Current Value</span>
-                <span class="value">₹${holding.currentValue.toLocaleString('en-IN')}</span>
-            </div>
-            <div class="holding-metric">
-                <span class="label">Invested</span>
-                <span class="value">₹${holding.buyValue.toLocaleString('en-IN')}</span>
-            </div>
-            <div class="holding-metric">
-                <span class="label">Units</span>
-                <span class="value">${unit.toLocaleString('en-IN')}</span>
-            </div>
-            <div class="holding-metric">
-                <span class="label">Avg. Cost</span>
-                <span class="value">₹${avgCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-            </div>
-            <div class="holding-metric">
-                <span class="label">LTP</span>
-                <span class="value">₹${ltp.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
-            </div>
-        `;
-    }
-    // --- Renderer for Fixed Income (FD, P2P) ---
-    else if (['fd', 'p2p'].includes(type)) {
-        bodyHtml = `
+        // Override Primary Metric to include P&L context
+        primaryMetricHtml = `
             <div class="holding-metric holding-metric-main">
                 <span class="label">Current Value</span>
                 <div class="value-stack">
                     <span class="value">₹${holding.currentValue.toLocaleString('en-IN')}</span>
+                    <div class="sub-value ${pAndLColor}">
+                        ${pAndLSign}${formatIndianCurrency(pAndL)} (${pAndLSign}${pAndLPercent.toFixed(1)}%)
+                    </div>
                 </div>
             </div>
-            <div class="holding-metric">
+        `;
+        
+        // Build 4-up grid
+        detailsGridHtml = `
+            <div class="holding-metric-small">
+                <span class="label">Invested</span>
+                <span class="value">${formatIndianCurrency(holding.buyValue)}</span>
+            </div>
+            <div class="holding-metric-small">
+                <span class="label">LTP</span>
+                <span class="value">₹${ltp.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+            <div class="holding-metric-small">
+                <span class="label">Units</span>
+                <span class="value">${unit.toLocaleString('en-IN')}</span>
+            </div>
+            <div class="holding-metric-small">
+                <span class="label">Avg. Cost</span>
+                <span class="value">₹${avgCost.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+            </div>
+        `;
+    }
+    // --- Fixed Income (FD, P2P) ---
+    else if (['fd', 'p2p'].includes(type)) {
+        // Build 4-up grid
+        detailsGridHtml = `
+            <div class="holding-metric-small">
                 <span class="label">Invested</span>
                 <span class="value">₹${holding.buyValue.toLocaleString('en-IN')}</span>
             </div>
-            <div class="holding-metric">
+            <div class="holding-metric-small">
                 <span class="label">Interest Rate</span>
                 <span class="value">${holding.meta.rate.toFixed(2)}% p.a.</span>
             </div>
-            <div class="holding-metric">
+            <div class="holding-metric-small">
+                <span class="label">Start Date</span>
+                <span class="value">${new Date(holding.meta.investmentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+            </div>
+            <div class="holding-metric-small">
                 <span class="label">Maturity Date</span>
                 <span class="value">${new Date(holding.meta.maturityDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </div>
         `;
     }
-    // --- Renderer for Retirement (EPF, NPS) ---
+    // --- Retirement (EPF, NPS) ---
     else if (['epf', 'nps', 'superannuation'].includes(type)) {
-        bodyHtml = `
-            <div class="holding-metric holding-metric-main">
-                <span class="label">Current Balance</span>
-                <div class="value-stack">
-                    <span class="value">₹${holding.currentValue.toLocaleString('en-IN')}</span>
-                </div>
-            </div>
-            <div class="holding-metric">
+        // Build 2-up grid
+        detailsGridHtml = `
+            <div class="holding-metric-small">
                 <span class="label">Invested</span>
                 <span class="value">₹${holding.buyValue.toLocaleString('en-IN')}</span>
             </div>
-            <div class="holding-metric">
+            <div class="holding-metric-small">
                 <span class="label">Est. Monthly</span>
                 <span class="value">₹${(holding.meta.monthlyContribution || 0).toLocaleString('en-IN')}</span>
             </div>
         `;
     }
-    // --- Renderer for Stock Grants (RSU, ESOP) ---
+    // --- Stock Grants (RSU, ESOP) ---
     else if (['rsu', 'esop'].includes(type)) {
         const vestedValue = (holding.meta.vestedUnits || 0) * (holding.meta.marketPrice || 0);
-        const pAndL = vestedValue - holding.buyValue; // P&L on vested shares only
+        const pAndL = vestedValue - holding.buyValue; // P&L on vested
         const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
         const pAndLSign = pAndL >= 0 ? '+' : '';
 
-        bodyHtml = `
+        // Override Primary Metric for Vested Value
+        primaryMetricHtml = `
             <div class="holding-metric holding-metric-main">
                 <span class="label">Vested Value</span>
                 <div class="value-stack">
                     <span class="value">₹${vestedValue.toLocaleString('en-IN')}</span>
-                    <div class="sub-value text-text-secondary">${(holding.meta.vestedUnits || 0)} units</div>
+                    <div class="sub-value ${pAndLColor}">
+                        P&L: ${pAndLSign}${formatIndianCurrency(pAndL)}
+                    </div>
                 </div>
             </div>
-            <div class="holding-metric">
-                <span class="label">Unvested</span>
-                <span class="value">${(holding.meta.unvestedUnits || 0)} units</span>
+        `;
+
+        // Build 4-up grid
+        detailsGridHtml = `
+            <div class="holding-metric-small">
+                <span class="label">Vested Units</span>
+                <span class="value">${(holding.meta.vestedUnits || 0)}</span>
             </div>
-            <div class="holding-metric">
-                <span class="label">P&L (Vested)</span>
-                <div class="value-stack">
-                    <span class="value ${pAndLColor}">${pAndLSign}₹${pAndL.toLocaleString('en-IN')}</span>
-                </div>
+            <div class="holding-metric-small">
+                <span class="label">Unvested Units</span>
+                <span class="value">${(holding.meta.unvestedUnits || 0)}</span>
             </div>
-            <div class="holding-metric">
+            <div class="holding-metric-small">
                 <span class="label">Market Price</span>
                 <span class="value">₹${(holding.meta.marketPrice || 0).toLocaleString('en-IN')}</span>
             </div>
-            <div class="holding-metric">
+            <div class="holding-metric-small">
                 <span class="label">Next Vesting</span>
                 <span class="value">${holding.meta.nextVestingDate ? new Date(holding.meta.nextVestingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'N/A'}</span>
             </div>
         `;
     }
-    // --- Fallback Renderer ---
+    // --- Fallback ---
     else {
-        bodyHtml = `
-            <div class="holding-metric-main">
-                <span class="label">Current Value</span>
-                <div class="value-stack">
-                    <span class="value">₹${holding.currentValue.toLocaleString('en-IN')}</span>
-                </div>
-            </div>
-            <div class="holding-metric">
+        detailsGridHtml = `
+            <div class="holding-metric-small">
                 <span class="label">Invested</span>
                 <span class="value">₹${holding.buyValue.toLocaleString('en-IN')}</span>
             </div>
         `;
     }
+
+    // --- 3. Assemble the final bodyHtml ---
+    bodyHtml = `
+        ${primaryMetricHtml}
+        <div class="holding-details-grid">
+            ${detailsGridHtml}
+        </div>
+    `;
 
     return `
         <div class="holding-card" data-holding-id="${holdingId}">
