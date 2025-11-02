@@ -345,6 +345,34 @@ input[type=number] { -moz-appearance: textfield; }
     /* The overflow-hidden is now set on this in dashboard.html */
 }
 
+/* src/styles/_components.css */
+
+/* ... (existing modal view rules for #portfolio-modal-view-container) ... */
+
+
+/* --- ADD THESE NEW RULES FOR THE ACCOUNT MODAL --- */
+
+/* This ID is on the view container */
+#account-modal-view-container {
+    position: relative;
+    /* Set a min-height to prevent modal jump */
+    min-height: 420px; 
+    overflow: hidden; /* This clips the sliding animation */
+}
+
+/* 1. The main selection screen slides LEFT when it's NOT active */
+#account-selection-view:not(.active-view) {
+    transform: translateX(-100%);
+}
+
+/* 2. ALL other form views slide in from the RIGHT by default */
+#account-form-bank:not(.active-view),
+#account-form-card:not(.active-view),
+#account-form-loan:not(.active-view),
+#account-form-cash:not(.active-view) {
+    transform: translateX(100%);
+}
+
 .modal-view {
     /* Views overlay each other when inactive */
     width: 100%;

@@ -1,21 +1,21 @@
 // src/js/utils/state.js
 
 // --- 1. PREDEFINED DATA (CATEGORIES, TAGS) ---
-
+// ... (This section is unchanged) ...
 function getRandomTagColor() {
     const colors = ['#F0857D', '#5BB974', '#1D4ED8', '#A78BFA', '#FBBF24', '#FB7185'];
     return colors[Math.floor(Math.random() * colors.length)];
 }
-
 const PREDEFINED_TAGS = [
     { id: 'tag-1', name: 'Singapore Trip', color: getRandomTagColor() },
-    { id: 'tag-2', name: 'Office', color: getRandomTagColor() },
-    { id: 'tag-3', name: 'Freelance', color: getRandomTagColor() },
+    { id: 'tag-2', name: 'Office Commute', color: getRandomTagColor() },
+    { id: 'tag-3', name: 'Freelance Project', color: getRandomTagColor() },
     { id: 'tag-salary', name: 'Salary', color: getRandomTagColor() },
-    { id: 'tag-travel', name: 'Travel', color: getRandomTagColor() },
-    { id: 'tag-foodie', name: 'Foodie', color: getRandomTagColor() }
+    { id: 'tag-emi', name: 'EMI', color: getRandomTagColor() },
+    { id: 'tag-vacation', name: 'Vacation', color: getRandomTagColor() },
+    { id: 'tag-foodie', name: 'Foodie', color: getRandomTagColor() },
+    { id: 'tag-bonus', name: 'Bonus', color: getRandomTagColor() }
 ];
-
 const PREDEFINED_CATEGORIES = [
     { id: 'cat-uncategorized', name: 'Uncategorized', iconId: '#icon-default' },
     { id: 'cat-income', name: 'Income', iconId: '#icon-income' },
@@ -25,110 +25,137 @@ const PREDEFINED_CATEGORIES = [
     { id: 'cat-transport', name: 'Transport', iconId: '#icon-transport' },
     { id: 'cat-bills', name: 'Bills & Utilities', iconId: '#icon-bills' },
     { id: 'cat-home', name: 'Home & Rent', iconId: '#icon-home' },
-    { id: 'cat-fuel', name: 'Fuel', iconId: '#icon-fuel' }
+    { id: 'cat-fuel', name: 'Fuel', iconId: '#icon-fuel' },
+    { id: 'cat-health', name: 'Health & Wellness', iconId: '#icon-health' },
+    { id: 'cat-entertainment', name: 'Entertainment', iconId: '#icon-entertainment' },
+    { id: 'cat-personal-care', name: 'Personal Care', iconId: '#icon-personal-care' },
+    { id: 'cat-education', name: 'Education', iconId: '#icon-education' },
+    { id: 'cat-gifts', name: 'Gifts', iconId: '#icon-gifts' },
+    { id: 'cat-subscriptions', name: 'Subscriptions', iconId: '#icon-subscriptions' },
+    { id: 'cat-investments', name: 'Investments', iconId: '#icon-investment' }
 ];
 
 // --- 2. TRANSACTION DATA GENERATOR ---
-
+// ... (The entire generateDenseData function is unchanged) ...
 function generateDenseData(masterTags) {
-    // ... (This entire, long function remains unchanged from your file) ...
-    // ... (It correctly generates accounts and transactions) ...
+    const today = new Date(2025, 10, 2); // Nov 2, 2025
+    const startDate = new Date(2023, 10, 2); // 2 years ago
+    
     const accounts = [
-        { id: 1, name: 'State Bank of India', type: 'Savings', startingBalance: 50000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
-        { id: 2, name: 'HDFC Bank', type: 'Savings', startingBalance: 25000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
-        { id: 3, name: 'ICICI Credit Card', type: 'Credit Card', startingBalance: 0, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
-        { id: 4, name: 'Axis Bank', type: 'Salary', startingBalance: 100000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
-        { id: 5, name: 'Kotak Bank', type: 'Savings', startingBalance: 75000, createdAt: new Date(new Date().setFullYear(new Date().getFullYear() - 2, new Date().getMonth(), 1)) },
+        { id: 1, name: 'HDFC Bank', type: 'Savings', number: '1234', startingBalance: 300000, createdAt: new Date(2023, 0, 1) },
+        { id: 2, name: 'Kotak Bank', type: 'Salary', number: '0987', startingBalance: 50000, createdAt: new Date(2023, 0, 1) },
+        { id: 3, name: 'ICICI Credit Card', type: 'Credit Card', number: '4444', startingBalance: 0, createdAt: new Date(2023, 6, 1) },
+        { id: 4, name: 'Cash', type: 'Cash', number: null, startingBalance: 10000, createdAt: new Date(2023, 0, 1) },
+        { id: 5, name: 'Personal Loan', type: 'Loan', number: 'L0001234', startingBalance: -200000, createdAt: new Date(2024, 0, 1) },
     ];
 
     const transactions = [];
-    const expenseDescriptions = ['Groceries', 'Shopping', 'Swiggy', 'Uber', 'Rent', 'Utilities', 'Amazon', 'Netflix', 'Fuel', 'Dinner', 'Movies', 'Coffee', 'Pharmacy', 'Travel'];
-    const incomeDescriptions = ['Freelance', 'Bonus', 'Interest'];
-    const salaryAccountId = 4; // Axis Bank designated for Salary
+    // ... (rest of transaction generation logic) ...
+     const expenseDescriptions = [
+        { desc: 'Swiggy', cat: 'cat-food' },
+        { desc: 'Zomato', cat: 'cat-food' },
+        { desc: 'Restaurant Dinner', cat: 'cat-food' },
+        { desc: 'Starbucks Coffee', cat: 'cat-food' },
+        { desc: 'Amazon Shopping', cat: 'cat-shopping' },
+        { desc: 'Myntra Clothes', cat: 'cat-shopping' },
+        { desc: 'BigBasket Groceries', cat: 'cat-groceries' },
+        { desc: 'Uber Ride', cat: 'cat-transport' },
+        { desc: 'Electricity Bill', cat: 'cat-bills' },
+        { desc: 'Netflix Subscription', cat: 'cat-subscriptions' },
+        { desc: 'Phone Bill', cat: 'cat-bills' },
+        { desc: 'Apollo Pharmacy', cat: 'cat-health' },
+        { desc: 'PVR Movies', cat: 'cat-entertainment' }
+    ];
 
-    for (let i = 0; i < 730; i++) {
-        const date = new Date(new Date().setDate(new Date().getDate() - i));
-        if (date < accounts[0].createdAt) continue;
+    const salaryAccountId = 2; // Kotak
+    const savingsAccountId = 1; // HDFC
+    const ccAccountId = 3; // ICICI CC
+    const cashAccountId = 4; // Cash
+    const loanAccountId = 5; // Personal Loan
+    
+    const days = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    for (let i = 0; i <= days; i++) {
+        const date = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
         const dayOfMonth = date.getDate();
-        const numTransactions = Math.floor(Math.random() * 5) + 4;
-
+        const month = date.getMonth(); // 0-11
+        
+        // --- Regular Monthly Transactions ---
         if (dayOfMonth === 1) {
-            transactions.push({ id: Date.now() + i + 10000, accountId: salaryAccountId, description: 'Salary', type: 'income', amount: Math.floor(Math.random() * 20000) + 50000, date, categoryId: 'cat-income', tagIds: ['tag-salary'] });
+            transactions.push({ id: Date.now() + i + 10000, accountId: salaryAccountId, description: 'Monthly Salary', type: 'income', amount: 120000, date, categoryId: 'cat-income', tagIds: ['tag-salary'] });
         }
-        if (Math.random() < 0.05) {
-             const incomeDesc = incomeDescriptions[Math.floor(Math.random() * incomeDescriptions.length)];
-             const incomeAccId = accounts[Math.floor(Math.random() * accounts.length)].id;
-             const tagIds = (incomeDesc === 'Freelance' && Math.random() < 0.5) ? ['tag-3'] : [];
-             transactions.push({ id: Date.now() + i + 20000, accountId: incomeAccId, description: incomeDesc, type: 'income', amount: Math.floor(Math.random() * 15000) + 1000, date, categoryId: 'cat-income', tagIds: tagIds });
+        if (dayOfMonth === 3) {
+             transactions.push({ id: Date.now() + i + 30000, accountId: salaryAccountId, description: 'Monthly Rent', type: 'expense', amount: 25000, date, categoryId: 'cat-home', tagIds: [] });
         }
-
-        for (let j = 0; j < numTransactions; j++) {
-            const accountIndex = Math.floor(Math.random() * accounts.length);
-            const accountId = accounts[accountIndex].id;
-            const categoryKeyword = expenseDescriptions[Math.floor(Math.random() * expenseDescriptions.length)];
-            let description = categoryKeyword;
+        if (dayOfMonth === 5 && date >= new Date(2024, 0, 1)) {
+            transactions.push({ id: Date.now() + i + 20000, accountId: salaryAccountId, description: 'Personal Loan EMI', type: 'expense', amount: 10000, date, categoryId: 'cat-bills', tagIds: ['tag-emi'] });
+            transactions.push({ id: Date.now() + i + 20001, accountId: loanAccountId, description: 'Loan Principal Payment', type: 'income', amount: 8000, date, categoryId: 'cat-bills', tagIds: ['tag-emi'] });
+        }
+        if (dayOfMonth === 10) {
+            transactions.push({ id: Date.now() + i + 50000, accountId: savingsAccountId, description: 'Mutual Fund SIP', type: 'expense', amount: 15000, date, categoryId: 'cat-investments', tagIds: [] });
+        }
+        if (dayOfMonth === 15 && date > new Date(2023, 6, 1)) {
+            let ccBalance = 0;
+            transactions.filter(t => t.accountId === ccAccountId && new Date(t.date) < date)
+                        .forEach(t => { ccBalance += (t.type === 'income' ? -t.amount : t.amount) });
             
-            if (categoryKeyword === 'Groceries') description = `Grocery shopping at ${['Big Bazaar', 'Reliance Fresh', 'Local Market'][Math.floor(Math.random() * 3)]}`;
-            else if (categoryKeyword === 'Shopping') description = `${['Clothes', 'Electronics', 'Books'][Math.floor(Math.random()*3)]} from ${['Myntra', 'Amazon', 'Flipkart'][Math.floor(Math.random()*3)]}`;
-            else if (categoryKeyword === 'Swiggy' || categoryKeyword === 'Dinner' || categoryKeyword === 'Coffee') description = `${categoryKeyword} from ${['Cafe Coffee Day', 'Starbucks', 'Local Restaurant', 'Pizza Hut'][Math.floor(Math.random()*4)]}`;
-            else if (categoryKeyword === 'Uber') description = `Uber ride to ${['Office', 'Home', 'Airport'][Math.floor(Math.random()*3)]}`;
-            else if (categoryKeyword === 'Rent') description = 'Monthly Rent Payment';
-            else if (categoryKeyword === 'Utilities') description = `${['Electricity Bill', 'Water Bill', 'Internet Bill'][Math.floor(Math.random()*3)]}`;
-            else if (categoryKeyword === 'Netflix') description = 'Netflix Subscription';
-            else if (categoryKeyword === 'Fuel') description = `Fuel at ${['Indian Oil', 'HP Petrol Pump', 'Shell'][Math.floor(Math.random()*3)]}`;
-            else if (categoryKeyword === 'Movies') description = `Movie tickets at ${['PVR', 'Inox'][Math.floor(Math.random()*2)]}`;
-            else if (categoryKeyword === 'Pharmacy') description = `Purchase from ${['Apollo Pharmacy', 'Local Chemist'][Math.floor(Math.random()*2)]}`;
-            else if (categoryKeyword === 'Travel') description = `${['Flight', 'Train', 'Bus'][Math.floor(Math.random()*3)]} ticket booking`;
-
-            const amount = Math.floor(Math.random() * (categoryKeyword === 'Rent' ? 15000 : 4000)) + 50;
-
-            let categoryId = 'cat-uncategorized';
-            if (categoryKeyword.match(/swiggy|dinner|coffee/i)) categoryId = 'cat-food';
-            else if (categoryKeyword.match(/shopping|amazon|movies/i)) categoryId = 'cat-shopping';
-            else if (categoryKeyword.match(/groceries/i)) categoryId = 'cat-groceries';
-            else if (categoryKeyword.match(/uber|travel/i)) categoryId = 'cat-transport';
-            else if (categoryKeyword.match(/utilities|netflix|pharmacy/i)) categoryId = 'cat-bills';
-            else if (categoryKeyword.match(/rent/i)) categoryId = 'cat-home';
-            else if (categoryKeyword.match(/fuel|petrol/i)) categoryId = 'cat-fuel';
-
-            let assignedTagIds = [];
-            if (Math.random() < 0.25) {
-                const randomTag = masterTags[Math.floor(Math.random() * masterTags.length)];
-                if (randomTag.id !== 'tag-salary') {
-                    assignedTagIds.push(randomTag.id);
-                }
+            if (ccBalance > 100) { 
+                const payment = Math.min(ccBalance, 30000) + Math.random() * 5000; 
+                transactions.push({ id: Date.now() + i + 40000, accountId: savingsAccountId, description: 'Credit Card Bill', type: 'expense', amount: payment, date, categoryId: 'cat-bills', tagIds: [] });
+                transactions.push({ id: Date.now() + i + 40001, accountId: ccAccountId, description: 'Credit Card Payment', type: 'income', amount: payment, date, categoryId: 'cat-bills', tagIds: [] });
             }
-            if (categoryKeyword === 'Travel' && !assignedTagIds.includes('tag-travel')) {
-                assignedTagIds.push('tag-travel');
+        }
+
+        // --- Irregular "Fluctuation" Events ---
+        if (dayOfMonth === 1 && month === 2) { // March 1st
+             transactions.push({ id: Date.now() + i + 60000, accountId: savingsAccountId, description: 'Annual Bonus', type: 'income', amount: 250000, date, categoryId: 'cat-income', tagIds: ['tag-bonus'] });
+        }
+        if (dayOfMonth === 20 && (month === 4 || month === 7 || month === 10)) { // Apr, Aug, Nov
+             transactions.push({ id: Date.now() + i + 70000, accountId: savingsAccountId, description: 'Freelance Project Payment', type: 'income', amount: 45000, date, categoryId: 'cat-income', tagIds: ['tag-3'] });
+        }
+        if (dayOfMonth === 1 && month === 10) { // Nov 1st
+            transactions.push({ id: Date.now() + i + 80000, accountId: ccAccountId, description: 'Goa Vacation Booking', type: 'expense', amount: 75000, date, categoryId: 'cat-transport', tagIds: ['tag-vacation', 'tag-goa-24'] });
+        }
+         if (dayOfMonth === 15 && month === 8) { // Sep 15th
+            transactions.push({ id: Date.now() + i + 90000, accountId: ccAccountId, description: 'New iPhone Purchase', type: 'expense', amount: 110000, date, categoryId: 'cat-shopping', tagIds: ['tag-personal'] });
+        }
+
+        // --- Random Daily Transactions ---
+        const numTransactions = Math.floor(Math.random() * 2); // 0-1 per day
+        for (let j = 0; j < numTransactions; j++) {
+            const item = expenseDescriptions[Math.floor(Math.random() * expenseDescriptions.length)];
+            const amount = Math.floor(Math.random() * 2500) + 50; 
+
+            let accountId = [savingsAccountId, salaryAccountId, ccAccountId][Math.floor(Math.random() * 3)];
+            if (item.cat === 'cat-food' && amount < 300) {
+                accountId = cashAccountId;
             }
-            if (categoryKeyword === 'Uber' && description.includes('Office') && !assignedTagIds.includes('tag-2')) {
-                assignedTagIds.push('tag-2');
-            }
-            if ((categoryKeyword === 'Swiggy' || categoryKeyword === 'Dinner') && Math.random() < 0.3 && !assignedTagIds.includes('tag-foodie')) {
-                assignedTagIds.push('tag-foodie');
+            if (item.cat === 'cat-shopping') {
+                accountId = ccAccountId;
             }
 
             transactions.push({ 
                 id: Date.now() + i + j, 
                 accountId, 
-                description, 
+                description: item.desc, 
                 type: 'expense', 
                 amount, 
                 date, 
-                categoryId,
-                tagIds: assignedTagIds
+                categoryId: item.cat,
+                tagIds: []
             });
         }
     }
     
+    // --- Calculate Final Balances ---
     accounts.forEach(account => {
-        const accountTransactions = transactions.filter(t => t.accountId === account.id);
-        const firstTransactionDate = accountTransactions.length > 0 ? Math.min(...accountTransactions.map(t => new Date(t.date).getTime())) : new Date(account.createdAt).getTime();
         let runningBalance = account.startingBalance;
         transactions
-            .filter(t => t.accountId === account.id && new Date(t.date).getTime() >= firstTransactionDate)
+            .filter(t => t.accountId === account.id)
             .sort((a, b) => new Date(a.date) - new Date(b.date))
-            .forEach(t => { runningBalance += (t.type === 'income' ? t.amount : -t.amount); });
+            .forEach(t => {
+                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
+            });
         account.balance = runningBalance;
     });
 
@@ -136,113 +163,147 @@ function generateDenseData(masterTags) {
 }
 
 
-// --- 3. GENERATE DATA & EXPORT appState ---
-
+// --- 3. GENERATE DATA ---
 const { accounts, transactions } = generateDenseData(PREDEFINED_TAGS);
 
-// --- *** NEW INVESTMENT DATA *** ---
-// This is the new data structure that matches our modal forms
+
+// --- 4. PREDEFINED INVESTMENT DATA ---
+// ... (This section is unchanged) ...
 const PREDEFINED_INVESTMENTS = [
-    // 1. A Brokerage Account (Matches old data + Ticker)
     {
-        id: 1,
-        name: 'Zerodha',
-        type: 'brokerage',
+        id: 101, name: 'Zerodha', type: 'brokerage',
         holdings: [
-            { 
-                type: 'equity', name: 'Reliance Industries', ticker: 'RELIANCE', 
-                quantity: 50, buyValue: 125000, currentValue: 142500 
-            },
-            { 
-                type: 'equity', name: 'Tata Consultancy Services', ticker: 'TCS', 
-                quantity: 100, buyValue: 330000, currentValue: 385000 
-            },
-            { 
-                type: 'mutual_fund', name: 'Parag Parikh Flexi Cap', ticker: 'PARAGFLEXI', 
-                quantity: 250, buyValue: 150000, currentValue: 185000 
-            },
-            { 
-                type: 'bond', name: 'SGBSEP31II-GB', ticker: null, 
-                quantity: 20, buyValue: 100000, currentValue: 124000 // 'quantity' is used for units/grams
-            }
+            { type: 'equity', name: 'Reliance Industries', ticker: 'RELIANCE', quantity: 50, buyValue: 125000, currentValue: 185000 },
+            { type: 'equity', name: 'Tata Motors', ticker: 'TATAMOTORS', quantity: 100, buyValue: 45000, currentValue: 92000 },
+            { type: 'mutual_fund', name: 'Parag Parikh Flexi Cap', ticker: 'PARAGFLEXI', quantity: 250, buyValue: 150000, currentValue: 210000 },
+            { type: 'bond', name: 'SGBSEP31II-GB', ticker: null, quantity: 20, buyValue: 100000, currentValue: 135000 }
         ]
     },
-    // 2. An EPF Account (Matches new form)
     {
-        id: 2,
-        name: 'EPFO',
-        type: 'employee_benefit',
+        id: 102, name: 'Groww', type: 'brokerage',
         holdings: [
-            {
-                type: 'epf', name: 'EPF',
-                quantity: 1, 
-                buyValue: 400000, 
-                currentValue: 485000,
-                meta: {
-                    monthlyContribution: 5000 // This is the field that was missing
-                }
-            }
+            { type: 'mutual_fund', name: 'Quant Small Cap Fund', ticker: 'QUANTSC', quantity: 1000, buyValue: 180000, currentValue: 265000 },
+            { type: 'mutual_fund', name: 'Mirae Asset ELSS Tax Saver', ticker: 'MIRAEELSS', quantity: 500, buyValue: 75000, currentValue: 105000 }
         ]
     },
-    // 3. An ESOP/RSU Account (Matches new form)
-    {
-        id: 3,
-        name: 'Morgan Stanley',
-        type: 'employee_benefit',
+    { id: 201, name: 'EPFO', type: 'employee_benefit',
         holdings: [
-            {
-                type: 'rsu', name: 'IBM', ticker: 'IBM',
-                quantity: 488, // Total grant
-                buyValue: 88 * 140, // Vested Units * Grant Price (example)
-                currentValue: 88 * 170, // Vested Units * Market Price (example)
-                meta: {
-                    vestedUnits: 88,
-                    unvestedUnits: 400,
-                    grantPrice: 140,
-                    marketPrice: 170,
-                    nextVestingDate: '2026-03-15'
-                }
-            }
+            { type: 'epf', name: 'EPF', quantity: 1, buyValue: 400000, currentValue: 520000, meta: { monthlyContribution: 5000 } }
         ]
     },
-    // 4. A Fixed Deposit (Matches new form)
     {
-        id: 4,
-        name: 'HDFC Bank FD',
-        type: 'fixed_income',
+        id: 202, name: 'Morgan Stanley (RSU)', type: 'employee_benefit',
         holdings: [
-            {
-                type: 'fd', name: 'Fixed Deposit',
-                quantity: 1,
-                buyValue: 100000,
-                currentValue: 103500, // This would be calculated in a real app
-                meta: {
-                    rate: 7.0,
-                    investmentDate: '2024-10-31',
-                    maturityDate: '2025-10-31'
-                }
-            }
+            { type: 'rsu', name: 'Alphabet Inc. (GOOGL)', ticker: 'GOOGL', quantity: 488, buyValue: 88 * 140, currentValue: 88 * 210, meta: { vestedUnits: 88, unvestedUnits: 400, grantPrice: 140, marketPrice: 210, nextVestingDate: '2026-03-15' } }
+        ]
+    },
+    {
+        id: 301, name: 'HDFC Bank FD', type: 'fixed_income',
+        holdings: [
+            { type: 'fd', name: 'Fixed Deposit', quantity: 1, buyValue: 200000, currentValue: 214500, meta: { rate: 7.2, investmentDate: '2024-10-31', maturityDate: '2025-10-31' } }
+        ]
+    },
+    {
+        id: 302, name: 'Cred Mint', type: 'fixed_income',
+        holdings: [
+            { type: 'p2p', name: 'P2P Investment', quantity: 1, buyValue: 50000, currentValue: 54500, meta: { rate: 9.0, investmentDate: '2024-01-01', maturityDate: '2025-01-01' } }
+        ]
+    },
+    {
+        id: 401, name: 'WazirX', type: 'other_asset',
+        holdings: [
+            { type: 'crypto', name: 'Bitcoin', ticker: 'BTC', quantity: 0.05, buyValue: 150000, currentValue: 350000 },
+            { type: 'crypto', name: 'Ethereum', ticker: 'ETH', quantity: 1, buyValue: 200000, currentValue: 310000 }
+        ]
+    },
+    {
+        id: 402, name: 'Digital Gold', type: 'other_asset',
+        holdings: [
+            { type: 'gold', name: 'Digital Gold', ticker: null, quantity: 10, buyValue: 50000, currentValue: 72000 } // quantity is in grams
         ]
     }
 ];
 
-// Export the final state object
+
+// --- 5. NEW: PORTFOLIO HISTORY GENERATOR ---
+function generatePortfolioHistory() {
+    const history = [];
+    const today = new Date(2025, 10, 2); // Nov 2, 2025
+    const startDate = new Date(2023, 10, 2); // 2 years ago
+    const days = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Get the total "buyValue" from all holdings
+    const totalBuyValue = PREDEFINED_INVESTMENTS.flatMap(acc => acc.holdings).reduce((sum, h) => sum + h.buyValue, 0);
+    // Get the total "currentValue"
+    const totalCurrentValue = PREDEFINED_INVESTMENTS.flatMap(acc => acc.holdings).reduce((sum, h) => sum + h.currentValue, 0);
+    
+    // This is the total market gain we need to simulate
+    const totalGain = totalCurrentValue - totalBuyValue;
+    
+    // We'll simulate a starting value 2 years ago
+    let runningCurrentValue = totalBuyValue * 0.7; // Start at 70% of buyValue
+    let runningInvested = totalBuyValue * 0.7; 
+    
+    // Daily gains and monthly SIPs
+    const dailyGain = totalGain / days;
+    const sipAmount = 15000;
+    const sipDay = 10;
+    
+    for (let i = 0; i <= days; i++) {
+        const currentDate = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
+        
+        // Add SIP on the 10th
+        if (currentDate.getDate() === sipDay) {
+            runningInvested += sipAmount;
+            runningCurrentValue += sipAmount; // Value jumps by SIP amount
+        }
+        
+        // Add simulated market gain
+        // This creates the "Zerodha-style" fluctuations
+        const fluctuation = (Math.random() - 0.48) * runningCurrentValue * 0.015;
+        runningCurrentValue += dailyGain + fluctuation;
+        
+        history.push({
+            date: currentDate.toISOString(),
+            totalInvested: runningInvested,
+            currentValue: runningCurrentValue
+        });
+    }
+
+    // Finally, ensure the very last data point matches our *actual* app state
+    history[history.length - 1] = {
+        date: today.toISOString(),
+        totalInvested: totalBuyValue,
+        currentValue: totalCurrentValue
+    };
+    
+    return history;
+}
+
+const portfolioHistory = generatePortfolioHistory();
+
+
+// --- 6. EXPORT THE FINAL STATE ---
 export const appState = {
+    // Generated Data
     accounts,
     transactions,
+    portfolioHistory, // <-- THE NEW DATA ARRAY
+    
+    // Predefined Data
     tags: PREDEFINED_TAGS,
     categories: PREDEFINED_CATEGORIES,
-    
-    // --- USE THE NEW INVESTMENT DATA ---
     investmentAccounts: PREDEFINED_INVESTMENTS,
     
-    // This is still fine as a placeholder
-    investments: [], // This old property is used by the dashboard card, we should fix that
-    investmentGrowth: [],
+    // Legacy properties
+    investments: [], // This is the old one, dashboard.js uses it. We should fix that.
+    investmentGrowth: [], // This is now REPLACED by portfolioHistory
     
+    // UI State
     activeExpensePeriod: 'month',
     activeBalancePeriod: 'max',
-    activePortfolioView: 'holdings',
+    activeInvestmentPeriod: '1Y', // <-- NEW UI STATE
     activeYear: new Date().getFullYear().toString(),
     activeMonth: (new Date().getMonth() + 1).toString().padStart(2, '0'),
+    hasDashboardLoaded: false
 };

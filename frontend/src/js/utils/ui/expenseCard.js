@@ -57,29 +57,39 @@ export function renderExpenseAnalysisCard(appState) {
         normalView.classList.remove('hidden');
         
         updateActiveTimelineTab(appState.activeExpensePeriod);
-        renderExpenseList(appState.transactions, appState.activeExpensePeriod);
+        // --- THIS CALL IS MODIFIED ---
+        renderExpenseList(appState);
     }
 }
 
-export function renderExpenseList(transactions, period) {
+// --- THIS FUNCTION IS REFACTORED ---
+export function renderExpenseList(appState) {
     const container = elements.expenseInsightsList;
-    const filteredExpenses = getTransactionsForPeriod(transactions, period).filter(t => t.type === 'expense');
+    const period = appState.activeExpensePeriod; // Get period from state
+    
+    // Get transactions for the period
+    const filteredExpenses = getTransactionsForPeriod(appState.transactions, period)
+        .filter(t => t.type === 'expense');
+        
     const chartContainer = elements.expenseChartContainer;
     
     if (filteredExpenses.length === 0) {
         chartContainer.classList.add('hidden');
-        // Clear the list container and add the message
         container.innerHTML = `<p class="text-center text-text-secondary pt-8">No expenses recorded for this ${period}.</p>`;
         return;
     }
    
     const totalExpensesInPeriod = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
 
+    // --- THIS IS THE CORRECTED LOGIC ---
+    // It now matches the logic from charts.js
     const categoryTotals = filteredExpenses.reduce((acc, t) => {
-        const category = t.description.split(' ')[0];
-        acc[category] = (acc[category] || 0) + t.amount;
+        // Find the category name from the ID
+        const categoryName = appState.categories.find(c => c.id === t.categoryId)?.name || 'Uncategorized';
+        acc[categoryName] = (acc[categoryName] || 0) + t.amount;
         return acc;
     }, {});
+    // --- END OF CORRECTED LOGIC ---
 
     const sortedExpenses = Object.entries(categoryTotals)
         .map(([category, amount]) => ({ category, amount }))
@@ -99,9 +109,7 @@ export function renderExpenseList(transactions, period) {
     
     chartContainer.classList.remove('hidden');
     
-    // --- START: MODIFIED CODE ---
-
-    // 1. Build the list of expenses with subdued colors and smaller fonts
+    // Build the list of expenses (now with correct category names)
     const listHTML = finalExpenses.map(item => {
         const percentage = totalExpensesInPeriod > 0 ? ((item.amount / totalExpensesInPeriod) * 100).toFixed(0) : 0;
         return `
@@ -114,7 +122,7 @@ export function renderExpenseList(transactions, period) {
             </div>`;
     }).join('');
 
-    // 2. Build the styled summary insight block (with icon)
+    // Build the styled summary insight block
     let summaryHTML = '';
     if (finalExpenses.length > 0) {
         const topCategory = finalExpenses[0];
@@ -135,8 +143,5 @@ export function renderExpenseList(transactions, period) {
             </div>`;
     }
 
-    // 3. Render list first, THEN summary
     container.innerHTML = listHTML + summaryHTML;
-
-    // --- END: MODIFIED CODE ---
 }

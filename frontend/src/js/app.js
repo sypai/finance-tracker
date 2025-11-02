@@ -31,14 +31,16 @@ import {
 const App = {
     init() {
         // NEW: Add navigation state
-        appState.activeYear = new Date().getFullYear().toString();
-        appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
-        appState.hasDashboardLoaded = false;
+        // appState.activeYear = new Date().getFullYear().toString();
+        // appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        // appState.hasDashboardLoaded = false;
+        
         initUI();
         initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
         initCategorySelect();
         this.bindEvents();
-        this.bindPortfolioModalEvents(); // <-- ADD THIS CALL
+        this.bindPortfolioModalEvents();
+        this.bindAccountModalEvents();
         this.render(); // Initial render
 
         this.handleTabSwitch('dashboard'); 
@@ -246,6 +248,17 @@ const App = {
 
         elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
 
+        // --- ADD THIS NEW LISTENER ---
+        if (elements.accountFilter) {
+            elements.accountFilter.addEventListener('change', () => {
+                // We don't need to call this.render(), which would rebuild the
+                // whole page. We just need to destroy and recreate the charts.
+                // The createCharts function will automatically read the
+                // new value from the dropdown.
+                createCharts(appState);
+            });
+        }
+        // --- END OF NEW LISTENER ---
         // elements.portfolioView.addEventListener('click', (event) => this.handlePortfolioViewClick(event));
 
         // Using a single, powerful event delegation listener for all dynamic content
@@ -277,6 +290,12 @@ const App = {
             if (event.target.id === 'addFixedIncomeForm') this.handleFixedIncomeSubmit(event);
             if (event.target.id === 'addRetirementForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
             if (event.target.id === 'addStockGrantForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
+
+            // --- NEW HANDLERS ---
+            if (event.target.id === 'addAccountForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addCreditCardForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addLoanForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addCashForm') this.handleAccountFormSubmit(event);
         });
 
         // --- THIS IS THE KEY CHANGE ---
@@ -377,6 +396,52 @@ const App = {
                 // Toggle the clicked group
                 group.classList.toggle('is-open', !currentlyOpen);
             });
+
+            // --- "INSET JOURNAL" ACCORDION CLICK (Accounts) ---
+        if (elements.accountList) { // Add a safety check
+            elements.accountList.addEventListener('click', (event) => {
+                const header = event.target.closest('.account-group-header');
+                if (header) {
+                    // Toggle the clicked group
+                    header.parentElement.classList.toggle('is-open');
+                    
+                    // Elite Touch: Close other groups
+                    document.querySelectorAll('#accountList .account-group.is-open').forEach(openGroup => {
+                        if (openGroup !== header.parentElement) {
+                            openGroup.classList.remove('is-open');
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- NEW: "INSET JOURNAL" LIVE SEARCH (Accounts) ---
+        const accountSearchInput = document.getElementById('accountSearch');
+        if (accountSearchInput) {
+            accountSearchInput.addEventListener('input', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                
+                document.querySelectorAll('#accountList .account-group').forEach(group => {
+                    let groupHasVisibleCards = false;
+                    
+                    group.querySelectorAll('.account-list-card').forEach(card => {
+                        const accountName = card.querySelector('.font-bold').textContent.toLowerCase();
+                        const accountType = card.querySelector('.text-sm').textContent.toLowerCase();
+                        
+                        const isMatch = accountName.includes(searchTerm) || 
+                                      accountType.includes(searchTerm);
+                        
+                        card.classList.toggle('hidden', !isMatch);
+                        if (isMatch) {
+                            groupHasVisibleCards = true;
+                        }
+                    });
+                    
+                    // Hide the *entire account group* if no cards match
+                    group.classList.toggle('hidden', !groupHasVisibleCards);
+                });
+            });
+        }
         }
 
         // --- (Keep the mobileMenuButton listener as is) ---
@@ -893,32 +958,52 @@ const App = {
         this.render(); // Re-render everything
     },
 
-    handleAccountSubmit(event) {
+    handleAccountFormSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
+        const formType = formData.get('accountFormType'); // 'bank', 'card', 'loan', 'cash'
         const name = formData.get('name');
-        const number = formData.get('number');
-    
+        const number = formData.get('number') || ''; // Optional
+        let balance = parseFloat(formData.get('balance'));
+        let type = formData.get('type'); // This is set by <select> or hidden input
+
+        // --- Crucial Logic: Handle negative balances ---
+        // User enters 15000, we store -15000
+        if (formType === 'card' || formType === 'loan') {
+            balance = -Math.abs(balance);
+        }
+        
+        // For credit cards, we hardcode the type
+        if (formType === 'card') {
+            type = 'Credit Card';
+        }
+
         // Check for duplicates
-        const accountExists = appState.accounts.some(acc => acc.name === name && acc.number === number);
+        const accountExists = appState.accounts.some(acc => acc.name.toLowerCase() === name.toLowerCase());
         if (accountExists) {
-            alert('This account already exists.');
+            alert(`An account named "${name}" already exists.`);
             return;
         }
-    
-        appState.accounts.push({
+
+        const newAccount = {
             id: Date.now(),
             name: name,
             number: number,
-            type: formData.get('type'),
-            balance: parseFloat(formData.get('balance')),
-            createdAt: new Date(), // Add the creation timestamp
-            history: [{ date: new Date().toISOString().split('T')[0], balance: parseFloat(formData.get('balance')) }]
-        });
+            type: type,
+            balance: balance,
+            createdAt: new Date(),
+            history: [{ date: new Date().toISOString().split('T')[0], balance: balance }]
+        };
+
+        appState.accounts.push(newAccount);
+        console.log("New Account Added:", newAccount);
         
         toggleModal('addAccountModal', false);
         event.target.reset();
-        this.render();
+        this.render(); // Re-render everything to show the new account
+
+        // Reset the modal to the selection view for next time
+        this.switchAccountView('account-selection-view', true);
     },
 
     handleInvestmentAccountSubmit(event) {
@@ -1094,6 +1179,69 @@ const App = {
         }
     },
     // *** END NEW FUNCTION ***
+
+    // --- THIS IS THE NEW METHOD ---
+    /**
+     * Binds click events for the new multi-view "Add Account" modal.
+     */
+    bindAccountModalEvents() {
+        const modal = document.getElementById('addAccountModal');
+        if (!modal) return;
+
+        // Add a single click listener to the modal
+        modal.addEventListener('click', (e) => {
+            // 1. Handle selection cards
+            const selectBtn = e.target.closest('.portfolio-select-card');
+            if (selectBtn) {
+                const viewId = selectBtn.dataset.view; // e.g., "account-form-bank"
+                this.switchAccountView(viewId);
+            }
+
+            // 2. Handle "Back" buttons
+            const backBtn = e.target.closest('.modal-back-btn');
+            if (backBtn) {
+                this.switchAccountView('account-selection-view');
+            }
+        });
+    },
+
+    /**
+     * Helper function to switch views in the "Add Account" modal.
+     * @param {string} viewId - The ID of the view to make active.
+     * @param {boolean} [isReset=false] - If true, skip animation and jump to view.
+     */
+    switchAccountView(viewId, isReset = false) {
+        const viewContainer = document.getElementById('account-modal-view-container');
+        const modalTitle = document.getElementById('accountModalTitle');
+        if (!viewContainer || !modalTitle) return;
+
+        // 1. Set title based on which view we are going to
+        let title = "Add an Account"; // Default
+        if (viewId === 'account-form-bank') title = "Add Bank Account";
+        else if (viewId === 'account-form-card') title = "Add Credit Card";
+        else if (viewId === 'account-form-loan') title = "Add Loan Account";
+        else if (viewId === 'account-form-cash') title = "Add Cash Account";
+        modalTitle.textContent = title;
+
+        if (isReset) {
+            // On reset, just instantly show the selection view
+            viewContainer.querySelectorAll('.modal-view').forEach(view => {
+                view.classList.toggle('active-view', view.id === 'account-selection-view');
+            });
+            return;
+        }
+        
+        // 2. Animate: Remove 'active-view' from all children
+        viewContainer.querySelectorAll('.modal-view').forEach(view => {
+            view.classList.remove('active-view');
+        });
+
+        // 3. Animate: Add 'active-view' to the target child
+        const targetView = document.getElementById(viewId);
+        if (targetView) {
+            targetView.classList.add('active-view');
+        }
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {

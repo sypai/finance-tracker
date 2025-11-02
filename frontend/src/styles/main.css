@@ -8,5 +8,6 @@
 @import url('./_responsive.css');  /* Loads ALL Media Queries */
 @import url('./_transactions.css');/* Loads Transaction Journal Styles */
 @import url('./_investments.css');/* Loads Transaction Journal Styles */
+@import url('./_accounts.css');/* Loads Transaction Journal Styles */
 
 /* Add styles for other specific views like _investments.css, _accounts.css here later */

@@ -724,3 +724,8 @@ fieldset legend {
         width: 100%; /* Full width on mobile */
     }
 }
+
+.kpi-card:hover {
+    transform: none; /* Disable the lift */
+    box-shadow: none; /* Disable the shadow */
+}
