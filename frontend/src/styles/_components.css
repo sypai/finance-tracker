@@ -373,6 +373,49 @@ input[type=number] { -moz-appearance: textfield; }
     transform: translateX(100%);
 }
 
+/* --- NEW: "Gold Standard" Timeline Selector Component --- */
+/* This is the main container, e.g., #expenseTimelineTabs */
+.timeline-selector-container {
+    /* REMOVED: padding: 0.25rem; */
+    border-radius: var(--radius-lg); /* rounded-lg */
+    /* REMOVED: background-color: rgba(255, 255, 255, 0.05); */
+    width: 100%;
+}
+
+/* This is the inner wrapper that holds the buttons */
+.timeline-selector-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem; /* gap-1 */
+    
+    /* ADDED: We move the background and padding HERE */
+    padding: 0.25rem; /* p-1 */
+    border-radius: var(--radius-lg); /* rounded-lg */
+    background-color: rgba(255, 255, 255, 0.05); /* bg-white/5 */
+}
+
+/* This is the button itself (replaces .expense-tab) */
+.timeline-selector-btn {
+    flex-grow: 1; /* <-- THIS IS THE FIX */
+    justify-content: center;
+    padding: 0.25rem 0.75rem; /* px-3 py-1 */
+    font-size: 0.875rem; /* text-sm */
+    border-radius: var(--radius-md); /* rounded-md */
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: all var(--transition-fast);
+}
+
+/* Active state for the button */
+.timeline-selector-btn:hover {
+    color: var(--text-primary);
+}
+.timeline-selector-btn.active {
+    background-color: rgba(255, 255, 255, 0.1); /* bg-white/10 */
+    color: var(--text-primary);
+}
+
 .modal-view {
     /* Views overlay each other when inactive */
     width: 100%;

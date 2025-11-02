@@ -3,33 +3,16 @@ import { elements } from './domElements.js';
 import { toggleModal } from './common.js';
 import { formatIndianCurrency } from './formatters.js';
 
-// --- Dashboard Card (Unchanged from original) ---
-// This remains to support the small card on the Dashboard tab
-function renderDashboardInvestmentList(investments) {
-    if (!elements.investmentAccountsList || !elements.investmentsLastUpdated) return;
-    const holdingsHtml = investments.map(holding => {
-        const changeColor = holding.isPositive ? 'text-positive-value' : 'text-negative-value';
-        const changeSign = holding.isPositive ? '+' : '';
-        return `
-        <div class="flex justify-between items-center py-2">
-            <div>
-                <h4 class="font-semibold text-white">${holding.name}</h4>
-                <p class="text-sm text-gray-400">${holding.type}</p>
-            </div>
-            <div class="text-right">
-                <div class="font-semibold text-white">₹${holding.value.toLocaleString('en-IN')}</div>
-                <div class="text-sm ${changeColor}">${changeSign}${holding.change}%</div>
-            </div>
-        </div>`;
-    }).join('');
-    elements.investmentAccountsList.innerHTML = `<div class="space-y-3 pt-6 mt-6 border-t border-white/5">${holdingsHtml}</div>`;
-    elements.investmentsLastUpdated.textContent = 'Last updated: 5 mins ago';
-}
-
+// --- Dashboard Card ---
+// This function now *only* handles the Show/Hide logic for the card.
+// The chart itself is rendered by createCharts() in charts.js.
 export function renderInvestmentCard(appState) {
     const normalView = elements.investmentPortfolioNormalView;
     const zeroStateView = elements.investmentPortfolioZeroState;
-    if (appState.investments.length === 0) {
+
+    // --- THIS IS THE FIX ---
+    if (appState.investmentAccounts.length === 0) { // <-- CORRECTED VARIABLE
+        // ZERO STATE VIEW
         normalView.classList.add('hidden');
         zeroStateView.classList.remove('hidden');
         zeroStateView.innerHTML = `
@@ -41,15 +24,17 @@ export function renderInvestmentCard(appState) {
             </div>
         `;
     } else {
+        // NORMAL VIEW
         zeroStateView.classList.add('hidden');
         normalView.classList.remove('hidden');
-        renderDashboardInvestmentList(appState.investments);
+        // The old, buggy renderDashboardInvestmentList() call is now gone.
+        // createCharts() in app.js will handle rendering the chart.
     }
 }
 // --- End Dashboard Card Logic ---
 
 
-// --- Add/Edit Portfolio Modal (Unchanged from original) ---
+// --- Add/Edit Portfolio Modal (Unchanged) ---
 export function createHoldingRow(assetType = 'stock') {
     const row = document.createElement('div');
     row.className = 'holding-input-row grid grid-cols-6 md:grid-cols-12 gap-x-3 gap-y-4 md:gap-y-0 items-center';
@@ -132,8 +117,10 @@ export function updateBrokerageFormHeaders(assetType) {
 
 
 // ---
-// --- NEW "INVESTMENT JOURNAL" IMPLEMENTATION (v2)
+// --- "INVESTMENT JOURNAL" IMPLEMENTATION (v2) ---
 // ---
+// ... (The rest of this file is unchanged) ...
+// ... (renderInvestmentsTab, renderInvestmentKPIs, renderHoldingsJournal, etc. are all correct) ...
 
 /**
  * Main function to render the entire Investments tab.
@@ -253,6 +240,8 @@ function getAssetClass(type) {
             return 'Fixed Income';
         case 'gold':
             return 'Gold';
+        case 'crypto':
+            return 'Crypto';
         default:
             return 'Other Assets';
     }
@@ -285,7 +274,8 @@ function renderHoldingsJournal(accounts) {
             portfolioTypeDisplay: {
                 'brokerage': 'Brokerage',
                 'fixed_income': 'Fixed Income',
-                'employee_benefit': 'Employee Benefit'
+                'employee_benefit': 'Employee Benefit',
+                'other_asset': 'Other Asset'
             }[portfolio.type] || 'Portfolio',
             portfolioId: portfolio.id
         }))
@@ -404,15 +394,12 @@ function renderHoldingCard(holding, portfolioId) {
         headerHtml += `<span class="holding-ticker">${holding.ticker}</span>`;
     }
 
-    // --- (This logic replaces the large "if/else" block) ---
-
     let primaryMetricHtml = '';
     let detailsGridHtml = '';
-    let bodyHtml = ''; // <--- THIS WAS THE MISSING LINE
+    let bodyHtml = '';
     const type = holding.type;
 
     // --- 1. Determine Primary Metric (Current Value) ---
-    // Default primary metric
     primaryMetricHtml = `
         <div class="holding-metric holding-metric-main">
             <span class="label">Current Value</span>
@@ -423,7 +410,7 @@ function renderHoldingCard(holding, portfolioId) {
     `;
 
     // --- 2. Build the Details Grid based on type ---
-    if (['equity', 'mutual_fund', 'bond'].includes(type)) {
+    if (['equity', 'mutual_fund', 'bond', 'crypto', 'gold'].includes(type)) { // Added crypto/gold
         const pAndL = holding.currentValue - holding.buyValue;
         const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
         const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';

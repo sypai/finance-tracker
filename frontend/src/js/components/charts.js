@@ -1,5 +1,5 @@
 // js/components/charts.js
-import { formatIndianCurrency } from '../utils/ui/formatters.js'; // Import our formatter
+import { formatIndianCurrency } from '../utils/ui/formatters.js';
 
 // --- Chart Instance Management ---
 const chartInstances = {};
@@ -11,8 +11,7 @@ function destroyChart(id) {
 }
 // --- End Instance Management ---
 
-// --- NEW: "Zerodha-style" Crosshair Plugin ---
-// This plugin draws the vertical dashed line on hover, just like in the screenshot.
+// --- "Zerodha-style" Crosshair Plugin ---
 const crosshairPlugin = {
     id: 'crosshair',
     afterDraw: (chart) => {
@@ -26,13 +25,12 @@ const crosshairPlugin = {
             ctx.lineTo(x, yAxis.bottom);
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 5]); // Dashed line
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; // Light gray, semi-transparent
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'; // Light gray
             ctx.stroke();
             ctx.restore();
         }
     }
 };
-// We must register the plugin for it to work
 Chart.register(crosshairPlugin); 
 // --- End of Plugin ---
 
@@ -42,7 +40,7 @@ Chart.register(crosshairPlugin);
  * @param {object} appState The global application state.
  */
 export function createCharts(appState) {
-    // Destroy all existing chart instances to prevent duplicates
+    // Destroy all existing chart instances
     Object.values(chartInstances).forEach(chart => {
         if(chart) chart.destroy();
     });
@@ -54,6 +52,7 @@ export function createCharts(appState) {
     }
 
     // --- 2. Investments Growth Chart (Dashboard) ---
+    // THIS IS THE REFACTORED ONE
     const investmentsGrowthChartCtx = document.getElementById('investmentsGrowthChart')?.getContext('2d');
     if (investmentsGrowthChartCtx) {
         renderInvestmentsGrowthChart(investmentsGrowthChartCtx, appState);
@@ -82,34 +81,89 @@ export function createCharts(appState) {
 // --- INDIVIDUAL CHART FUNCTIONS ---
 
 /**
- * Renders the Balance History "Zerodha-style" Line Chart (Accounts Tab)
+ * Renders the NEW Portfolio Performance Chart (Dashboard)
  */
-function renderBalanceHistoryChart(ctx, appState) {
-    const selectedAccountId = document.getElementById('accountFilter').value;
-    const selectedPeriod = appState.activeBalancePeriod;
+function renderInvestmentsGrowthChart(ctx, appState) {
+    const period = appState.activeInvestmentPeriod;
+    const history = appState.portfolioHistory;
 
-    const accountsToChart = selectedAccountId === 'all'
-        ? appState.accounts 
-        : appState.accounts.filter(acc => acc.id == selectedAccountId); 
+    if (!history || history.length === 0) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        return;
+    }
 
-    const { labels, datasets } = prepareBalanceHistoryDatasets(
-        accountsToChart, 
-        appState.transactions, 
-        selectedPeriod,
-        selectedAccountId
-    );
+    // 1. Filter history based on selected period
+    const today = new Date(2025, 10, 2); // Same "today" as state.js
+    let startDate;
 
-    chartInstances['balanceChart'] = new Chart(ctx, {
-        type: 'line', 
+    switch (period) {
+        case '1M':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            break;
+        case '6M':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate());
+            break;
+        case '1Y':
+            startDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            break;
+        case 'Max':
+        default:
+            startDate = new Date(history[0].date);
+            break;
+    }
+    startDate.setHours(0,0,0,0);
+
+    const filteredHistory = history.filter(d => new Date(d.date) >= startDate);
+
+    // 2. Create the two datasets
+    const currentValueData = filteredHistory.map(d => ({ x: new Date(d.date).getTime(), y: d.currentValue }));
+    const totalInvestedData = filteredHistory.map(d => ({ x: new Date(d.date).getTime(), y: d.totalInvested }));
+
+    // 3. Determine colors
+    const finalValue = currentValueData[currentValueData.length - 1].y;
+    const initialValue = currentValueData[0].y;
+    const isPositiveGrowth = finalValue >= initialValue;
+    const mainColor = isPositiveGrowth ? '#5BB974' : '#F0857D'; // green or red
+    const mainBgColor = isPositiveGrowth ? 'rgba(91, 185, 116, 0.1)' : 'rgba(240, 133, 125, 0.1)';
+
+    chartInstances['investmentsGrowthChart'] = new Chart(ctx, {
+        type: 'line',
         data: {
-            labels: labels,
-            datasets: datasets
+            datasets: [
+                {
+                    label: 'Current Value',
+                    data: currentValueData,
+                    borderColor: mainColor,
+                    backgroundColor: mainBgColor,
+                    fill: 'origin',
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBorderWidth: 2,
+                    pointHoverBackgroundColor: mainColor,
+                    pointHoverBorderColor: '#131314'
+                },
+                {
+                    label: 'Total Invested',
+                    data: totalInvestedData,
+                    borderColor: '#969696', // var(--text-secondary)
+                    borderDash: [5, 5], // Dashed line
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBorderWidth: 2,
+                    pointHoverBackgroundColor: '#969696',
+                    pointHoverBorderColor: '#131314'
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             interaction: {
-                mode: 'index', // <-- This enables the "snap" tooltip
+                mode: 'index',
                 intersect: false,
             },
             scales: {
@@ -117,7 +171,7 @@ function renderBalanceHistoryChart(ctx, appState) {
                     type: 'time',
                     time: {
                         unit: 'month',
-                        tooltipFormat: 'dd MMM yyyy' // "02 Apr 2025"
+                        tooltipFormat: 'dd MMM yyyy'
                     },
                     grid: { color: 'rgba(255, 255, 255, 0.05)' },
                     ticks: { color: '#7F849B' }
@@ -131,7 +185,6 @@ function renderBalanceHistoryChart(ctx, appState) {
                 }
             },
             plugins: {
-                // The crosshair plugin is now registered globally and will work
                 legend: {
                     display: true, 
                     position: 'bottom',
@@ -144,16 +197,116 @@ function renderBalanceHistoryChart(ctx, appState) {
                 },
                 tooltip: {
                     enabled: true,
-                    backgroundColor: 'rgba(30, 31, 32, 0.9)', // var(--card-bg)
-                    titleColor: '#E3E3E3', // var(--text-primary)
+                    backgroundColor: 'rgba(30, 31, 32, 0.9)',
+                    titleColor: '#E3E3E3',
                     bodyColor: '#E3E3E3', 
-                    borderColor: 'rgba(255, 255, 255, 0.1)', // var(--card-border)
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                     borderWidth: 1,
-                    cornerRadius: 8, // var(--radius-sm)
+                    cornerRadius: 8,
                     padding: 12,
                     callbacks: {
                         title: function(tooltipItems) {
-                            return tooltipItems[0].label;
+                            const date = new Date(tooltipItems[0].parsed.x);
+                            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                        },
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y;
+                            return `${label}: ${formatIndianCurrency(value)}`;
+                        },
+                    },
+                }
+            }
+        }
+    });
+}
+
+
+/**
+ * Renders the Balance History "Zerodha-style" Line Chart (Accounts Tab)
+ */
+function renderBalanceHistoryChart(ctx, appState) {
+    // ... (This function is unchanged from v10) ...
+    const selectedAccountId = document.getElementById('accountFilter').value;
+    const selectedPeriod = appState.activeBalancePeriod;
+
+    const accountsToChart = selectedAccountId === 'all'
+        ? appState.accounts 
+        : appState.accounts.filter(acc => acc.id == selectedAccountId); 
+
+    const { history, datasetLabel, datasetColor, datasetBgColor } = 
+        prepareBalanceHistory(
+            accountsToChart, 
+            appState.transactions, 
+            selectedPeriod
+        );
+
+    chartInstances['balanceChart'] = new Chart(ctx, {
+        type: 'line', 
+        data: {
+            datasets: [{
+                label: datasetLabel,
+                data: history, 
+                borderColor: datasetColor,
+                backgroundColor: datasetBgColor,
+                fill: 'origin',
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBorderWidth: 2,
+                pointHoverBackgroundColor: datasetColor,
+                pointHoverBorderColor: '#131314'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index', 
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month',
+                        tooltipFormat: 'dd MMM yyyy'
+                    },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#7F849B' }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: {
+                        color: '#7F849B',
+                        callback: (value) => formatIndianCurrency(value)
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true, 
+                    position: 'bottom',
+                    labels: { 
+                        color: '#E3E3E3', 
+                        font: { family: 'Inter' },
+                        usePointStyle: true,
+                        boxWidth: 8
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(30, 31, 32, 0.9)',
+                    titleColor: '#E3E3E3',
+                    bodyColor: '#E3E3E3', 
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    padding: 12,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const date = new Date(tooltipItems[0].parsed.x);
+                            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
                         },
                         label: function(context) {
                             const label = context.dataset.label || '';
@@ -168,8 +321,89 @@ function renderBalanceHistoryChart(ctx, appState) {
 }
 
 /**
- * Renders the Cash Flow Bar Chart (Transactions Tab)
+ * NEW, SIMPLIFIED, AND CORRECTED data function for Accounts
  */
+function prepareBalanceHistory(accounts, allTransactions, period) {
+    // ... (This function is unchanged from v10) ...
+    const today = new Date(2025, 10, 2); 
+    let startDate;
+    const earliestAccountDate = new Date(Math.min(...accounts.map(acc => new Date(acc.createdAt).getTime())));
+    
+    switch (period) {
+        case 'day': startDate = new Date(new Date(today).setHours(0, 0, 0, 0)); break;
+        case 'week': startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000); break;
+        case 'month': startDate = new Date(today.getFullYear(), today.getMonth(), 1); break;
+        case 'year': startDate = new Date(today.getFullYear(), 0, 1); break;
+        case 'max': default:
+            startDate = earliestAccountDate;
+            break;
+    }
+    startDate.setHours(0,0,0,0);
+
+    const accountIds = new Set(accounts.map(acc => acc.id));
+
+    const relevantTransactions = allTransactions
+        .filter(t => accountIds.has(t.accountId))
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let runningBalance = 0;
+    accounts.forEach(acc => {
+        runningBalance += acc.startingBalance; 
+        relevantTransactions.forEach(t => {
+            if (new Date(t.date) < startDate && t.accountId === acc.id && new Date(t.date) >= new Date(acc.createdAt)) {
+                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
+            }
+        });
+    });
+
+    const history = [];
+    const endDate = today;
+    const days = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let txIndex = relevantTransactions.findIndex(t => new Date(t.date) >= startDate);
+    if (txIndex === -1) txIndex = relevantTransactions.length;
+
+    for (let i = 0; i <= days; i++) {
+        const currentDate = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
+        
+        while (txIndex < relevantTransactions.length) {
+            const txDate = new Date(relevantTransactions[txIndex].date);
+            if (txDate.getFullYear() === currentDate.getFullYear() &&
+                txDate.getMonth() === currentDate.getMonth() &&
+                txDate.getDate() === currentDate.getDate()) {
+                
+                const t = relevantTransactions[txIndex];
+                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
+                txIndex++;
+            } else {
+                break; 
+            }
+        }
+        
+        history.push({ x: currentDate.getTime(), y: runningBalance });
+    }
+
+    let datasetLabel = "Net Liquid Worth";
+    let datasetColor, datasetBgColor;
+
+    if (accounts.length === 1) {
+        datasetLabel = accounts[0].name;
+    }
+    
+    if (runningBalance >= 0) {
+        datasetColor = '#5BB974'; // var(--positive-color)
+        datasetBgColor = 'rgba(91, 185, 116, 0.1)';
+    } else {
+        datasetColor = '#F0857D'; // var(--negative-color)
+        datasetBgColor = 'rgba(240, 133, 125, 0.1)';
+    }
+
+    return { history, datasetLabel, datasetColor, datasetBgColor };
+}
+
+
+// --- OTHER CHART FUNCTIONS (Unchanged) ---
+
 function renderCashFlowChart(ctx, appState) {
     // ... (This function is unchanged) ...
     const monthlyData = appState.transactions.reduce((acc, t) => {
@@ -221,9 +455,6 @@ function renderCashFlowChart(ctx, appState) {
     });
 }
 
-/**
- * Renders the Allocation Doughnut Chart (Investments Tab)
- */
 function renderAllocationChart(ctx, appState) {
     // ... (This function is unchanged) ...
     const allocationData = appState.investmentAccounts
@@ -261,42 +492,8 @@ function renderAllocationChart(ctx, appState) {
     });
 }
 
-/**
- * Renders the Investments Growth Line Chart (Dashboard)
- */
-function renderInvestmentsGrowthChart(ctx, appState) {
-    // ... (This function is unchanged) ...
-    if (appState.investmentGrowth && appState.investmentGrowth.length > 0) {
-        chartInstances['investmentsGrowthChart'] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: appState.investmentGrowth.map(d => d.month),
-                datasets: [{
-                    label: 'Portfolio Value',
-                    data: appState.investmentGrowth.map(d => d.value),
-                    borderColor: '#5BB974', // var(--positive-color)
-                    backgroundColor: 'rgba(91, 185, 116, 0.1)', // var(--positive-color) w/ alpha
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#5BB974', // var(--positive-color)
-                    pointBorderColor: '#131314', // var(--background)
-                    pointBorderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 7,
-                }]
-            },
-            options: getCommonChartOptions(true)
-        });
-    } else {
-        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    }
-}
-
-/**
- * Renders the Expense Bar Chart (Dashboard)
- */
 function renderExpenseBarChart(ctx, appState) {
+    // ... (This function is unchanged) ...
     const filteredTransactions = getTransactionsForPeriod(appState.transactions, appState.activeExpensePeriod);
     const categoryTotals = filteredTransactions.filter(t => t.type === 'expense').reduce((acc, t) => {
         const category = appState.categories.find(c => c.id === t.categoryId)?.name || 'Uncategorized';
@@ -350,15 +547,7 @@ function renderExpenseBarChart(ctx, appState) {
                 plugins: { legend: { display: false } },
                 scales: {
                      x: { grid: { drawBorder: false, color: 'rgba(255,255,255,0.05)' }, ticks: { display: false } },
-                     // --- THIS IS THE FIX ---
-                     y: { 
-                         grid: { display: false, drawBorder: false }, 
-                         ticks: { 
-                             color: '#E3E3E3', // Hardcoded var(--text-primary)
-                             font: { family: 'Manrope' } 
-                         } 
-                     }
-                     // --- END OF FIX ---
+                     y: { grid: { display: false, drawBorder: false }, ticks: { color: '#E3E3E3', font: { family: 'Manrope' } } }
                 }
             }
         });
@@ -436,123 +625,3 @@ function getTransactionsForPeriod(transactions, period = 'month') {
     // Default to month
     return transactions.filter(t => new Date(t.date).getMonth() === now.getMonth() && new Date(t.date).getFullYear() === currentYear);
 }
-
-
-// --- THIS IS THE REWRITTEN FUNCTION ---
-/**
- * Prepares datasets for the "Zerodha-style" line chart.
- * @param {Array} accounts - The accounts to include. If count > 1, calculates Net Worth.
- * @param {Array} transactions - ALL transactions.
- * @param {string} period - The time period ('day', 'week', 'month', 'year', 'max').
- * @param {string} selectedAccountId - The ID from the dropdown ('all' or a number).
- * @returns {object} - An object containing `labels` and `datasets`.
- */
-function prepareBalanceHistoryDatasets(accounts, transactions, period, selectedAccountId) {
-    const now = new Date();
-    let startDate;
-
-    // 1. Determine Start Date
-    switch (period) {
-        case 'day': startDate = new Date(new Date().setHours(0, 0, 0, 0)); break;
-        case 'week': startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); break;
-        case 'month': startDate = new Date(now.getFullYear(), now.getMonth(), 1); break;
-        case 'year': startDate = new Date(now.getFullYear(), 0, 1); break;
-        case 'max': default:
-            startDate = new Date(Math.min(...accounts.map(acc => new Date(acc.createdAt).getTime())));
-            break;
-    }
-    startDate.setHours(0,0,0,0);
-
-    const accountIds = new Set(accounts.map(acc => acc.id));
-    
-    // 2. Get all relevant transactions
-    const relevantTransactions = transactions
-        .filter(t => accountIds.has(t.accountId) && new Date(t.date) >= startDate)
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    // 3. Create a map of all unique dates
-    const allDates = new Set();
-    allDates.add(startDate.getTime());
-    relevantTransactions.forEach(t => allDates.add(new Date(t.date).setHours(0,0,0,0)));
-    allDates.add(new Date().setHours(0,0,0,0)); // Ensure today is included
-    
-    const sortedDates = Array.from(allDates).sort((a, b) => a - b);
-    
-    // Map transactions by date for quick lookup
-    const transactionsByDate = relevantTransactions.reduce((acc, t) => {
-        const dateKey = new Date(t.date).setHours(0,0,0,0);
-        if (!acc[dateKey]) acc[dateKey] = [];
-        acc[dateKey].push(t);
-        return acc;
-    }, {});
-
-    // 4. Calculate History
-    const history = [];
-    let datasetLabel = "Net Liquid Worth";
-    let datasetColor = '#1D4ED8'; // var(--primary-accent)
-    let datasetBgColor = 'rgba(29, 78, 216, 0.1)';
-    let runningBalance = 0;
-
-    // --- Calculate the true starting balance(s) at `startDate` ---
-    accounts.forEach(acc => {
-        const historyTx = transactions
-            .filter(t => t.accountId === acc.id && new Date(t.date) < startDate)
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-        let balance = acc.startingBalance;
-        historyTx.forEach(t => {
-            balance += (t.type === 'income' ? t.amount : -t.amount);
-        });
-        runningBalance += balance; // Add this account's starting balance to the total
-    });
-
-    // --- Set label and color based on selection ---
-    if (selectedAccountId !== 'all' && accounts.length === 1) {
-        const account = accounts[0];
-        datasetLabel = account.name;
-        if (account.balance >= 0) {
-            datasetColor = '#5BB974'; // var(--positive-color)
-            datasetBgColor = 'rgba(91, 185, 116, 0.1)';
-        } else {
-            datasetColor = '#F0857D'; // var(--negative-color)
-            datasetBgColor = 'rgba(240, 133, 125, 0.1)';
-        }
-    } else {
-        // "All Accounts" is selected, so set color based on final Net Worth
-        if (runningBalance >= 0) {
-            datasetColor = '#5BB974'; // var(--positive-color)
-            datasetBgColor = 'rgba(91, 185, 116, 0.1)';
-        } else {
-            datasetColor = '#F0857D'; // var(--negative-color)
-            datasetBgColor = 'rgba(240, 133, 125, 0.1)';
-        }
-    }
-
-    // 5. Iterate through dates and calculate running balance
-    sortedDates.forEach(dateMs => {
-        if (transactionsByDate[dateMs]) {
-            transactionsByDate[dateMs].forEach(t => {
-                runningBalance += (t.type === 'income' ? t.amount : -t.amount);
-            });
-        }
-        history.push({ x: dateMs, y: runningBalance });
-    });
-
-    // 6. Build the final Chart.js dataset
-    const datasets = [{
-        label: datasetLabel,
-        data: history,
-        borderColor: datasetColor,
-        backgroundColor: datasetBgColor, // <-- THIS IS THE FIX
-        fill: 'origin', // Fill from y=0
-        tension: 0.1,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBorderWidth: 2,
-        pointHoverBackgroundColor: datasetColor,
-        pointHoverBorderColor: '#131314' // var(--background)
-    }];
-
-    return { labels: sortedDates, datasets };
-}
-

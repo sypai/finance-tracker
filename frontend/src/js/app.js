@@ -34,13 +34,19 @@ const App = {
         // appState.activeYear = new Date().getFullYear().toString();
         // appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
         // appState.hasDashboardLoaded = false;
-        
+
         initUI();
         initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
         initCategorySelect();
         this.bindEvents();
         this.bindPortfolioModalEvents();
         this.bindAccountModalEvents();
+
+        // --- NEW: Set initial active tabs ---
+        this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
+        this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
+        this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
+        
         this.render(); // Initial render
 
         this.handleTabSwitch('dashboard'); 
@@ -77,6 +83,12 @@ const App = {
     },
 
     bindEvents() {
+        // --- NEW: Investment Timeline Listener ---
+        const investmentTimelineTabs = document.getElementById('investment-timeline-tabs');
+        if (investmentTimelineTabs) {
+            investmentTimelineTabs.addEventListener('click', (event) => this.handleInvestmentTimelineClick(event));
+        }
+        // --- END NEW ---
 
         // --- *** NEW: "+ New Category" LOGIC *** ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
@@ -1020,23 +1032,53 @@ const App = {
         this.render();
     },
 
+     // Generic function to update any timeline UI
+     updateTimelineUI(containerId, activePeriod) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.querySelectorAll('.timeline-selector-btn, .expense-tab').forEach(btn => {
+            const isActive = btn.dataset.period === activePeriod;
+            btn.classList.toggle('active', isActive);
+
+            // This is the logic from the old updateActiveTimelineTab
+            if (isActive) {
+                btn.classList.add('bg-white/10', 'text-white');
+                btn.classList.remove('text-gray-400');
+            } else {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-gray-400');
+            }
+        });
+    },
+
     handleTimelineClick(event) {
-        const clickedTab = event.target.closest('button');
-        // FIX: Correctly reference the state via appState.ui
+        const clickedTab = event.target.closest('button[data-period]');
         if (!clickedTab || clickedTab.dataset.period === appState.activeExpensePeriod) return;
         
         appState.activeExpensePeriod = clickedTab.dataset.period;
+        this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
         this.render();
     },
 
-    // NEW handler for the balance history timeline
     handleBalanceTimelineClick(event) {
-        const clickedTab = event.target.closest('button');
+        const clickedTab = event.target.closest('button[data-period]');
         if (!clickedTab || clickedTab.dataset.period === appState.activeBalancePeriod) return;
         
         appState.activeBalancePeriod = clickedTab.dataset.period;
-        this.render();
+        this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
+        createCharts(appState); 
     },
+
+    handleInvestmentTimelineClick(event) {
+        const clickedTab = event.target.closest('button[data-period]');
+        if (!clickedTab || clickedTab.dataset.period === appState.activeInvestmentPeriod) return;
+
+        appState.activeInvestmentPeriod = clickedTab.dataset.period;
+        this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
+        createCharts(appState);
+    },
+    // --- END NEW ---
 
     bindPortfolioModalEvents() {
         const modal = document.getElementById('addPortfolioModal');

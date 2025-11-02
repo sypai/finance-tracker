@@ -236,8 +236,3 @@
     margin-top: 0.125rem; /* 2px */
     letter-spacing: 0.025em; /* Add a slight letter-spacing for clarity */
 }
-
-#balanceHistoryTabs .expense-tab {
-    flex-grow: 1;
-    justify-content: center; /* Ensures text is centered */
-}
