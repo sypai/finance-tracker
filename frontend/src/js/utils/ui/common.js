@@ -35,7 +35,7 @@ export function toggleModal(modalId, show) {
 
 export function updateGreeting() {
     const hour = new Date().getHours();
-    const name = "Suyash";
+    const name = "Radha";
     let greetingText = "";
 
     if (hour < 12) {

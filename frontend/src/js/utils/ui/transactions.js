@@ -132,12 +132,19 @@ export function showTransactionModal(appState, transactionToEdit = null) {
     const modalTitle = document.getElementById('transactionModalTitle');
     const form = document.getElementById('transactionForm');
     const submitBtn = document.getElementById('transactionSubmitBtn');
-
+    
+    // --- THIS IS THE MODIFIED PART ---
+    const deleteBtn = document.getElementById('deleteTransactionBtn');
+    
     // --- 5. Handle Edit vs. Add Mode ---
     if (transactionToEdit) {
         // --- EDIT MODE ---
         if(modalTitle) modalTitle.textContent = 'Edit Transaction';
         if(submitBtn) submitBtn.textContent = 'Save Changes';
+        if(deleteBtn) {
+            deleteBtn.classList.remove('hidden'); // Show delete button
+            deleteBtn.dataset.transactionId = transactionToEdit.id; // Store ID for the click handler
+        }
 
         if(form) {
             form.elements.id.value = transactionToEdit.id;
@@ -148,12 +155,17 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             if (typeRadio) typeRadio.checked = true;
 
             setSelectedTags(transactionToEdit.tagIds || []);
-            setSelectedCategory(transactionToEdit.categoryId || 'cat-uncategorized'); // <-- SET CATEGORY
+            setSelectedCategory(transactionToEdit.categoryId || 'cat-uncategorized');
         }
     } else {
         // --- ADD MODE ---
         if(modalTitle) modalTitle.textContent = 'Add Transaction';
         if(submitBtn) submitBtn.textContent = 'Add Transaction';
+        if(deleteBtn) {
+            deleteBtn.classList.add('hidden'); // Hide delete button
+            deleteBtn.dataset.transactionId = '';
+        }
+
         if(form) {
             form.reset();
             form.elements.id.value = '';
@@ -161,21 +173,21 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             const expenseRadio = form.querySelector('input[name="type"][value="expense"]');
             if (expenseRadio) expenseRadio.checked = true;
             setSelectedTags([]);
-            setSelectedCategory('cat-uncategorized'); // Clear tags for new transaction
+            setSelectedCategory('cat-uncategorized'); 
         }
     }
+    // --- END OF MODIFIED PART ---
 
-    // --- 6. Reset View Switcher to Manual ---
+    // --- (rest of function is unchanged) ---
     const manualViewEl = document.getElementById('manual-entry-view');
     const importViewEl = document.getElementById('import-view');
     const manualRadio = document.getElementById('modeManual');
     if(manualRadio) manualRadio.checked = true;
     if(manualViewEl) manualViewEl.classList.add('active-view');
     if(importViewEl) importViewEl.classList.remove('active-view');
-
-    // --- 7. Show Modal ---
     toggleModal('transactionModal', true);
 }
+
 
 
 // --- Modified populateAccountDropdown to include "Cash" ---

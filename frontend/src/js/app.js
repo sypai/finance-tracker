@@ -46,7 +46,7 @@ const App = {
         this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
         this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
         this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
-        
+
         this.render(); // Initial render
 
         this.handleTabSwitch('dashboard'); 
@@ -278,6 +278,16 @@ const App = {
             if (event.target.matches('.close-modal-btn')) {
                 event.target.closest('.modal-backdrop').classList.remove('active');
             }
+            // Listen for the delete transaction button
+            else if (event.target.id === 'deleteTransactionBtn' || event.target.closest('#deleteTransactionBtn')) {
+                const button = event.target.id === 'deleteTransactionBtn' ? event.target : event.target.closest('#deleteTransactionBtn');
+                const transactionId = parseInt(button.dataset.transactionId);
+                if (transactionId) {
+                    // --- CHANGED: Now calls confirmation ---
+                    this.showDeleteConfirmation('transaction', { transactionId });
+                }
+            }
+
             if (event.target.id === 'modalAddAccountBtn') {
                 toggleModal('transactionModal', false);
                 toggleModal('addAccountModal', true);
@@ -326,7 +336,7 @@ const App = {
             if (event.target.id === 'deleteAccountBtn') {
                 const accountId = parseInt(event.target.dataset.accountId);
                 toggleModal('accountActionsModal', false); // Close this modal first
-                this.showDeleteConfirmation(accountId);
+                this.showDeleteConfirmation('account', accountId);
             }
             if (event.target.id === 'editAccountBtn') {
                 // You would build an "Edit Account" modal flow here
@@ -704,23 +714,80 @@ const App = {
         toggleModal('accountActionsModal', true);
     },
 
-    showDeleteConfirmation(accountId) {
-        // Store the ID on the button so we know which account to delete
+    showDeleteConfirmation(type, ids) {
+        const modal = document.getElementById('deleteConfirmationModal');
         const confirmBtn = document.getElementById('confirmDeleteBtn');
-        if(confirmBtn) {
-            confirmBtn.dataset.accountIdToDelete = accountId;
-            toggleModal('deleteConfirmationModal', true);
+        const title = modal.querySelector('h3');
+        const message = modal.querySelector('p');
+        
+        // Clear all previous data attributes
+        confirmBtn.dataset.deleteType = '';
+        confirmBtn.dataset.accountId = '';
+        confirmBtn.dataset.transactionId = '';
+        // (add portfolio/holding IDs later)
+
+        if (type === 'account') {
+            title.textContent = 'Delete Account?';
+            message.textContent = 'This will permanently delete the account and all of its associated transactions. This action cannot be undone.';
+            confirmBtn.dataset.deleteType = 'account';
+            confirmBtn.dataset.accountId = ids.accountId;
         }
+        // --- ADD THIS NEW BLOCK ---
+        else if (type === 'transaction') {
+            title.textContent = 'Delete Transaction?';
+            message.textContent = 'This will permanently delete this transaction. This action cannot be undone.';
+            confirmBtn.dataset.deleteType = 'transaction';
+            confirmBtn.dataset.transactionId = ids.transactionId;
+        }
+        // --- END OF NEW BLOCK ---
+
+        toggleModal('deleteConfirmationModal', true);
     },
 
-    deleteAccount(accountId) {
-        // Filter out the account to be deleted
-        appState.accounts = appState.accounts.filter(acc => acc.id !== accountId);
-        // Also filter out all transactions associated with that account
-        appState.transactions = appState.transactions.filter(t => t.accountId !== accountId);
+    // --- ADD THIS NEW FUNCTION ---
+    handleConfirmDelete() {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const type = confirmBtn.dataset.deleteType;
+        
+        // Get the *current* active tab so we can re-render it
+        let activeTab = document.querySelector('.sidebar-item.active')?.dataset.tab || 'dashboard';
 
+        if (type === 'account') {
+            const accountId = parseInt(confirmBtn.dataset.accountId);
+            this.deleteAccount(accountId);
+            
+            // Re-render the current tab (which is probably 'accounts')
+            if (activeTab === 'accounts') {
+                renderAccountsPage(appState);
+                createCharts(appState);
+            } else {
+                this.render(); // Full render if on another tab
+            }
+
+        } else if (type === 'transaction') {
+            const transactionId = parseInt(confirmBtn.dataset.transactionId);
+            this.deleteTransaction(transactionId);
+            
+            // Re-render the current tab (which is probably 'transactions')
+            if (activeTab === 'transactions') {
+                renderTransactionStructure(appState.transactions);
+                requestAnimationFrame(() => {
+                    loadTransactionData(appState.transactions, appState.accounts, appState.categories, appState.tags);
+                    renderTransactionInsights(appState);
+                    createCharts(appState); // Re-draw charts with new data
+                });
+            } else {
+                this.render(); // Full render if on another tab
+            }
+        }
+        
         toggleModal('deleteConfirmationModal', false);
-        this.render(); // Re-render the UI to reflect the changes
+    },
+    // --- END OF NEW FUNCTION ---
+
+    deleteAccount(accountId) {
+        appState.accounts = appState.accounts.filter(acc => acc.id !== accountId);
+        appState.transactions = appState.transactions.filter(t => t.accountId !== accountId);
     },
 
     // *** REVISED handlePortfolioSubmit ***
@@ -1017,6 +1084,32 @@ const App = {
         // Reset the modal to the selection view for next time
         this.switchAccountView('account-selection-view', true);
     },
+
+    // --- THIS IS STEP 3.A ---
+    // --- ADD THIS NEW FUNCTION ---
+    deleteTransaction(transactionId) {
+        const transactionIndex = appState.transactions.findIndex(t => t.id === transactionId);
+        if (transactionIndex === -1) {
+            console.error("Could not find transaction to delete");
+            return;
+        }
+
+        const transaction = appState.transactions[transactionIndex];
+        
+        // 1. Revert balance change
+        const account = appState.accounts.find(acc => acc.id === transaction.accountId);
+        if (account) {
+            account.balance += (transaction.type === 'income' ? -transaction.amount : transaction.amount);
+        }
+        
+        // 2. Remove transaction from the state
+        appState.transactions.splice(transactionIndex, 1);
+        
+        toggleModal('transactionModal', false); // Close the *edit* modal
+        
+        console.log(`Deleted transaction ${transactionId}`);
+    },
+    // --- END OF NEW FUNCTION ---
 
     handleInvestmentAccountSubmit(event) {
         event.preventDefault();
