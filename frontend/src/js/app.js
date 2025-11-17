@@ -1,3 +1,4 @@
+// src/js/app.js
 import { appState } from './utils/state.js';
 import { createCharts } from './components/charts.js';
 import { 
@@ -10,11 +11,9 @@ import {
     renderTransactionInsights,
     renderTransactionStructure,
     loadTransactionData,
-    // populateAccountDropdown,
     renderInvestmentCard,
     renderInvestmentsTab,
     updateDashboardMetrics,
-    // updateActiveTimelineTab,
     renderExpenseAnalysisCard,
     updateHeaderButtons,
     toggleModal,
@@ -30,32 +29,26 @@ import {
 
 const App = {
     init() {
-        // NEW: Add navigation state
-        // appState.activeYear = new Date().getFullYear().toString();
-        // appState.activeMonth = (new Date().getMonth() + 1).toString().padStart(2, '0');
-        // appState.hasDashboardLoaded = false;
-
         initUI();
-        initTagInput(); // <-- INITIALIZE THE TAG COMPONENT
+        initTagInput(); 
         initCategorySelect();
+        
         this.bindEvents();
-        this.bindPortfolioModalEvents();
-        this.bindAccountModalEvents();
+        this.bindPortfolioModalEvents(); 
+        this.bindAccountModalEvents(); 
+        this.bindSettingsModalEvents(); // <-- ADD THIS LINE
 
-        // --- NEW: Set initial active tabs ---
+        // Set initial active tabs
         this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
         this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
         this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
 
-        this.render(); // Initial render
-
+        this.render(); 
         this.handleTabSwitch('dashboard'); 
 
-        // Initial positioning of the sidebar indicator
         const initialActiveItem = document.querySelector('.sidebar-item.active');
         this.moveSidebarIndicator(initialActiveItem);
         
-        // The clock update only needs to be set up once.
         updateDateTime(); 
         setInterval(updateDateTime, 1000 * 60);
     },
@@ -65,13 +58,10 @@ const App = {
 
         updateGreeting();
         updateHeaderButtons(activeTab);
-
-        // console.log(activeTab)
     
-        // Render content based on the active tab
         if (activeTab === 'dashboard') {
             updateDashboardMetrics(appState);
-            renderInvestmentCard(appState);
+            renderInvestmentCard(appState); 
             renderExpenseAnalysisCard(appState);
         } else if (activeTab === 'accounts') {
             renderAccountsPage(appState);
@@ -83,14 +73,7 @@ const App = {
     },
 
     bindEvents() {
-        // --- NEW: Investment Timeline Listener ---
-        const investmentTimelineTabs = document.getElementById('investment-timeline-tabs');
-        if (investmentTimelineTabs) {
-            investmentTimelineTabs.addEventListener('click', (event) => this.handleInvestmentTimelineClick(event));
-        }
-        // --- END NEW ---
-
-        // --- *** NEW: "+ New Category" LOGIC *** ---
+        // --- Category Create Logic ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
         const categorySelect = document.getElementById('transactionCategory');
         const newCategoryInputGroup = document.getElementById('newCategoryInputGroup');
@@ -99,87 +82,62 @@ const App = {
         const cancelNewCategoryBtn = document.getElementById('cancelNewCategoryBtn');
 
         if (newCategoryBtn && categorySelect && newCategoryInputGroup && newCategoryNameInput && saveNewCategoryBtn && cancelNewCategoryBtn) {
-
             const showInput = () => {
                 categorySelect.classList.add('hidden');
                 newCategoryBtn.classList.add('hidden');
                 newCategoryInputGroup.classList.remove('hidden');
                 newCategoryNameInput.focus();
             };
-
             const hideInput = () => {
                 newCategoryInputGroup.classList.add('hidden');
                 categorySelect.classList.remove('hidden');
                 newCategoryBtn.classList.remove('hidden');
-                newCategoryNameInput.value = ''; // Clear input
+                newCategoryNameInput.value = '';
             };
-
             newCategoryBtn.addEventListener('click', showInput);
             cancelNewCategoryBtn.addEventListener('click', hideInput);
-
             saveNewCategoryBtn.addEventListener('click', () => {
                 const newName = newCategoryNameInput.value.trim();
-                if (!newName) {
-                    alert('Please enter a category name.');
-                    return;
-                }
-                // Basic duplicate check (case-insensitive)
+                if (!newName) return; 
                 if (appState.categories.some(cat => cat.name.toLowerCase() === newName.toLowerCase())) {
-                    alert(`Category "${newName}" already exists.`);
-                    return;
+                    return; 
                 }
-
-                // Create new category
                 const newCategory = {
-                    id: `cat-${Date.now()}`, // Simple unique ID
+                    id: `cat-${Date.now()}`,
                     name: newName,
-                    iconId: '#icon-default' // Assign default icon for now
+                    iconId: '#icon-default' 
                 };
-
-                // Add to state
                 appState.categories.push(newCategory);
-
-                // Re-populate dropdown (using the function from transactions.js)
-                populateCategoryDropdown(appState.categories); // Ensure this is imported/accessible
-
-                // Select the new category
-                categorySelect.value = newCategory.id;
-
-                // Hide input, show select
+                // We need to re-render the select list inside the component
+                // This is a simplified version. Ideally, categorySelect.js would handle this.
+                initCategorySelect(); // Re-init to repopulate
+                setSelectedCategory(newCategory.id); // Select it
                 hideInput();
             });
         }
-        // --- *** END "+ New Category" LOGIC *** ---
-
+        
+        // --- Transaction Modal View Switcher ---
         const entryModeSwitcher = document.getElementById('entry-mode-switcher');
         const manualView = document.getElementById('manual-entry-view');
         const importView = document.getElementById('import-view');
-        const modalTitle = document.getElementById('transactionModalTitle'); // Keep title update
 
-        if (entryModeSwitcher && manualView && importView && modalTitle) {
+        if (entryModeSwitcher && manualView && importView) {
             entryModeSwitcher.addEventListener('change', (event) => {
                 if (event.target.value === 'manual') {
-                    // Slide Manual IN, Import OUT (to the right)
                     manualView.classList.add('active-view');
-                    importView.classList.remove('active-view'); // Ensure only one is active
-                    // modalTitle.textContent = document.getElementById('transactionId').value ? 'Edit Transaction' : 'Add Transaction';
+                    importView.classList.remove('active-view');
                 } else if (event.target.value === 'import') {
-                    // Slide Import IN, Manual OUT (to the left)
                     importView.classList.add('active-view');
-                    manualView.classList.remove('active-view'); // Ensure only one is active
-                    // modalTitle.textContent = 'Import Transactions';
+                    manualView.classList.remove('active-view');
                 }
             });
         }
         
-        // --- "INSET JOURNAL" ACCORDION CLICK ---
+        // --- "INSET JOURNAL" ACCORDION CLICK (Transactions) ---
         elements.transactionList.addEventListener('click', (event) => {
             const header = event.target.closest('.transaction-group-header');
             if (header) {
-                // Toggle the clicked group
                 header.parentElement.classList.toggle('is-open');
-                
-                // Elite Touch: Close other groups
                 document.querySelectorAll('#transactionList .transaction-group.is-open').forEach(openGroup => {
                     if (openGroup !== header.parentElement) {
                         openGroup.classList.remove('is-open');
@@ -188,10 +146,24 @@ const App = {
             }
         });
 
-        // --- "INSET JOURNAL" CARD CLICK (Drill-Down) ---
-        // This targets the .transaction-card, which is now inside the horizontal stream
+        // --- "INSET JOURNAL" ACCORDION CLICK (Accounts) ---
+        if (elements.accountList) { 
+            elements.accountList.addEventListener('click', (event) => {
+                const header = event.target.closest('.account-group-header');
+                if (header) {
+                    header.parentElement.classList.toggle('is-open');
+                    document.querySelectorAll('#accountList .account-group.is-open').forEach(openGroup => {
+                        if (openGroup !== header.parentElement) {
+                            openGroup.classList.remove('is-open');
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- "INSET JOURNAL" CARD CLICK (Transactions) ---
         elements.transactionList.addEventListener('click', (event) => {
-            const row = event.target.closest('.transaction-card'); // Changed from .transaction-row
+            const row = event.target.closest('.transaction-card'); 
             if (row) {
                 event.preventDefault(); 
                 const transactionId = parseInt(row.dataset.transactionId);
@@ -202,186 +174,212 @@ const App = {
             }
         });
 
-        // --- "INSET JOURNAL" LIVE SEARCH ---
+        // --- "INSET JOURNAL" LIVE SEARCH (Transactions) ---
         const transactionSearchInput = document.getElementById('transactionSearch');
         if (transactionSearchInput) {
-            transactionSearchInput.addEventListener('input', (event) => {
+             transactionSearchInput.addEventListener('input', (event) => {
                 const searchTerm = event.target.value.toLowerCase();
-                
-                // We must search all the way down to the cards
                 document.querySelectorAll('.transaction-group').forEach(group => {
                     let groupHasVisibleCards = false;
-                    
                     group.querySelectorAll('.day-column').forEach(column => {
                         let columnHasVisibleCards = false;
-
                         column.querySelectorAll('.transaction-card').forEach(card => {
                             const description = card.querySelector('.font-semibold').textContent.toLowerCase();
-                            const account = card.querySelector('.text-sm').textContent.toLowerCase();
+                            const account = card.querySelector('.account-name')?.textContent.toLowerCase() || card.querySelector('.text-sm').textContent.toLowerCase(); // Updated selector
                             const amount = card.querySelector('.mono').textContent.toLowerCase();
-                            
                             const isMatch = description.includes(searchTerm) || 
                                           account.includes(searchTerm) || 
                                           amount.includes(searchTerm);
-                            
                             card.classList.toggle('hidden', !isMatch);
                             if (isMatch) {
                                 columnHasVisibleCards = true;
                                 groupHasVisibleCards = true;
                             }
                         });
-                        // Hide the *day column* if no cards match
                         column.classList.toggle('hidden', !columnHasVisibleCards);
                     });
-                    // Hide the *entire month group* if no days match
                     group.classList.toggle('hidden', !groupHasVisibleCards);
                 });
             });
         }
         
-        elements.mobileMenuButton.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
-        
-        elements.addTransactionBtn.addEventListener('click', () => showTransactionModal(appState));
-        
-        elements.addAccountBtn.addEventListener('click', () => toggleModal('addAccountModal', true));
-        
-        elements.addInvestmentBtn.addEventListener('click', () => showPortfolioModal());
-        
-        document.getElementById('addPortfolioForm')?.addEventListener('submit', (e) => this.handlePortfolioSubmit(e));
-
-        elements.sidebarItems.forEach(item => {
-            item.addEventListener('click', () => {
-                setActiveTab(item.dataset.tab);
-                this.render();
+        // --- "INSET JOURNAL" LIVE SEARCH (Accounts) ---
+        const accountSearchInput = document.getElementById('accountSearch');
+        if (accountSearchInput) {
+            accountSearchInput.addEventListener('input', (event) => {
+                const searchTerm = event.target.value.toLowerCase();
+                document.querySelectorAll('#accountList .account-group').forEach(group => {
+                    let groupHasVisibleCards = false;
+                    group.querySelectorAll('.account-list-card').forEach(card => {
+                        const accountName = card.querySelector('.account-name').textContent.toLowerCase();
+                        const accountType = card.querySelector('.account-details').textContent.toLowerCase();
+                        const isMatch = accountName.includes(searchTerm) || accountType.includes(searchTerm);
+                        card.classList.toggle('hidden', !isMatch);
+                        if (isMatch) {
+                            groupHasVisibleCards = true;
+                        }
+                    });
+                    group.classList.toggle('hidden', !groupHasVisibleCards);
+                });
             });
-        });
+        }
         
+        // --- Main Navigation & Header Buttons ---
+        elements.mobileMenuButton.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('active'));
+        elements.addTransactionBtn.addEventListener('click', () => showTransactionModal(appState));
+        elements.addAccountBtn.addEventListener('click', () => {
+            this.switchAccountView('account-selection-view', true); // Reset to main view
+            toggleModal('addAccountModal', true);
+        });
+        elements.addInvestmentBtn.addEventListener('click', () => showPortfolioModal());
+
+        // --- Timeline Tabs ---
         elements.expenseTimelineTabs.addEventListener('click', (event) => this.handleTimelineClick(event));
-
         elements.balanceHistoryTabs.addEventListener('click', (event) => this.handleBalanceTimelineClick(event));
+        const investmentTimelineTabs = document.getElementById('investment-timeline-tabs');
+        if (investmentTimelineTabs) {
+            investmentTimelineTabs.addEventListener('click', (event) => this.handleInvestmentTimelineClick(event));
+        }
 
-        // --- ADD THIS NEW LISTENER ---
+        // --- Account Filter Listener ---
         if (elements.accountFilter) {
             elements.accountFilter.addEventListener('change', () => {
-                // We don't need to call this.render(), which would rebuild the
-                // whole page. We just need to destroy and recreate the charts.
-                // The createCharts function will automatically read the
-                // new value from the dropdown.
                 createCharts(appState);
             });
         }
-        // --- END OF NEW LISTENER ---
-        // elements.portfolioView.addEventListener('click', (event) => this.handlePortfolioViewClick(event));
 
-        // Using a single, powerful event delegation listener for all dynamic content
+        // --- Global Click Listener (for modals, etc.) ---
         document.body.addEventListener('click', (event) => {
+            // Close any modal
             if (event.target.matches('.close-modal-btn')) {
                 event.target.closest('.modal-backdrop').classList.remove('active');
             }
+
+            // --- THIS IS THE FIX ---
             // Listen for the delete transaction button
             else if (event.target.id === 'deleteTransactionBtn' || event.target.closest('#deleteTransactionBtn')) {
                 const button = event.target.id === 'deleteTransactionBtn' ? event.target : event.target.closest('#deleteTransactionBtn');
                 const transactionId = parseInt(button.dataset.transactionId);
                 if (transactionId) {
-                    // --- CHANGED: Now calls confirmation ---
                     this.showDeleteConfirmation('transaction', { transactionId });
                 }
             }
+            // --- END OF FIX ---
 
-            if (event.target.id === 'modalAddAccountBtn') {
-                toggleModal('transactionModal', false);
-                toggleModal('addAccountModal', true);
-            }
-            if (event.target.id === 'zeroStateAddPortfolioBtn') {
-                showPortfolioModal(); 
-            }
-            const tabLink = event.target.dataset.tabLink;
-            if (tabLink) {
-                setActiveTab(tabLink);
-                if (tabLink === 'accounts') toggleModal('addAccountModal', true);
-                if (tabLink === 'investments') toggleModal('addPortfolioModal', true);
-                this.render();
-            }
-        });
-
-        document.body.addEventListener('submit', (event) => {
-            if (event.target.id === 'transactionForm') this.handleTransactionSubmit(event);
-            if (event.target.id === 'addAccountForm') this.handleAccountSubmit(event);
-            if (event.target.id === 'addInvestmentAccountForm') this.handleInvestmentAccountSubmit(event);
-            if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
-            if (event.target.id === 'addFixedIncomeForm') this.handleFixedIncomeSubmit(event);
-            if (event.target.id === 'addRetirementForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
-            if (event.target.id === 'addStockGrantForm') this.handleEmployeeBenefitSubmit(event); // <-- ADD THIS
-
-            // --- NEW HANDLERS ---
-            if (event.target.id === 'addAccountForm') this.handleAccountFormSubmit(event);
-            if (event.target.id === 'addCreditCardForm') this.handleAccountFormSubmit(event);
-            if (event.target.id === 'addLoanForm') this.handleAccountFormSubmit(event);
-            if (event.target.id === 'addCashForm') this.handleAccountFormSubmit(event);
-        });
-
-        // --- THIS IS THE KEY CHANGE ---
-        // A single, powerful event listener for the entire page
-        document.body.addEventListener('click', (event) => {
-            const actionsButton = event.target.closest('[data-account-actions-id]');
-            
-            // --- NEW LOGIC FOR THE ACTIONS MODAL ---
-            if (actionsButton) {
+            // Account Actions Modals (Delete, Edit)
+            else if (event.target.closest('[data-account-actions-id]')) {
+                const actionsButton = event.target.closest('[data-account-actions-id]');
                 const accountId = parseInt(actionsButton.dataset.accountActionsId);
                 this.showAccountActions(accountId);
             }
-            if (event.target.id === 'cancelAccountActionsBtn') {
+            else if (event.target.id === 'cancelAccountActionsBtn') {
                 toggleModal('accountActionsModal', false);
             }
-            if (event.target.id === 'deleteAccountBtn') {
+            else if (event.target.id === 'deleteAccountBtn') {
+                // --- THIS IS THE FIX ---
+                toggleModal('accountActionsModal', false); // <-- ADD THIS LINE
+                // --- END OF FIX ---
                 const accountId = parseInt(event.target.dataset.accountId);
-                toggleModal('accountActionsModal', false); // Close this modal first
-                this.showDeleteConfirmation('account', accountId);
+                this.showDeleteConfirmation('account', { accountId });
             }
-            if (event.target.id === 'editAccountBtn') {
-                // You would build an "Edit Account" modal flow here
+            else if (event.target.id === 'editAccountBtn') {
                 console.log('Edit account:', event.target.dataset.accountId);
                 toggleModal('accountActionsModal', false);
             }
-            // --- End of new logic ---
+            else if (event.target.id === 'cancelHoldingActionsBtn') {
+                toggleModal('holdingActionsModal', false);
+            }
+            else if (event.target.id === 'editHoldingBtn') {
+                // Get data stored on the button
+                const portfolioId = parseInt(event.target.dataset.portfolioId);
+                const holdingId = event.target.dataset.holdingId;
+                
+                // Find the objects and show the edit modal
+                const portfolio = appState.investmentAccounts.find(p => p.id === portfolioId);
+                const holding = portfolio?.holdings.find(h => h.name.replace(/\s+/g, '-').toLowerCase() === holdingId);
+                
+                if (portfolio && holding) {
+                    this.showEditHoldingModal(portfolio, holding);
+                    toggleModal('holdingActionsModal', false); // Close this modal
+                }
+            }
+            else if (event.target.id === 'deleteHoldingBtn') {
+                // Get data stored on the button
+                const portfolioId = parseInt(event.target.dataset.portfolioId);
+                const holdingId = event.target.dataset.holdingId;
 
-            // Logic for the delete confirmation modal buttons
-            if (event.target.id === 'cancelDeleteBtn') {
+                toggleModal('holdingActionsModal', false); // Close this modal
+                this.showDeleteConfirmation('holding', { portfolioId, holdingId });
+            }
+            // --- END NEW ---
+            else if (event.target.id === 'cancelDeleteBtn') {
                 toggleModal('deleteConfirmationModal', false);
             }
-            if (event.target.id === 'confirmDeleteBtn') {
-                const accountId = parseInt(event.target.dataset.accountIdToDelete);
-                this.deleteAccount(accountId);
+            // --- THIS IS THE FIX ---
+            else if (event.target.id === 'confirmDeleteBtn') {
+                this.handleConfirmDelete(); 
+            }
+            // --- END OF FIX ---
+            
+            // Other modal/tab logic
+            else if (event.target.id === 'modalAddAccountBtn') {
+                toggleModal('transactionModal', false);
+                this.switchAccountView('account-selection-view', true); // Reset
+                toggleModal('addAccountModal', true);
+            }
+            else if (event.target.id === 'zeroStateAddPortfolioBtn') {
+                showPortfolioModal(); 
+            }
+            else if (event.target.dataset.tabLink) {
+                const tabLink = event.target.dataset.tabLink;
+                setActiveTab(tabLink);
+                if (tabLink === 'accounts') {
+                    this.switchAccountView('account-selection-view', true); // Reset
+                    toggleModal('addAccountModal', true);
+                }
+                if (tabLink === 'investments') toggleModal('addPortfolioModal', true);
+                this.render();
+            }
+            
+            // FAB Logic
+            const fabContainer = document.getElementById('fab-container');
+            const fabMainBtn = document.getElementById('fab-main-btn');
+            if (fabContainer && fabContainer.classList.contains('active') && !event.target.closest('#fab-container') && !event.target.closest('#fab-main-btn')) {
+                fabContainer.classList.remove('active');
+            }
+
+            // Metric Toggle Logic
+            const metric = event.target.closest('.toggable-metric');
+            if (metric) {
+                const { full, abbreviated } = metric.dataset;
+                if (metric.textContent === abbreviated) {
+                    metric.textContent = full;
+                } else {
+                    metric.textContent = abbreviated;
+                }
+                metric.classList.toggle('is-expanded');
             }
         });
 
-        // --- NEW: LOGIC FOR THE LENS SELECTOR DROPDOWN ---
+        // --- Investment View Selector ---
         const viewSelector = document.getElementById('investmentViewSelector');
         if (viewSelector) {
             const btn = document.getElementById('investmentViewBtn');
             const dropdown = document.getElementById('investmentViewDropdown');
             const chevron = btn.querySelector('.chevron-icon');
-
-            // Open/close the dropdown
             btn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 dropdown.classList.toggle('hidden');
                 chevron.classList.toggle('rotate-180');
             });
-
-            // Handle selecting an option
             dropdown.addEventListener('click', (event) => {
                 const option = event.target.closest('.investment-view-option');
                 if (option) {
                     event.preventDefault();
-                    const viewName = option.dataset.tab;
-                    this.updateInvestmentView(viewName);
-                    // No need to manually hide here, the window listener below handles it
+                    this.updateInvestmentView(option.dataset.view);
                 }
             });
         }
-        
-        // --- Add this global listener to close the dropdown when clicking anywhere else ---
         window.addEventListener('click', () => {
             const dropdown = document.getElementById('investmentViewDropdown');
             if (dropdown && !dropdown.classList.contains('hidden')) {
@@ -390,330 +388,165 @@ const App = {
             }
         });
 
-        // --- NEW "INVESTMENT JOURNAL" ACCORDION CLICK ---
-        // This listener now targets the #investmentJournalContent container
         const investmentJournalContent = document.getElementById('investmentJournalContent');
         if (investmentJournalContent) {
             investmentJournalContent.addEventListener('click', (event) => {
-                // Find the clicked header
+                
+                // 1. Handle Accordion Toggle
                 const header = event.target.closest('.portfolio-accordion-header');
-                if (!header) return;
-
-                const group = header.closest('.portfolio-accordion-group');
-                if (!group) return;
-
-                // Find the parent Asset Class Card (for closing others)
-                const parentCard = group.closest('.investment-journal-card');
-                if (!parentCard) return;
-
-                const currentlyOpen = group.classList.contains('is-open');
-
-                // Elite Touch: Close other accordions *within the same asset class card*
-                parentCard.querySelectorAll('.portfolio-accordion-group.is-open').forEach(openGroup => {
-                    if (openGroup !== group) {
-                        openGroup.classList.remove('is-open');
-                    }
-                });
-
-                // Toggle the clicked group
-                group.classList.toggle('is-open', !currentlyOpen);
-            });
-
-            // --- "INSET JOURNAL" ACCORDION CLICK (Accounts) ---
-        if (elements.accountList) { // Add a safety check
-            elements.accountList.addEventListener('click', (event) => {
-                const header = event.target.closest('.account-group-header');
                 if (header) {
-                    // Toggle the clicked group
-                    header.parentElement.classList.toggle('is-open');
-                    
-                    // Elite Touch: Close other groups
-                    document.querySelectorAll('#accountList .account-group.is-open').forEach(openGroup => {
-                        if (openGroup !== header.parentElement) {
+                    const group = header.closest('.portfolio-accordion-group');
+                    if (!group) return;
+                    const parentCard = group.closest('.investment-journal-card');
+                    if (!parentCard) return;
+                    const currentlyOpen = group.classList.contains('is-open');
+                    parentCard.querySelectorAll('.portfolio-accordion-group.is-open').forEach(openGroup => {
+                        if (openGroup !== group) {
                             openGroup.classList.remove('is-open');
                         }
                     });
+                    group.classList.toggle('is-open', !currentlyOpen);
+                }
+                
+                // 2. Handle Holding Actions Button
+                const holdingBtn = event.target.closest('.holding-card-actions');
+                if (holdingBtn) {
+                    const portfolioId = parseInt(holdingBtn.dataset.portfolioId);
+                    const holdingId = holdingBtn.dataset.holdingId; // ID is string
+                    
+                    // Find the objects to pass
+                    const portfolio = appState.investmentAccounts.find(p => p.id === portfolioId);
+                    const holding = portfolio?.holdings.find(h => h.name.replace(/\s+/g, '-').toLowerCase() === holdingId);
+
+                    if(portfolio && holding) {
+                        this.showHoldingActions(portfolio, holding);
+                    }
                 }
             });
         }
 
-        // --- NEW: "INSET JOURNAL" LIVE SEARCH (Accounts) ---
-        const accountSearchInput = document.getElementById('accountSearch');
-        if (accountSearchInput) {
-            accountSearchInput.addEventListener('input', (event) => {
-                const searchTerm = event.target.value.toLowerCase();
-                
-                document.querySelectorAll('#accountList .account-group').forEach(group => {
-                    let groupHasVisibleCards = false;
-                    
-                    group.querySelectorAll('.account-list-card').forEach(card => {
-                        const accountName = card.querySelector('.font-bold').textContent.toLowerCase();
-                        const accountType = card.querySelector('.text-sm').textContent.toLowerCase();
-                        
-                        const isMatch = accountName.includes(searchTerm) || 
-                                      accountType.includes(searchTerm);
-                        
-                        card.classList.toggle('hidden', !isMatch);
-                        if (isMatch) {
-                            groupHasVisibleCards = true;
-                        }
-                    });
-                    
-                    // Hide the *entire account group* if no cards match
-                    group.classList.toggle('hidden', !groupHasVisibleCards);
-                });
-            });
-        }
-        }
+        // --- Tab Switching Logic ---
+        const handleTabClick = (tabName) => { this.handleTabSwitch(tabName); };
+        elements.sidebarItems.forEach(item => item.addEventListener('click', () => handleTabClick(item.dataset.tab)));
+        elements.bottomNavItems.forEach(item => item.addEventListener('click', () => handleTabClick(item.dataset.tab)));
 
-        // --- (Keep the mobileMenuButton listener as is) ---
-        elements.mobileMenuButton.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active')
-        });
+        // --- REFACTORED: Settings Modal Logic ---
+        const profileMenuBtn = document.getElementById('profileMenuBtn'); 
+        const settingsModal = document.getElementById('settingsModal'); // <-- New ID
 
-        const handleTabClick = (tabName) => {
-            // Deactivate all navigation items
-            elements.sidebarItems.forEach(item => item.classList.remove('active'));
-            elements.bottomNavItems.forEach(item => item.classList.remove('active'));
-
-            // Activate the correct items in both navs
-            document.querySelector(`.sidebar-item[data-tab="${tabName}"]`)?.classList.add('active');
-            document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add('active');
-
-            // Close sidebar on mobile after selection
-            document.querySelector('.sidebar').classList.remove('active');
-            
-            setActiveTab(tabName);
-            this.render();
-        };
-
-        elements.sidebarItems.forEach(item => {
-            item.addEventListener('click', () => this.handleTabSwitch(item.dataset.tab));
-        });
-
-        elements.bottomNavItems.forEach(item => {
-            item.addEventListener('click', () => this.handleTabSwitch(item.dataset.tab));
-        });
-
-        // --- CORRECTED logic for the profile modal ---
-        const profileMenuBtn = document.getElementById('profileMenuBtn'); // Target the button specifically
-        const profileModal = document.getElementById('profileModal');
-
-        if (profileMenuBtn && profileModal) {
+        if (profileMenuBtn && settingsModal) {
             // Open the modal when the button is clicked
             profileMenuBtn.addEventListener('click', () => {
-                toggleModal('profileModal', true);
+                toggleModal('settingsModal', true); // <-- New ID
             });
 
             // Close the modal when clicking the backdrop
-            profileModal.addEventListener('click', (event) => {
-                if (event.target === profileModal) {
-                    toggleModal('profileModal', false);
+            settingsModal.addEventListener('click', (event) => {
+                if (event.target === settingsModal) {
+                    toggleModal('settingsModal', false); // <-- New ID
                 }
             });
         }
+        // --- END REFACTORED ---
 
-        // Listen for clicks on sidebar items
-        elements.sidebarItems.forEach(item => {
-            item.addEventListener('click', () => handleTabClick(item.dataset.tab));
-        });
-
-        // Listen for clicks on bottom nav items
-        elements.bottomNavItems.forEach(item => {
-            item.addEventListener('click', () => handleTabClick(item.dataset.tab));
-        });
-
-        elements.mobileMenuButton.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    
-        const updateActiveTab = (tabName) => {
-            // Deactivate all items in both nav systems
-            elements.sidebarItems.forEach(item => item.classList.remove('active'));
-            elements.bottomNavItems.forEach(item => item.classList.remove('active'));
-    
-            // Activate the correct item in both the sidebar and bottom bar
-            document.querySelector(`.sidebar-item[data-tab="${tabName}"]`)?.classList.add('active');
-            document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add('active');
-            
-            // Hide the mobile sidebar after a selection is made
-            document.querySelector('.sidebar').classList.remove('active');
-            
-            setActiveTab(tabName);
-            this.render();
-        };
-    
-        // Listen for clicks on sidebar items
-        elements.sidebarItems.forEach(item => {
-            item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
-        });
-    
-        // Listen for clicks on bottom nav items
-        elements.bottomNavItems.forEach(item => {
-            item.addEventListener('click', () => updateActiveTab(item.dataset.tab));
-        });
-
-        // --- UPDATED logic for the Floating Action Button ---
+        // --- FAB Logic ---
         const fabContainer = document.getElementById('fab-container');
         const fabMainBtn = document.getElementById('fab-main-btn');
         const actionSheetButtons = document.querySelectorAll('.action-sheet-btn');
-
         if (fabMainBtn) {
             fabMainBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 fabContainer.classList.toggle('active');
             });
         }
-
-        // This part opens the correct modal when an option is clicked
         actionSheetButtons.forEach(option => {
             option.addEventListener('click', () => {
                 const modalId = option.dataset.modal;
                 if (modalId === 'transactionModal') {
                     showTransactionModal(appState);
+                } else if (modalId === 'addAccountModal') {
+                     this.switchAccountView('account-selection-view', true);
+                     toggleModal(modalId, true);
                 } else if (modalId) {
                     toggleModal(modalId, true);
                 }
-                fabContainer.classList.remove('active'); // Close the FAB menu
+                fabContainer.classList.remove('active'); 
             });
         });
 
-        // Close FAB when clicking anywhere else on the page
-        document.querySelector('.content').addEventListener('click', () => {
-            if (fabContainer && fabContainer.classList.contains('active')) {
-                fabContainer.classList.remove('active');
-            }
-        });
 
-        document.querySelector('.content').addEventListener('click', (event) => {
-            const metric = event.target.closest('.toggable-metric');
-            if (!metric) return;
+        // --- Global Form Submission Listener ---
+        document.body.addEventListener('submit', (event) => {
+            if (event.target.id === 'transactionForm') this.handleTransactionSubmit(event);
+            if (event.target.id === 'addPortfolioForm') this.handlePortfolioSubmit(event);
+            if (event.target.id === 'addFixedIncomeForm') this.handleFixedIncomeSubmit(event);
+            if (event.target.id === 'addRetirementForm') this.handleEmployeeBenefitSubmit(event);
+            if (event.target.id === 'addStockGrantForm') this.handleEmployeeBenefitSubmit(event); 
+            if (event.target.id === 'addAccountForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addCreditCardForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addLoanForm') this.handleAccountFormSubmit(event);
+            if (event.target.id === 'addCashForm') this.handleAccountFormSubmit(event);
+            // --- NEW: Listen for the Edit Holding Form ---
+            if (event.target.id === 'editHoldingForm') this.handleEditHoldingSubmit(event);
         
-            const { full, abbreviated } = metric.dataset;
-            
-            if (metric.textContent === abbreviated) {
-                metric.textContent = full;
-            } else {
-                metric.textContent = abbreviated;
-            }
-        
-            // Add this line to toggle the class
-            metric.classList.toggle('is-expanded');
         });
     },
 
-    // NEW: The single source of truth for changing tabs
     handleTabSwitch(tabName) {
         if (!tabName) return;
-
-        // Deactivate all items in both nav systems
         elements.sidebarItems.forEach(item => item.classList.remove('active'));
         elements.bottomNavItems.forEach(item => item.classList.remove('active'));
-
-        // Activate the correct items in both the sidebar and bottom bar
         const activeSidebarItem = document.querySelector(`.sidebar-item[data-tab="${tabName}"]`);
         const activeBottomNavItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
-        
         activeSidebarItem?.classList.add('active');
         activeBottomNavItem?.classList.add('active');
-        
-        // Move the floating pill indicator
         this.moveSidebarIndicator(activeSidebarItem);
-        
-        // Hide the mobile sidebar after a selection is made
         document.querySelector('.sidebar').classList.remove('active');
         document.querySelector('.overlay')?.classList.remove('active');
-        
         setActiveTab(tabName);
-
-        // --- FIX: Use requestAnimationFrame for Async Loading ---
         if (tabName === 'transactions') {
-            // 1. Immediately render the basic structure (fast)
             renderTransactionStructure(appState.transactions);
-
-            // 2. Schedule the heavy data loading using requestAnimationFrame
             requestAnimationFrame(() => {
-                // *** MODIFICATION HERE ***
-                loadTransactionData(
-                    appState.transactions, 
-                    appState.accounts, 
-                    appState.categories, // Pass categories
-                    appState.tags         // Pass tags
-                );
-                // *** END MODIFICATION ***
-
+                loadTransactionData(appState.transactions, appState.accounts, appState.categories, appState.tags);
                 renderTransactionInsights(appState);
                 createCharts(appState);
             });
         } else {
-            // For other tabs, render everything synchronously
             this.render();
         }
-
-        this.render();
     },
 
-    // NEW: Helper function to move the indicator
     moveSidebarIndicator(activeItem) {
         if (!activeItem || !elements.sidebarIndicator) return;
-        
         const top = activeItem.offsetTop;
         const height = activeItem.offsetHeight;
-
         elements.sidebarIndicator.style.transform = `translateY(${top}px)`;
         elements.sidebarIndicator.style.height = `${height}px`;
     },
 
-    // NEW helper function to move the indicator
-    moveSidebarIndicator(activeItem) {
-        if (!activeItem || !elements.sidebarIndicator) return;
-        
-        const top = activeItem.offsetTop;
-        const height = activeItem.offsetHeight;
-
-        elements.sidebarIndicator.style.transform = `translateY(${top}px)`;
-        elements.sidebarIndicator.style.height = `${height}px`;
-    },
-
-    // --- NEW FUNCTION to replace updateInvestmentTab ---
     updateInvestmentView(viewName) {
         if (!viewName) return;
-
         const currentViewEl = document.getElementById('currentInvestmentView');
         const viewNameCapitalized = viewName.charAt(0).toUpperCase() + viewName.slice(1);
-        
         if (currentViewEl) {
             currentViewEl.textContent = viewNameCapitalized;
         }
-
-        // --- Render content based on the selected view ---
-        if (viewName === 'holdings') {
-            // --- THIS IS THE CHANGE ---
-            renderSmartStackView(appState.investmentAccounts);
-        } else if (viewName === 'allocation') {
-            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6"><div class="chart-container h-80"><canvas id="allocationChart"></canvas></div></div>`;
-            createCharts(appState);
-        } else if (viewName === 'performance') {
-            document.getElementById('investmentTabContent').innerHTML = `<div class="p-6 text-center text-text-secondary">Performance Chart Coming Soon!</div>`;
-        }
+        appState.activePortfolioView = viewName; 
+        renderHoldingsJournal(appState.investmentAccounts); // Re-render journal
     },
-
+    
     showAccountActions(accountId) {
         const account = appState.accounts.find(acc => acc.id === accountId);
         if (!account) return;
-
-        // Update modal content
         document.getElementById('accountActionsTitle').textContent = account.name;
         document.getElementById('accountActionsDetails').textContent = 
             `${account.type} • Balance: ₹${account.balance.toLocaleString('en-IN')}`;
-
-        // Store accountId on buttons for event listeners
         document.getElementById('editAccountBtn').dataset.accountId = accountId;
         document.getElementById('deleteAccountBtn').dataset.accountId = accountId;
-
         toggleModal('accountActionsModal', true);
     },
 
+    // --- MODIFIED Delete Confirmation ---
     showDeleteConfirmation(type, ids) {
         const modal = document.getElementById('deleteConfirmationModal');
         const confirmBtn = document.getElementById('confirmDeleteBtn');
@@ -724,7 +557,8 @@ const App = {
         confirmBtn.dataset.deleteType = '';
         confirmBtn.dataset.accountId = '';
         confirmBtn.dataset.transactionId = '';
-        // (add portfolio/holding IDs later)
+        confirmBtn.dataset.portfolioId = '';
+        confirmBtn.dataset.holdingId = '';
 
         if (type === 'account') {
             title.textContent = 'Delete Account?';
@@ -732,170 +566,171 @@ const App = {
             confirmBtn.dataset.deleteType = 'account';
             confirmBtn.dataset.accountId = ids.accountId;
         }
-        // --- ADD THIS NEW BLOCK ---
         else if (type === 'transaction') {
             title.textContent = 'Delete Transaction?';
             message.textContent = 'This will permanently delete this transaction. This action cannot be undone.';
             confirmBtn.dataset.deleteType = 'transaction';
             confirmBtn.dataset.transactionId = ids.transactionId;
         }
+        // --- ADD THIS NEW BLOCK ---
+        else if (type === 'holding') {
+            title.textContent = 'Delete Holding?';
+            message.textContent = 'This will permanently delete this holding from your portfolio. This action cannot be undone.';
+            confirmBtn.dataset.deleteType = 'holding';
+            confirmBtn.dataset.portfolioId = ids.portfolioId;
+            confirmBtn.dataset.holdingId = ids.holdingId;
+        }
+        // --- ADD THIS NEW BLOCK ---
+        else if (type === 'deleteAllData') {
+            title.textContent = 'Delete All Data?';
+            message.textContent = 'This will permanently delete all your accounts, transactions, and investment data. This action cannot be undone.';
+            confirmBtn.dataset.deleteType = 'deleteAllData';
+        }
+        // --- END OF NEW BLOCK ---
         // --- END OF NEW BLOCK ---
 
         toggleModal('deleteConfirmationModal', true);
     },
-
+    
     // --- ADD THIS NEW FUNCTION ---
+    deleteAllData() {
+        appState.accounts = [];
+        appState.transactions = [];
+        appState.investmentAccounts = [];
+        appState.portfolioHistory = [];
+        // We keep tags and categories
+        
+        console.log("All user data deleted.");
+        toggleModal('settingsModal', false); // Close settings
+    },
+    // --- END OF NEW FUNCTION ---
+
+    // --- MODIFIED Master Delete Handler ---
     handleConfirmDelete() {
         const confirmBtn = document.getElementById('confirmDeleteBtn');
         const type = confirmBtn.dataset.deleteType;
-        
-        // Get the *current* active tab so we can re-render it
         let activeTab = document.querySelector('.sidebar-item.active')?.dataset.tab || 'dashboard';
 
         if (type === 'account') {
             const accountId = parseInt(confirmBtn.dataset.accountId);
             this.deleteAccount(accountId);
-            
-            // Re-render the current tab (which is probably 'accounts')
             if (activeTab === 'accounts') {
                 renderAccountsPage(appState);
                 createCharts(appState);
-            } else {
-                this.render(); // Full render if on another tab
-            }
-
-        } else if (type === 'transaction') {
+            } else { this.render(); }
+        } 
+        else if (type === 'transaction') {
             const transactionId = parseInt(confirmBtn.dataset.transactionId);
             this.deleteTransaction(transactionId);
-            
-            // Re-render the current tab (which is probably 'transactions')
             if (activeTab === 'transactions') {
                 renderTransactionStructure(appState.transactions);
                 requestAnimationFrame(() => {
                     loadTransactionData(appState.transactions, appState.accounts, appState.categories, appState.tags);
                     renderTransactionInsights(appState);
-                    createCharts(appState); // Re-draw charts with new data
+                    createCharts(appState);
                 });
-            } else {
-                this.render(); // Full render if on another tab
-            }
+            } else { this.render(); }
         }
+        // --- ADD THIS NEW BLOCK ---
+        else if (type === 'holding') {
+            const portfolioId = parseInt(confirmBtn.dataset.portfolioId);
+            const holdingId = confirmBtn.dataset.holdingId;
+            
+            this.deleteHolding(portfolioId, holdingId);
+            
+            if (activeTab === 'investments') {
+                renderInvestmentsTab(appState);
+                createCharts(appState);
+            } else { this.render(); }
+        }
+        // --- ADD THIS NEW BLOCK ---
+        else if (type === 'deleteAllData') {
+            this.deleteAllData();
+            this.render(); // Force a full re-render
+        }
+        // --- END OF NEW BLOCK ---
+        // --- END OF NEW BLOCK ---
         
         toggleModal('deleteConfirmationModal', false);
     },
-    // --- END OF NEW FUNCTION ---
 
+
+
+    // --- THIS IS THE FIX ---
     deleteAccount(accountId) {
         appState.accounts = appState.accounts.filter(acc => acc.id !== accountId);
         appState.transactions = appState.transactions.filter(t => t.accountId !== accountId);
+        // NO UI LOGIC HERE
     },
+    // --- END OF FIX ---
 
-    // *** REVISED handlePortfolioSubmit ***
+    // ... (All ...Submit functions are unchanged) ...
     handlePortfolioSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const portfolioType = formData.get('portfolioType'); // 'brokerage'
-        
-        // --- NEW: Read the *current* asset type from the switcher ---
+        const portfolioType = formData.get('portfolioType'); 
         const currentAssetType = document.getElementById('currentAssetType').value;
-
-        // Get all the dynamic holding rows
         const holdingNames = formData.getAll('holdingName');
         const holdingTickers = formData.getAll('holdingTicker');
         const holdingUnits = formData.getAll('holdingUnits');
         const holdingBuyPrices = formData.getAll('holdingBuyPrice');
-
-        // Process holdings
         const newHoldings = holdingNames.map((name, index) => {
             const units = parseFloat(holdingUnits[index]);
             const buyPrice = parseFloat(holdingBuyPrices[index]);
             return {
-                type: currentAssetType, // <-- SAVE THE CORRECT ASSET TYPE
+                type: currentAssetType, 
                 name: name,
                 ticker: holdingTickers[index] || null,
                 quantity: units,
                 buyValue: units * buyPrice,
-                // In a real app, API would fetch this. For now, set to buy value.
                 currentValue: units * buyPrice 
             };
         });
-
-        const newAccount = {
-            id: Date.now(),
-            name: formData.get('name'),
-            type: formData.get('type'), // This is the old dropdown, let's fix
-            // --- FIX: Use the value from the hidden input ---
-            // type: formData.get('portfolioType'), // This is 'brokerage'
-            holdings: newHoldings
-        };
-
-        // --- Let's correct the 'type' field ---
-        // The *Portfolio's* type (e.g., "Brokerage", "Retirement") is what matters
         const newPortfolio = {
             id: Date.now(),
             name: formData.get('name'),
-            type: portfolioType, // 'brokerage', 'fixed_income', 'employee'
+            type: portfolioType, 
             holdings: newHoldings
         };
-        
         appState.investmentAccounts.push(newPortfolio);
-        console.log("New Portfolio Account:", newPortfolio);
-
         toggleModal('addPortfolioModal', false);
-        this.render(); // Re-render the app
+        this.render(); 
     },
-
-    /**
-     * Handles the submission of the Fixed Income form.
-     */
     handleFixedIncomeSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-
-        // For Fixed Income, the entire investment is a single "holding"
         const holding = {
-            type: formData.get('type'), // 'fd', 'p2p', 'bond'
+            type: formData.get('type'), 
             name: formData.get('type') === 'fd' ? 'Fixed Deposit' : 
                   formData.get('type') === 'p2p' ? 'P2P Investment' : 'Bond',
-            quantity: 1, // Represents a single investment
+            quantity: 1, 
             buyValue: parseFloat(formData.get('investedAmount')),
-            currentValue: parseFloat(formData.get('investedAmount')), // Starts at buy value
-            
-            // Store the extra metadata specific to fixed income
+            currentValue: parseFloat(formData.get('investedAmount')), 
             meta: {
                 rate: parseFloat(formData.get('interestRate')),
                 investmentDate: formData.get('investmentDate'),
                 maturityDate: formData.get('maturityDate')
             }
         };
-
         const newPortfolio = {
             id: Date.now(),
-            name: formData.get('name'), // e.g., "HDFC Bank"
-            type: formData.get('portfolioType'), // 'fixed_income'
-            holdings: [holding] // This portfolio contains this one investment
+            name: formData.get('name'), 
+            type: formData.get('portfolioType'), 
+            holdings: [holding] 
         };
-        
         appState.investmentAccounts.push(newPortfolio);
-        console.log("New Fixed Income Portfolio:", newPortfolio);
-
         toggleModal('addPortfolioModal', false);
-        this.render(); // Re-render the app
+        this.render();
     },
-
-    /**
-     * Handles submission for BOTH Employee Benefit forms.
-     */
     handleEmployeeBenefitSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const assetType = formData.get('assetType'); // 'retirement_fund' or 'stock_grant'
-
+        const assetType = formData.get('assetType'); 
         let holding;
         if (assetType === 'retirement_fund') {
             holding = {
-                type: formData.get('type'), // 'epf', 'nps'
-                name: formData.get('type').toUpperCase(), // e.g., "EPF"
+                type: formData.get('type'), 
+                name: formData.get('type').toUpperCase(), 
                 quantity: 1,
                 buyValue: parseFloat(formData.get('currentBalance')),
                 currentValue: parseFloat(formData.get('currentBalance')),
@@ -908,18 +743,13 @@ const App = {
             const grantPrice = parseFloat(formData.get('grantPrice')) || 0;
             const marketPrice = parseFloat(formData.get('marketPrice')) || 0;
             const unvestedUnits = parseFloat(formData.get('unvestedUnits')) || 0;
-
             holding = {
-                type: formData.get('type'), // 'rsu', 'esop'
-                name: formData.get('name'), // Company Name
+                type: formData.get('type'), 
+                name: formData.get('name'), 
                 ticker: formData.get('ticker') || null,
-                quantity: vestedUnits + unvestedUnits, // Total shares in grant
-                
-                // Buy value is what *vested* shares cost
+                quantity: vestedUnits + unvestedUnits, 
                 buyValue: vestedUnits * grantPrice,
-                // Current value is what *vested* shares are worth
                 currentValue: vestedUnits * marketPrice,
-
                 meta: {
                     vestedUnits: vestedUnits,
                     unvestedUnits: unvestedUnits,
@@ -929,137 +759,112 @@ const App = {
                 }
             };
         }
-
         const newPortfolio = {
             id: Date.now(),
-            name: formData.get('name'), // Provider or Company Name
-            type: formData.get('portfolioType'), // 'employee_benefit'
+            name: formData.get('name'), 
+            type: formData.get('portfolioType'), 
             holdings: [holding]
         };
-        
         appState.investmentAccounts.push(newPortfolio);
-        console.log("New Employee Benefit Portfolio:", newPortfolio);
-
         toggleModal('addPortfolioModal', false);
-        this.render(); // Re-render the app
+        this.render();
     },
-
     handleTransactionSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        // *** MODIFICATION: Get accountId based on selected value (could be 'cash') ***
         const accountIdOrCash = formData.get('accountId');
         let transactionAccountId;
         let account;
 
         if (accountIdOrCash === 'cash') {
-            transactionAccountId = 'cash'; // Store 'cash' literally
-            // No specific account object needed for balance update here
+            // Find the 'Cash' account by name
+            const cashAccount = appState.accounts.find(acc => acc.type.toLowerCase() === 'cash');
+            if (!cashAccount) {
+                console.error("No 'Cash' account found!");
+                return;
+            }
+            transactionAccountId = cashAccount.id; // Use the actual ID
         } else {
-            transactionAccountId = parseInt(accountIdOrCash); // Store the ID
+            transactionAccountId = parseInt(accountIdOrCash); 
             account = appState.accounts.find(acc => acc.id === transactionAccountId);
             if (!account) {
                  console.error("Selected account not found!");
-                 return; // Prevent submission if account invalid
+                 return; 
             }
         }
-        // *** END MODIFICATION ***
-
         const amount = parseFloat(formData.get('amount'));
         const type = formData.get('type');
-        const transactionId = formData.get('id') ? parseInt(formData.get('id')) : null; // Get ID for editing
-
-        // --- NEW TAG HANDLING ---
-        // Read the comma-separated IDs from our hidden input
+        const transactionId = formData.get('id') ? parseInt(formData.get('id')) : null; 
         const tagIds = formData.get('tagIds') 
             ? formData.get('tagIds').split(',').filter(id => id.length > 0) 
             : [];
-
-        // --- END NEW TAG HANDLING ---
         const categoryId = formData.get('categoryId');
 
         if (transactionId) {
-            // --- EDIT LOGIC ---
             const transaction = appState.transactions.find(t => t.id === parseInt(transactionId));
             if (transaction) {
-                // Note: We need to revert balance changes before applying new ones
                 const oldAmount = transaction.amount;
                 const oldType = transaction.type;
                 const oldAccountId = transaction.accountId;
-
-                // Revert old balance
                 const oldAccount = appState.accounts.find(acc => acc.id === oldAccountId);
                 if (oldAccount) {
                     oldAccount.balance += (oldType === 'income' ? -oldAmount : oldAmount);
                 }
-
-                // Apply new balance
-                const newAccount = appState.accounts.find(acc => acc.id === accountId);
+                const newAccount = appState.accounts.find(acc => acc.id === transactionAccountId);
                 if (newAccount) {
                     newAccount.balance += (type === 'income' ? amount : -amount);
                 }
-
-                // Update transaction object
-                transaction.accountId = accountId;
+                transaction.accountId = transactionAccountId;
                 transaction.description = formData.get('description');
                 transaction.amount = amount;
                 transaction.type = type;
-        
-                transaction.tagIds = tagIds; // <-- Save the new tag IDs
+                transaction.tagIds = tagIds; 
                 transaction.categoryId = categoryId;
             }
         } else {
-            // --- ADD NEW LOGIC ---
-            if (accountId === 'cash') {
-                // No balance to update for 'cash'
-            } else {
-                const account = appState.accounts.find(acc => acc.id === accountId);
-                if (account) {
-                    account.balance += type === 'income' ? amount : -amount;
-                }
+            // This now correctly handles the 'Cash' account ID
+            const account = appState.accounts.find(acc => acc.id === transactionAccountId);
+            if (account) {
+                account.balance += type === 'income' ? amount : -amount;
             }
             appState.transactions.unshift({
                 id: Date.now(),
-                accountId,
-                date: new Date().toISOString(), // Use ISO string for consistency
+                accountId: transactionAccountId,
+                date: new Date().toISOString(), 
                 description: formData.get('description'),
                 amount,
                 type,
                 categoryId: categoryId,
-                tagIds: tagIds, // <-- Save the new tag IDs
+                tagIds: tagIds, 
             });
         }
         
         toggleModal('transactionModal', false);
         event.target.reset();
         setSelectedTags([]);
-        setSelectedCategory('cat-uncategorized'); // Manually clear pills after form reset
-        this.render(); // Re-render everything
+        setSelectedCategory('cat-uncategorized'); 
+        this.render(); 
     },
-
     handleAccountFormSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
-        const formType = formData.get('accountFormType'); // 'bank', 'card', 'loan', 'cash'
+        const formType = formData.get('accountFormType'); 
         const name = formData.get('name');
-        const number = formData.get('number') || ''; // Optional
+        const number = formData.get('number') || ''; 
         let balance = parseFloat(formData.get('balance'));
-        let type = formData.get('type'); // This is set by <select> or hidden input
-
-        // --- Crucial Logic: Handle negative balances ---
-        // User enters 15000, we store -15000
+        let type = formData.get('type'); 
         if (formType === 'card' || formType === 'loan') {
             balance = -Math.abs(balance);
         }
-        
-        // For credit cards, we hardcode the type
         if (formType === 'card') {
             type = 'Credit Card';
         }
 
         // Check for duplicates
         const accountExists = appState.accounts.some(acc => acc.name.toLowerCase() === name.toLowerCase());
-        if (accountExists) {
+        if (accountExists && formType.toLowerCase() === 'cash') {
+             // Silently ignore if 'Cash' account already exists
+        } else if (accountExists) {
             alert(`An account named "${name}" already exists.`);
             return;
         }
@@ -1073,20 +878,14 @@ const App = {
             createdAt: new Date(),
             history: [{ date: new Date().toISOString().split('T')[0], balance: balance }]
         };
-
         appState.accounts.push(newAccount);
-        console.log("New Account Added:", newAccount);
-        
         toggleModal('addAccountModal', false);
         event.target.reset();
-        this.render(); // Re-render everything to show the new account
-
-        // Reset the modal to the selection view for next time
+        this.render(); 
         this.switchAccountView('account-selection-view', true);
     },
 
-    // --- THIS IS STEP 3.A ---
-    // --- ADD THIS NEW FUNCTION ---
+    // --- THIS IS THE FIX ---
     deleteTransaction(transactionId) {
         const transactionIndex = appState.transactions.findIndex(t => t.id === transactionId);
         if (transactionIndex === -1) {
@@ -1108,33 +907,50 @@ const App = {
         toggleModal('transactionModal', false); // Close the *edit* modal
         
         console.log(`Deleted transaction ${transactionId}`);
+        // NO RENDER LOGIC HERE
     },
-    // --- END OF NEW FUNCTION ---
+    // --- END OF FIX ---
 
-    handleInvestmentAccountSubmit(event) {
-        event.preventDefault();
-        appState.investments.push({
-            id: Date.now(),
-            name: event.target.name.value,
-            type: event.target.type.value,
-            value: parseFloat(event.target.value.value),
-            change: 0, isPositive: true
-        });
-        toggleModal('addInvestmentAccountModal', false);
-        event.target.reset();
-        this.render();
+    // --- NEW: Investment Delete Functions ---
+    deletePortfolio(portfolioId) {
+        appState.investmentAccounts = appState.investmentAccounts.filter(p => p.id !== portfolioId);
+        console.log(`Deleted portfolio ${portfolioId}`);
     },
 
-     // Generic function to update any timeline UI
-     updateTimelineUI(containerId, activePeriod) {
+    deleteHolding(portfolioId, holdingId) {
+        const portfolio = appState.investmentAccounts.find(p => p.id === portfolioId);
+        if (portfolio) {
+            portfolio.holdings = portfolio.holdings.filter(h => 
+                (h.name.replace(/\s+/g, '-').toLowerCase()) !== holdingId
+            );
+            console.log(`Deleted holding ${holdingId} from portfolio ${portfolioId}`);
+            
+            // --- "Elite" UX: If last holding, delete parent portfolio ---
+            if (portfolio.holdings.length === 0) {
+                this.deletePortfolio(portfolioId);
+            }
+        }
+    },
+    // --- END NEW ---
+    
+    // --- (Timeline Handlers) ---
+    updateTimelineUI(containerId, activePeriod) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
         container.querySelectorAll('.timeline-selector-btn, .expense-tab').forEach(btn => {
+            // Use .closest to find the parent wrapper for class logic
+            const wrapper = btn.closest('.timeline-selector-wrapper');
+            let baseBtnClass = 'timeline-selector-btn'; // Default
+            
+            // This is a check for the old .expense-tab class for safety
+            if (!wrapper) {
+                baseBtnClass = 'expense-tab';
+            }
+
             const isActive = btn.dataset.period === activePeriod;
             btn.classList.toggle('active', isActive);
 
-            // This is the logic from the old updateActiveTimelineTab
             if (isActive) {
                 btn.classList.add('bg-white/10', 'text-white');
                 btn.classList.remove('text-gray-400');
@@ -1171,27 +987,74 @@ const App = {
         this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
         createCharts(appState);
     },
-    // --- END NEW ---
 
+    // --- ADD THIS NEW FUNCTION ---
+    bindSettingsModalEvents() {
+        const modal = document.getElementById('settingsModal');
+        if (!modal) return;
+
+        const nav = modal.querySelector('.settings-nav');
+        const indicator = modal.querySelector('.settings-nav-indicator');
+        const navButtons = modal.querySelectorAll('.settings-nav-btn');
+        const contentPanes = modal.querySelectorAll('.settings-content');
+
+        // 1. Handle sub-navigation clicks
+        nav.addEventListener('click', (e) => {
+            const button = e.target.closest('.settings-nav-btn');
+            if (!button) return;
+
+            // Get target content ID
+            const contentId = button.dataset.content;
+            const targetPane = document.getElementById(contentId);
+
+            // Deactivate all
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            contentPanes.forEach(pane => pane.classList.remove('active'));
+
+            // Activate clicked
+            button.classList.add('active');
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+
+            // Move indicator
+            if (indicator) {
+                indicator.style.transform = `translateY(${button.offsetTop - nav.firstElementChild.offsetTop}px)`;
+                indicator.style.height = `${button.offsetHeight}px`;
+            }
+        });
+
+        // 2. Handle "Delete All Data" button
+        const deleteDataBtn = modal.querySelector('#deleteAllDataBtn');
+        if (deleteDataBtn) {
+            deleteDataBtn.addEventListener('click', () => {
+                this.showDeleteConfirmation('deleteAllData', {});
+            });
+        }
+        
+        // 3. Handle "Log Out" (Placeholder)
+        const logoutBtn = modal.querySelector('#logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                console.log("Log Out Clicked");
+                // In a real app, this would redirect to signin.html
+            });
+        }
+    },
+
+    // --- (Modal bind/switch functions are unchanged) ---
     bindPortfolioModalEvents() {
         const modal = document.getElementById('addPortfolioModal');
         if (!modal) return;
-
         const viewContainer = document.getElementById('portfolio-modal-view-container');
         const modalTitle = document.getElementById('portfolioModalTitle');
         const selectionView = document.getElementById('portfolio-selection-view');
-        
-        // --- NEW: Get Brokerage Form Elements ---
         const assetSwitcher = document.getElementById('brokerage-asset-switcher');
         const hiddenAssetType = document.getElementById('currentAssetType');
         const holdingsContainer = document.getElementById('holdingsContainer');
         const addHoldingBtn = document.getElementById('addHoldingBtn');
-
-        // --- NEW: Get Fixed Income Date Pickers ---
         const investmentDateInput = document.getElementById('fi-investment-date');
         const maturityDateInput = document.getElementById('fi-maturity-date');
-
-        // Function to switch views
         const switchView = (viewId, title) => {
             viewContainer.querySelectorAll('.modal-view').forEach(view => {
                 view.classList.remove('active-view');
@@ -1201,30 +1064,20 @@ const App = {
                 targetView.classList.add('active-view');
             }
             if (modalTitle) modalTitle.textContent = title;
-
-            // --- NEW: Set date rules when switching to Fixed Income view ---
             if (viewId === 'portfolio-fixed-income-view' && investmentDateInput && maturityDateInput) {
-                // 1. Get today's date in YYYY-MM-DD format
                 const today = new Date().toISOString().split('T')[0];
-                
-                // 2. Set the max for Investment Date to today
                 investmentDateInput.max = today;
-                
-                // 3. If investment date is already filled, set maturity date's min
                 if (investmentDateInput.value) {
                     const minMaturity = new Date(investmentDateInput.value);
                     minMaturity.setDate(minMaturity.getDate() + 1);
                     maturityDateInput.min = minMaturity.toISOString().split('T')[0];
                 } else {
-                    // 4. If investment date is empty, set maturity min to tomorrow (as a fallback)
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     maturityDateInput.min = tomorrow.toISOString().split('T')[0];
                 }
             }
         };
-
-        // 1. Listen for clicks on the selection cards
         modal.addEventListener('click', (e) => {
             const selectBtn = e.target.closest('.portfolio-select-card');
             if (selectBtn) {
@@ -1240,67 +1093,45 @@ const App = {
                 }
             }
         });
-
-        // 2. Listen for clicks on any "Back" button
         modal.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-back-btn')) {
                 switchView('portfolio-selection-view', 'Add Portfolio');
             }
         });
-
-        // --- NEW 3: Listen for Asset Type change ---
         if (assetSwitcher) {
             assetSwitcher.addEventListener('change', (e) => {
-                const newAssetType = e.target.value; // 'stock', 'mutual_fund', or 'bond'
+                const newAssetType = e.target.value; 
                 hiddenAssetType.value = newAssetType;
-                
-                // Update headers and placeholders
                 updateBrokerageFormHeaders(newAssetType);
-
-                // Clear existing rows and add a new one of the correct type
                 holdingsContainer.innerHTML = '';
                 holdingsContainer.appendChild(createHoldingRow(newAssetType));
             });
         }
-
-        // --- NEW 4: Update Add Row button listener ---
         if (addHoldingBtn) {
             addHoldingBtn.addEventListener('click', () => {
                 const currentAssetType = hiddenAssetType.value;
                 holdingsContainer.appendChild(createHoldingRow(currentAssetType));
             });
         }
-
-        // --- NEW 5: Add listener for Investment Date change ---
         if (investmentDateInput && maturityDateInput) {
             investmentDateInput.addEventListener('change', () => {
                 if (investmentDateInput.value) {
-                    // Create a new date object from the investment date
                     const minMaturity = new Date(investmentDateInput.value);
-                    // Set it to the next day
                     minMaturity.setDate(minMaturity.getDate() + 1);
-                    
-                    // Set the min attribute of the maturity date picker
                     maturityDateInput.min = minMaturity.toISOString().split('T')[0];
-
-                    // (Optional) If maturity date is now invalid, clear it
                     if (maturityDateInput.value && maturityDateInput.value < maturityDateInput.min) {
                         maturityDateInput.value = '';
                     }
                 } else {
-                    // If investment date is cleared, reset maturity date min
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     maturityDateInput.min = tomorrow.toISOString().split('T')[0];
                 }
             });
         }
-
-        // --- NEW: Employee View Logic ---
         const employeeSwitcher = document.getElementById('employee-asset-switcher');
         const retirementForm = document.getElementById('addRetirementForm');
         const stockGrantForm = document.getElementById('addStockGrantForm');
-
         if (employeeSwitcher && retirementForm && stockGrantForm) {
             employeeSwitcher.addEventListener('change', (e) => {
                 if (e.target.value === 'retirement') {
@@ -1313,26 +1144,16 @@ const App = {
             });
         }
     },
-    // *** END NEW FUNCTION ***
 
-    // --- THIS IS THE NEW METHOD ---
-    /**
-     * Binds click events for the new multi-view "Add Account" modal.
-     */
     bindAccountModalEvents() {
         const modal = document.getElementById('addAccountModal');
         if (!modal) return;
-
-        // Add a single click listener to the modal
         modal.addEventListener('click', (e) => {
-            // 1. Handle selection cards
             const selectBtn = e.target.closest('.portfolio-select-card');
             if (selectBtn) {
-                const viewId = selectBtn.dataset.view; // e.g., "account-form-bank"
+                const viewId = selectBtn.dataset.view; 
                 this.switchAccountView(viewId);
             }
-
-            // 2. Handle "Back" buttons
             const backBtn = e.target.closest('.modal-back-btn');
             if (backBtn) {
                 this.switchAccountView('account-selection-view');
@@ -1340,45 +1161,79 @@ const App = {
         });
     },
 
-    /**
-     * Helper function to switch views in the "Add Account" modal.
-     * @param {string} viewId - The ID of the view to make active.
-     * @param {boolean} [isReset=false] - If true, skip animation and jump to view.
-     */
     switchAccountView(viewId, isReset = false) {
         const viewContainer = document.getElementById('account-modal-view-container');
         const modalTitle = document.getElementById('accountModalTitle');
         if (!viewContainer || !modalTitle) return;
-
-        // 1. Set title based on which view we are going to
-        let title = "Add an Account"; // Default
+        let title = "Add an Account"; 
         if (viewId === 'account-form-bank') title = "Add Bank Account";
         else if (viewId === 'account-form-card') title = "Add Credit Card";
         else if (viewId === 'account-form-loan') title = "Add Loan Account";
         else if (viewId === 'account-form-cash') title = "Add Cash Account";
         modalTitle.textContent = title;
-
         if (isReset) {
-            // On reset, just instantly show the selection view
             viewContainer.querySelectorAll('.modal-view').forEach(view => {
                 view.classList.toggle('active-view', view.id === 'account-selection-view');
             });
             return;
         }
-        
-        // 2. Animate: Remove 'active-view' from all children
         viewContainer.querySelectorAll('.modal-view').forEach(view => {
             view.classList.remove('active-view');
         });
-
-        // 3. Animate: Add 'active-view' to the target child
         const targetView = document.getElementById(viewId);
         if (targetView) {
             targetView.classList.add('active-view');
         }
+    },
+
+    // --- NEW: Holding Actions Modal Functions ---
+    showHoldingActions(portfolio, holding) {
+        if (!portfolio || !holding) return;
+
+        const modal = document.getElementById('holdingActionsModal');
+        if (!modal) return;
+        
+        const holdingId = holding.name.replace(/\s+/g, '-').toLowerCase();
+
+        // Populate modal content
+        modal.querySelector('#holdingActionsTitle').textContent = holding.name;
+        modal.querySelector('#holdingActionsDetails').textContent = `${holding.type} • ${holding.quantity} Units`;
+
+        // Store IDs on buttons
+        modal.querySelector('#editHoldingBtn').dataset.portfolioId = portfolio.id;
+        modal.querySelector('#editHoldingBtn').dataset.holdingId = holdingId;
+        modal.querySelector('#deleteHoldingBtn').dataset.portfolioId = portfolio.id;
+        modal.querySelector('#deleteHoldingBtn').dataset.holdingId = holdingId;
+
+        toggleModal('holdingActionsModal', true);
+    },
+
+    showEditHoldingModal(portfolio, holding) {
+        const modal = document.getElementById('editHoldingModal');
+        const form = document.getElementById('editHoldingForm');
+        if (!modal || !form) return;
+
+        const holdingId = holding.name.replace(/\s+/g, '-').toLowerCase();
+        
+        // Calculate Avg. Buy Price from state
+        const avgBuyPrice = holding.quantity > 0 ? (holding.buyValue / holding.quantity) : 0;
+
+        // Populate hidden fields
+        form.elements.portfolioId.value = portfolio.id;
+        form.elements.holdingId.value = holdingId;
+
+        // Populate visible fields
+        form.elements.name.value = holding.name;
+        form.elements.ticker.value = holding.ticker || '';
+        form.elements.quantity.value = holding.quantity;
+        form.elements.avgBuyPrice.value = avgBuyPrice.toFixed(2);
+
+        toggleModal('editHoldingModal', true);
     }
+    // --- END NEW ---
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
+

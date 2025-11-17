@@ -260,6 +260,9 @@ function getHoldingsTotals(holdings) {
 
 /**
  * Renders the "Investment Journal" (Row 3+).
+ */
+/**
+ * Renders the "Investment Journal" (Row 3+).
  * Creates a full-width card for each Asset Class, with portfolio accordions inside.
  */
 function renderHoldingsJournal(accounts) {
@@ -329,6 +332,7 @@ function renderHoldingsJournal(accounts) {
             // Map portfolio type to a user-friendly name
             const portfolioTypeDisplay = portfolio.typeDisplay; // <-- Use prepared display name
 
+            // --- THIS IS THE MODIFIED (CLEANED) BLOCK ---
             return `
                 <div class="portfolio-accordion-group ${isOpenClass}" data-portfolio-id="${portfolio.id}">
                     <div class="portfolio-accordion-header">
@@ -340,6 +344,9 @@ function renderHoldingsJournal(accounts) {
                             <p class="mono font-semibold text-white text-base">${formatIndianCurrency(totals.currentValue)}</p>
                             <p class="mono text-sm ${pAndLColor}">${pAndLSign}${formatIndianCurrency(pAndL)}</p>
                         </div>
+                        
+                        <!-- THE UGLY 3-DOT BUTTON IS GONE -->
+
                         <svg class="chevron-icon h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -352,6 +359,7 @@ function renderHoldingsJournal(accounts) {
                     </div>
                 </div>
             `;
+            // --- END OF MODIFIED BLOCK ---
         }).join('');
 
         // Assemble the main Asset Class Card
@@ -381,25 +389,22 @@ function renderHoldingsJournal(accounts) {
 
 /**
  * Renders a single "Holding Card" (the "Baseball Card").
- * @param {object} holding - A single holding object from appState
- * @param {string|number} portfolioId - The ID of the parent portfolio
- * @returns {string} HTML string for one holding card
  */
 function renderHoldingCard(holding, portfolioId) {
-    // Use holding name as a fallback for ID if real ID isn't present
-    const holdingId = holding.id || holding.name.replace(/\s+/g, '-').toLowerCase();
+    // We'll use the holding name as a unique ID, this is a safe fallback
+    const holdingId = holding.name.replace(/\s+/g, '-').toLowerCase();
 
     let headerHtml = `<span class="holding-name">${holding.name}</span>`;
     if (holding.ticker) {
         headerHtml += `<span class="holding-ticker">${holding.ticker}</span>`;
     }
 
+    // ... (rest of the metric logic is unchanged) ...
     let primaryMetricHtml = '';
     let detailsGridHtml = '';
     let bodyHtml = '';
     const type = holding.type;
 
-    // --- 1. Determine Primary Metric (Current Value) ---
     primaryMetricHtml = `
         <div class="holding-metric holding-metric-main">
             <span class="label">Current Value</span>
@@ -409,8 +414,7 @@ function renderHoldingCard(holding, portfolioId) {
         </div>
     `;
 
-    // --- 2. Build the Details Grid based on type ---
-    if (['equity', 'mutual_fund', 'bond', 'crypto', 'gold'].includes(type)) { // Added crypto/gold
+    if (['equity', 'mutual_fund', 'bond', 'crypto', 'gold'].includes(type)) {
         const pAndL = holding.currentValue - holding.buyValue;
         const pAndLPercent = holding.buyValue > 0 ? (pAndL / holding.buyValue) * 100 : 0;
         const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
@@ -419,7 +423,6 @@ function renderHoldingCard(holding, portfolioId) {
         const avgCost = unit > 0 ? holding.buyValue / unit : 0;
         const ltp = unit > 0 ? holding.currentValue / unit : 0;
 
-        // Override Primary Metric to include P&L context
         primaryMetricHtml = `
             <div class="holding-metric holding-metric-main">
                 <span class="label">Current Value</span>
@@ -432,7 +435,6 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
         
-        // Build 4-up grid
         detailsGridHtml = `
             <div class="holding-metric-small">
                 <span class="label">Invested</span>
@@ -452,9 +454,7 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
     }
-    // --- Fixed Income (FD, P2P) ---
     else if (['fd', 'p2p'].includes(type)) {
-        // Build 4-up grid
         detailsGridHtml = `
             <div class="holding-metric-small">
                 <span class="label">Invested</span>
@@ -474,9 +474,7 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
     }
-    // --- Retirement (EPF, NPS) ---
     else if (['epf', 'nps', 'superannuation'].includes(type)) {
-        // Build 2-up grid
         detailsGridHtml = `
             <div class="holding-metric-small">
                 <span class="label">Invested</span>
@@ -488,14 +486,12 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
     }
-    // --- Stock Grants (RSU, ESOP) ---
     else if (['rsu', 'esop'].includes(type)) {
         const vestedValue = (holding.meta.vestedUnits || 0) * (holding.meta.marketPrice || 0);
-        const pAndL = vestedValue - holding.buyValue; // P&L on vested
+        const pAndL = vestedValue - holding.buyValue;
         const pAndLColor = pAndL >= 0 ? 'text-positive-value' : 'text-negative-value';
         const pAndLSign = pAndL >= 0 ? '+' : '';
 
-        // Override Primary Metric for Vested Value
         primaryMetricHtml = `
             <div class="holding-metric holding-metric-main">
                 <span class="label">Vested Value</span>
@@ -508,7 +504,6 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
 
-        // Build 4-up grid
         detailsGridHtml = `
             <div class="holding-metric-small">
                 <span class="label">Vested Units</span>
@@ -528,7 +523,6 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
     }
-    // --- Fallback ---
     else {
         detailsGridHtml = `
             <div class="holding-metric-small">
@@ -537,8 +531,8 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         `;
     }
+    // --- End of metric logic ---
 
-    // --- 3. Assemble the final bodyHtml ---
     bodyHtml = `
         ${primaryMetricHtml}
         <div class="holding-details-grid">
@@ -546,10 +540,12 @@ function renderHoldingCard(holding, portfolioId) {
         </div>
     `;
 
+    // --- THIS IS THE MODIFIED BLOCK ---
     return `
         <div class="holding-card" data-holding-id="${holdingId}">
             <div class="holding-card-header">
                 ${headerHtml}
+                <!-- RE-ADDING THIS BUTTON (we had it before but lost it) -->
                 <button type="button" class="holding-card-actions" data-portfolio-id="${portfolioId}" data-holding-id="${holdingId}">
                     <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -561,4 +557,5 @@ function renderHoldingCard(holding, portfolioId) {
             </div>
         </div>
     `;
+    // --- END OF MODIFIED BLOCK ---
 }

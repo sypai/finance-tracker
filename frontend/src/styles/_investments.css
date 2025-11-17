@@ -524,12 +524,6 @@ fieldset legend {
     background-color: var(--card-hover-bg);
 }
 
-.portfolio-accordion-header .chevron-icon {
-    position: absolute; right: 0.75rem; top: 50%;
-    transform: translateY(-50%) rotate(0deg);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    color: var(--text-secondary);
-}
 
 /* 3. The Inset Stream Container (Clones .transaction-group-list) */
 .portfolio-holdings-list {
@@ -728,4 +722,13 @@ fieldset legend {
 .kpi-card:hover {
     transform: none; /* Disable the lift */
     box-shadow: none; /* Disable the shadow */
+}
+
+/* REPLACE the old .chevron-icon rule with this one: */
+
+.portfolio-accordion-header .chevron-icon {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-secondary);
 }

@@ -9,5 +9,6 @@
 @import url('./_transactions.css');/* Loads Transaction Journal Styles */
 @import url('./_investments.css');/* Loads Transaction Journal Styles */
 @import url('./_accounts.css');/* Loads Transaction Journal Styles */
+@import url('./_settings.css');
 
 /* Add styles for other specific views like _investments.css, _accounts.css here later */

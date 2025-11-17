@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Mono:wght@100..900&display=swap" rel="stylesheet"> 
-    <link rel="stylesheet" href="../src/styles/combined_main.css">
+    <link rel="stylesheet" href="../src/styles/main.css">
 
 </head>
 
@@ -1126,26 +1126,7 @@
         </div>
     </div>
 
-    <div id="deleteConfirmationModal" class="modal-backdrop">
-        <div class="modal-content card p-0 w-full max-w-md"> 
-    
-            <div class="flex justify-between items-center p-5">
-                <h3 class="text-xl font-bold font-heading">Are you sure?</h3>
-                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
-            </div>
-    
-            <div class="p-8 text-center"> 
-                <p class="text-gray-400 mb-6">This will permanently delete the account and all of its associated transactions. This action cannot be undone.</p>
-                <div class="flex justify-center gap-4">
-                    <button id="cancelDeleteBtn" class="btn btn-secondary">Cancel</button> 
-                    
-                    <button id="confirmDeleteBtn" class="btn bg-red-600 text-white hover:bg-red-700">Yes, Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="profileModal" class="modal-backdrop">
+    <!-- <div id="profileModal" class="modal-backdrop">
         <div class="modal-content card p-0 w-full max-w-sm rounded-lg shadow-xl">
             <div class="flex items-center gap-4 p-3 border-b border-white/10">
                 <img src="https://i.pravatar.cc/40?u=suyash" alt="User Avatar" class="w-11 h-11 rounded-full">
@@ -1169,6 +1150,239 @@
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                     <span>Log Out</span>
                 </a>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- NEW: HOLDING ACTIONS MODAL (like Account Actions) -->
+    <div id="holdingActionsModal" class="modal-backdrop">
+        <div class="modal-content card p-0 w-full max-w-sm rounded-lg shadow-xl"> 
+            
+            <div class="flex justify-between items-center p-5">
+                <h3 class="text-xl font-bold font-heading">Holding Actions</h3> 
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+    
+            <div class="p-6 flex flex-col items-center"> 
+                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-4">
+                    <svg class="h-6 w-6 text-primary-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>
+                </div>
+                <h3 id="holdingActionsTitle" class="text-lg font-semibold text-white mb-1 text-center">Reliance Industries</h3> 
+                <p id="holdingActionsDetails" class="text-sm text-gray-400 mb-6 text-center">Equity • 50 Units</p>
+                
+                <div class="w-full space-y-3">
+                    <button id="editHoldingBtn" class="btn btn-secondary w-full justify-center text-white">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        Edit Details
+                    </button>
+                    <button id="deleteHoldingBtn" class="btn bg-red-600/20 text-red-400 hover:bg-red-600/30 w-full justify-center">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Delete Holding
+                    </button>
+                    <button id="cancelHoldingActionsBtn" class="btn bg-transparent hover:bg-white/5 w-full justify-center mt-3 text-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: EDIT HOLDING MODAL -->
+    <div id="editHoldingModal" class="modal-backdrop">
+        <div class="modal-content card p-0 w-full max-w-lg">
+            
+            <div class="modal-header flex justify-between items-center p-5">
+                <h3 id="editHoldingTitle" class="text-xl font-bold font-heading">Edit Holding</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <div class="p-8">
+                <form id="editHoldingForm" class="space-y-6">
+                    <!-- Hidden fields to identify the holding -->
+                    <input type="hidden" id="editPortfolioId" name="portfolioId">
+                    <input type="hidden" id="editHoldingId" name="holdingId">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="editHoldingName" class="form-label">Holding Name</label>
+                            <input type="text" id="editHoldingName" name="name" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="editHoldingTicker" class="form-label">Ticker <span class="form-label-optional">(Optional)</span></label>
+                            <input type="text" id="editHoldingTicker" name="ticker" class="form-input">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="editHoldingUnits" class="form-label">Units / Quantity</label>
+                            <input type="number" step="any" id="editHoldingUnits" name="quantity" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="editHoldingBuyPrice" class="form-label">Average Buy Price (₹)</label>
+                            <input type="number" step="0.01" id="editHoldingBuyPrice" name="avgBuyPrice" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="pt-6 border-t border-white/10">
+                        <button type="submit" class="btn btn-primary w-full justify-center">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW: "SETTINGS SANCTUARY" MODAL (Replaces profileModal) -->
+    <!-- Right-hand Content Area -->
+    <div id="settingsModal" class="modal-backdrop">
+        <div class="modal-content card p-0 w-full max-w-4xl min-h-[60vh]">
+            
+            <div class="modal-header flex justify-between items-center p-5">
+                <h3 id="settingsModalTitle" class="text-xl font-bold font-heading">Settings</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+
+            <div class="settings-layout">
+                
+                <nav class="settings-nav">
+                    <div class="settings-nav-indicator"></div>
+                    <button type="button" class="settings-nav-btn active" data-content="settings-profile">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <span>Profile</span>
+                    </button>
+                    <button type="button" class="settings-nav-btn" data-content="settings-preferences">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826 3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span>Preferences</span>
+                    </button>
+                    <button type="button" class="settings-nav-btn" data-content="settings-security">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                        <span>Security</span>
+                    </button>
+                    <button type="button" class="settings-nav-btn" data-content="settings-data">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4" /></svg>
+                        <span>Data</span>
+                    </button>
+                </nav>
+
+                <div class="settings-content-wrapper">
+                    
+                    <div id="settings-profile" class="settings-content active">
+                        <h3 class="text-xl font-semibold mb-6">Profile</h3>
+                        <form id="profileForm" class="space-y-6 max-w-md">
+                            
+                            <div>
+                                <label class="form-label">Profile Photo</label>
+                                <div class="flex items-center gap-4">
+                                    <img class="w-16 h-16 rounded-full" src="https://i.pravatar.cc/64?u=suyash" alt="User Avatar">
+                                    <div class="flex gap-2">
+                                        <button type="button" class="btn btn-secondary !text-xs !py-1.5 !px-3">Upload New</button>
+                                        <button type="button" class="btn bg-transparent hover:bg-white/5 !text-xs !py-1.5 !px-3 text-text-secondary">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="profileName" class="form-label">Name</label>
+                                <input type="text" id="profileName" name="name" class="form-input" value="Suyash" required>
+                            </div>
+                            
+                            <div>
+                                <label for="profilePhone" class="form-label">Phone Number <span class="form-label-optional">(Optional)</span></label>
+                                <input type="tel" id="profilePhone" name="phone" class="form-input" placeholder="e.g., +91 98765 43210">
+                            </div>
+
+                            <div>
+                                <label for="profileEmail" class="form-label">Email</label>
+                                <input type="email" id="profileEmail" name="email" class="form-input" value="suyash@email.com" disabled>
+                            </div>
+
+                            <div>
+                                <label for="profileBackupEmail" class="form-label">Backup Email <span class="form-label-optional">(Optional)</span></label>
+                                <input type="email" id="profileBackupEmail" name="backup_email" class="form-input" placeholder="Add a recovery email">
+                            </div>
+
+                            <div class="pt-4">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="settings-preferences" class="settings-content">
+                        <h3 class="text-xl font-semibold mb-6">Preferences</h3>
+                        <form id="preferencesForm" class="space-y-6 max-w-md">
+                            <div>
+                                <label for="prefCurrency" class="form-label">Currency</label>
+                                <select id="prefCurrency" name="currency" class="form-input" disabled>
+                                    <option value="INR">INR (Indian Rupee)</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="settings-security" class="settings-content">
+                        <h3 class="text-xl font-semibold mb-6">Security</h3>
+                        <div class="space-y-6 max-w-lg">
+
+                            <div class="settings-component-row">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">Password</h4>
+                                    <p class="text-sm text-text-secondary">Set a permanent password for your account.</p>
+                                </div>
+                                <button id="setPasswordBtn" class="btn btn-secondary ml-auto flex-shrink-0" disabled>Set Password</button>
+                            </div>
+
+                            <div class="settings-component-row">
+                                <div>
+                                    <h4 class="font-semibold text-text-primary">Two-Factor Authentication (2FA)</h4>
+                                    <p class="text-sm text-text-secondary">Add an extra layer of security to your account.</p>
+                                </div>
+                                <div class="ml-auto flex-shrink-0">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="2fa-toggle" disabled>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 border-t border-white/10">
+                                <button id="logoutBtn" class="btn btn-secondary">Log Out</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settings-data" class="settings-content">
+                        <h3 class="text-xl font-semibold mb-6">Data Management</h3>
+                        <div class="space-y-4 max-w-md">
+                            <button id="exportDataBtn" class="btn btn-secondary">Export All Data</button>
+                            
+                            <div class="pt-6 border-t border-white/10">
+                                <h4 class="text-lg font-semibold text-negative-color">Danger Zone</h4>
+                                <p class="text-sm text-text-secondary mt-2 mb-4">This action is irreversible and will permanently delete all your accounts, transactions, and investment data.</p>
+                                <button id="deleteAllDataBtn" class="btn bg-red-600/20 text-red-400 hover:bg-red-600/30">
+                                    Delete All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmationModal" class="modal-backdrop">
+        <div class="modal-content card p-0 w-full max-w-md"> 
+    
+            <div class="flex justify-between items-center p-5">
+                <h3 class="text-xl font-bold font-heading">Are you sure?</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+    
+            <div class="p-8 text-center"> 
+                <p class="text-gray-400 mb-6">This will permanently delete the account and all of its associated transactions. This action cannot be undone.</p>
+                <div class="flex justify-center gap-4">
+                    <button id="cancelDeleteBtn" class="btn btn-secondary">Cancel</button> 
+                    
+                    <button id="confirmDeleteBtn" class="btn bg-red-600 text-white hover:bg-red-700">Yes, Delete</button>
+                </div>
             </div>
         </div>
     </div>
