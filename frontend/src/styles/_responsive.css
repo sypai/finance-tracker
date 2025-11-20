@@ -36,7 +36,16 @@
         padding-bottom: 5rem;
     }
     .sidebar {
-        transform: translateX(-100%);
+        /* FIX 1: Override base anchor and attach to the right edge */
+        left: auto; /* Remove explicit left anchor */
+        right: 0;
+        
+        /* FIX 2: Push sidebar off-screen to the right (was -100%) */
+        transform: translateX(100%);
+    }
+    .sidebar.active {
+        /* FIX 3: Bring sidebar back to screen (slides left into view) */
+        transform: translateX(0);
     }
     .content {
         margin-left: 0;

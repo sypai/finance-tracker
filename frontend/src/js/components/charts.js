@@ -1,4 +1,5 @@
 // js/components/charts.js
+import { elements } from '../utils/ui/domElements.js';
 import { formatIndianCurrency } from '../utils/ui/formatters.js';
 
 // --- Chart Instance Management ---
@@ -406,6 +407,12 @@ function prepareBalanceHistory(accounts, allTransactions, period) {
 
 function renderCashFlowChart(ctx, appState) {
     // ... (This function is unchanged) ...
+
+    // Get chart canvas element reference for toggle
+    const cashFlowCard = elements.cashFlowCard;
+    const cashFlowCanvas = elements.cashFlowChartCanvas;
+    const cashFlowZeroState = elements.cashFlowZeroState;
+
     const monthlyData = appState.transactions.reduce((acc, t) => {
         const date = new Date(t.date);
         const monthYearKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -416,8 +423,51 @@ function renderCashFlowChart(ctx, appState) {
         else acc[monthYearKey].expense += t.amount;
         return acc;
     }, {});
+    
 
     const sortedKeys = Object.keys(monthlyData).sort((a, b) => a.localeCompare(b)).slice(-6);
+    
+    // --- FIX: Implement HTML Zero State Toggle & Sizing ---
+    if (Object.keys(monthlyData).length === 0) {
+        if (cashFlowZeroState) cashFlowZeroState.classList.remove('hidden');
+        if (cashFlowCanvas) cashFlowCanvas.classList.add('hidden'); 
+        
+        // Shrink the card by manipulating the Chart Container's height
+        if (cashFlowCard) {
+             // Reduce padding to make the card smaller
+             cashFlowCard.classList.remove('p-6', 'lg:p-8');
+             cashFlowCard.classList.add('p-4', 'lg:p-6'); 
+        }
+
+        const chartContainer = cashFlowCanvas ? cashFlowCanvas.closest('.chart-container-medium') : null;
+        if(chartContainer) {
+            chartContainer.style.height = '150px'; // Explicitly shrink the chart area height
+        }
+        
+        // Ensure chart instance is destroyed to prevent ghosting
+        destroyChart('cashFlowChart'); 
+        return; 
+    }
+
+    // Restore size and visibility for normal rendering
+    if (cashFlowZeroState) cashFlowZeroState.classList.add('hidden');
+    if (cashFlowCanvas) {
+        cashFlowCanvas.classList.remove('hidden');
+        
+        if (cashFlowCard) {
+            // Restore padding
+            cashFlowCard.classList.add('p-6', 'lg:p-8');
+            cashFlowCard.classList.remove('p-4', 'lg:p-6');
+        }
+
+        const chartContainer = cashFlowCanvas ? cashFlowCanvas.closest('.chart-container-medium') : null;
+        if(chartContainer) {
+            // Restore default height (we use CSS variables or classes for this, 
+            // but setting it via JS is the most robust way to override the zero state shrink)
+            chartContainer.style.height = ''; 
+        }
+    }
+    
     const labels = sortedKeys.map(key => monthlyData[key].monthName);
     const incomeData = sortedKeys.map(key => monthlyData[key].income);
     const expenseData = sortedKeys.map(key => monthlyData[key].expense);

@@ -431,8 +431,9 @@ const App = {
         elements.bottomNavItems.forEach(item => item.addEventListener('click', () => handleTabClick(item.dataset.tab)));
 
         // --- REFACTORED: Settings Modal Logic ---
-        const profileMenuBtn = document.getElementById('profileMenuBtn'); 
-        const settingsModal = document.getElementById('settingsModal'); // <-- New ID
+        const profileSettingsBtn = document.getElementById('profileSettingsBtn'); // FIX 4: Use new ID
+        const settingsModal = document.getElementById('settingsModal'); 
+        const settingsLink = document.getElementById('settingsLink'); // FIX 5: Get the new sidebar link
 
         if (profileMenuBtn && settingsModal) {
             // Open the modal when the button is clicked
@@ -646,7 +647,9 @@ const App = {
         // --- ADD THIS NEW BLOCK ---
         else if (type === 'deleteAllData') {
             this.deleteAllData();
-            this.render(); // Force a full re-render
+            // this.render(); // Force a full re-render
+            // FIX: Force a re-render of the current active tab
+            this.handleTabSwitch(activeTab);
         }
         // --- END OF NEW BLOCK ---
         // --- END OF NEW BLOCK ---

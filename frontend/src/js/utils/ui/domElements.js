@@ -87,4 +87,8 @@ export function initUI() {
     elements.bottomNavItems = document.querySelectorAll('#bottom-nav .nav-item');
 
     elements.sidebarIndicator = document.getElementById('sidebar-indicator');
+
+    elements.cashFlowCard = document.getElementById('cashFlowCard');
+    elements.cashFlowChartCanvas = document.getElementById('cashFlowChart');
+    elements.cashFlowZeroState = document.getElementById('cashFlowZeroState');
 }

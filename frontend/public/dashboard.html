@@ -229,6 +229,12 @@
                     <h3 class="text-xl font-semibold mb-6">Monthly Cash Flow (Last 6 Months)</h3>
                     <div class="chart-container-medium">
                         <canvas id="cashFlowChart"></canvas>
+
+                        <div id="cashFlowZeroState" class="absolute inset-0 hidden flex-col items-center justify-center text-center p-8">
+                            <!-- <svg class="h-10 w-10 mb-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> -->
+                            <h4 class="text-lg font-semibold text-text-primary">Track Your Cash Flow</h4>
+                            <p class="text-sm text-text-secondary mt-1 max-w-xs">Start logging your transactions to see a clear monthly view of your income vs. expenses.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -358,8 +364,7 @@
                         <p id="accountsDebtsSubtext" class="text-sm mt-2 text-gray-500">All negative balances</p>
                     </div>
                 </div>
-            </div>
-        
+
                 <div class="card animate-fade-in delay-300">
                     
                     <div id="account-journal-header" class="flex flex-col md:flex-row justify-between items-center p-5 gap-4" style="position: relative;">
@@ -406,6 +411,7 @@
                         <canvas id="balanceChart"></canvas>
                     </div>
                 </div>
+            </div>
         
             </div>
         </div>
