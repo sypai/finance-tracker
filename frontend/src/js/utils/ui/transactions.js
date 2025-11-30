@@ -146,6 +146,14 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             deleteBtn.dataset.transactionId = transactionToEdit.id; // Store ID for the click handler
         }
 
+        // NEW: Populate Date
+        if (form.elements.date) {
+            const dateObj = new Date(transactionToEdit.date);
+            // Format to YYYY-MM-DD for input[type="date"]
+            const dateStr = dateObj.toISOString().split('T')[0];
+            form.elements.date.value = dateStr;
+        }
+
         if(form) {
             form.elements.id.value = transactionToEdit.id;
             form.elements.accountId.value = transactionToEdit.accountId;
@@ -174,6 +182,10 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             if (expenseRadio) expenseRadio.checked = true;
             setSelectedTags([]);
             setSelectedCategory('cat-uncategorized'); 
+            // NEW: Default to Today
+            if (form.elements.date) {
+                form.elements.date.valueAsDate = new Date();
+            }
         }
     }
     // --- END OF MODIFIED PART ---

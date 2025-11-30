@@ -332,9 +332,9 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* --- Modal View Switching Animation (ULTRA-SIMPLIFIED) --- */
 #modal-view-container {
-    position: relative; /* Establishes positioning context */
-    min-height: 450px;
-    overflow: visible; /* Allow content to be visible */
+    position: relative;
+    min-height: 520px; /* Increased from 450px to accommodate Date field */
+    overflow: visible; /* (This is overridden by the HTML class, but good fallback) */
 }
 
 /* --- ADD THIS NEW RULE --- */

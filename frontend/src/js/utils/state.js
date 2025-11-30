@@ -34,6 +34,49 @@ const PREDEFINED_CATEGORIES = [
     { id: 'cat-investments', name: 'Investments', iconId: '#icon-investment' }
 ];
 
+/**
+ * CORE LOGIC: The Anchor Strategy
+ * Adds a transaction and smartly updates balance based on the date.
+ * * Logic:
+ * 1. If Date >= Account Creation Date: Update Current Balance (Live Mode).
+ * 2. If Date < Account Creation Date: Do NOT update Current Balance (History Mode).
+ */
+export function addTransactionToState(transaction) {
+    // 1. Add to the main list
+    appState.transactions.unshift(transaction);
+
+    // 2. Handle Balance Impact
+    const account = appState.accounts.find(acc => acc.id === transaction.accountId);
+    
+    // If it's a "Cash" account (which might not have a strict ID/Created Date in some flows), 
+    // or if the account isn't found, we assume strict update or skip.
+    if (!account) return; 
+
+    // Parse Dates
+    const txnDate = new Date(transaction.date);
+    const accountCreatedDate = new Date(account.createdAt);
+    
+    // Normalize to Midnight to avoid time-of-day bugs
+    txnDate.setHours(0,0,0,0);
+    accountCreatedDate.setHours(0,0,0,0);
+
+    // THE ANCHOR CHECK
+    if (txnDate >= accountCreatedDate) {
+        // ZONE A: Future/Present
+        // This happened AFTER we started tracking. Real money moved.
+        if (transaction.type === 'income') {
+            account.balance += transaction.amount;
+        } else {
+            account.balance -= transaction.amount;
+        }
+    } else {
+        // ZONE B: The Past
+        // This happened BEFORE we started tracking. 
+        // We are just filling in the ledger. The 'Current Balance' anchor is unaffected.
+        console.log(`Back-dated transaction added. Balance for ${account.name} remains ₹${account.balance}.`);
+    }
+}
+
 // --- 2. TRANSACTION DATA GENERATOR ---
 function generateDenseData(masterTags) {
     const today = new Date(2025, 10, 2); // Nov 2, 2025
