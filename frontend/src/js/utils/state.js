@@ -1,7 +1,6 @@
 // src/js/utils/state.js
 
 // --- 1. PREDEFINED DATA (CATEGORIES, TAGS) ---
-// ... (This section is unchanged) ...
 function getRandomTagColor() {
     const colors = ['#F0857D', '#5BB974', '#1D4ED8', '#A78BFA', '#FBBF24', '#FB7185'];
     return colors[Math.floor(Math.random() * colors.length)];
@@ -36,7 +35,6 @@ const PREDEFINED_CATEGORIES = [
 ];
 
 // --- 2. TRANSACTION DATA GENERATOR ---
-// ... (The entire generateDenseData function is unchanged) ...
 function generateDenseData(masterTags) {
     const today = new Date(2025, 10, 2); // Nov 2, 2025
     const startDate = new Date(2023, 10, 2); // 2 years ago
@@ -50,7 +48,6 @@ function generateDenseData(masterTags) {
     ];
 
     const transactions = [];
-    // ... (rest of transaction generation logic) ...
      const expenseDescriptions = [
         { desc: 'Swiggy', cat: 'cat-food' },
         { desc: 'Zomato', cat: 'cat-food' },
@@ -137,10 +134,10 @@ function generateDenseData(masterTags) {
             transactions.push({ 
                 id: Date.now() + i + j, 
                 accountId, 
+                date: date.toISOString(), // Ensure date is stringified right away
                 description: item.desc, 
                 type: 'expense', 
                 amount, 
-                date, 
                 categoryId: item.cat,
                 tagIds: []
             });
@@ -163,12 +160,7 @@ function generateDenseData(masterTags) {
 }
 
 
-// --- 3. GENERATE DATA ---
-const { accounts, transactions } = generateDenseData(PREDEFINED_TAGS);
-
-
-// --- 4. PREDEFINED INVESTMENT DATA ---
-// ... (This section is unchanged) ...
+// --- 3. PREDEFINED INVESTMENT DATA ---
 const PREDEFINED_INVESTMENTS = [
     {
         id: 101, name: 'Zerodha', type: 'brokerage',
@@ -225,7 +217,7 @@ const PREDEFINED_INVESTMENTS = [
 ];
 
 
-// --- 5. NEW: PORTFOLIO HISTORY GENERATOR ---
+// --- 4. PORTFOLIO HISTORY GENERATOR ---
 function generatePortfolioHistory() {
     const history = [];
     const today = new Date(2025, 10, 2); // Nov 2, 2025
@@ -280,30 +272,65 @@ function generatePortfolioHistory() {
     return history;
 }
 
-const portfolioHistory = generatePortfolioHistory();
 
+// --- 5. LOCAL STORAGE & STATE EXPORT LOGIC ---
+const STORAGE_KEY = 'arthaAppState'; 
+const defaultData = generateDenseData(PREDEFINED_TAGS);
 
-// --- 6. EXPORT THE FINAL STATE ---
-export const appState = {
-    // Generated Data
-    accounts,
-    transactions,
-    portfolioHistory, // <-- THE NEW DATA ARRAY
-    
-    // Predefined Data
-    tags: PREDEFINED_TAGS,
-    categories: PREDEFINED_CATEGORIES,
+// Define the initial state structure using default data/config
+let initialState = {
+    // Data (will be overwritten by localStorage if available)
+    accounts: defaultData.accounts,
+    transactions: defaultData.transactions,
+    portfolioHistory: generatePortfolioHistory(),
     investmentAccounts: PREDEFINED_INVESTMENTS,
     
-    // Legacy properties
-    investments: [], // This is the old one, dashboard.js uses it. We should fix that.
-    investmentGrowth: [], // This is now REPLACED by portfolioHistory
+    // Config/Lookups (always use predefined to ensure latest structure)
+    tags: PREDEFINED_TAGS,
+    categories: PREDEFINED_CATEGORIES,
     
     // UI State
     activeExpensePeriod: 'month',
     activeBalancePeriod: 'max',
-    activeInvestmentPeriod: '1Y', // <-- NEW UI STATE
+    activeInvestmentPeriod: '1Y', 
     activeYear: new Date().getFullYear().toString(),
     activeMonth: (new Date().getMonth() + 1).toString().padStart(2, '0'),
-    hasDashboardLoaded: false
+    hasDashboardLoaded: false,
 };
+
+// 1. Try to load state from Local Storage
+const savedState = localStorage.getItem(STORAGE_KEY);
+
+if (savedState) {
+    try {
+        const loadedState = JSON.parse(savedState);
+        
+        // Overwrite mutable data arrays and settings with saved state
+        if (loadedState.accounts) initialState.accounts = loadedState.accounts;
+        if (loadedState.transactions) initialState.transactions = loadedState.transactions;
+        if (loadedState.investmentAccounts) initialState.investmentAccounts = loadedState.investmentAccounts;
+        if (loadedState.portfolioHistory) initialState.portfolioHistory = loadedState.portfolioHistory;
+
+        // Restore UI settings
+        if (loadedState.activeExpensePeriod) initialState.activeExpensePeriod = loadedState.activeExpensePeriod;
+        if (loadedState.activeBalancePeriod) initialState.activeBalancePeriod = loadedState.activeBalancePeriod;
+        if (loadedState.activeInvestmentPeriod) initialState.activeInvestmentPeriod = loadedState.activeInvestmentPeriod;
+
+        // Ensure accounts and transactions are parsed correctly if LocalStorage returns an object
+        // NOTE: dates need to be kept as strings here, JS functions handle parsing them.
+
+        if (initialState.accounts.length === 0) {
+             console.log("Starting with clean slate from saved state.");
+        } else {
+             console.log("Loaded state from Local Storage.");
+        }
+        
+    } catch (e) {
+        console.error("Error parsing saved state. Starting with default demo data.");
+    }
+} else {
+    console.log("No saved state found. Starting with demo data.");
+}
+
+// Export the final mutable state object
+export const appState = initialState;
