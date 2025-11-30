@@ -155,7 +155,7 @@ export function showTransactionModal(appState, transactionToEdit = null) {
         }
 
         if(form) {
-            form.elements.id.value = transactionToEdit.id;
+            form.elements.txnId.value = transactionToEdit.id;
             form.elements.accountId.value = transactionToEdit.accountId;
             form.elements.description.value = transactionToEdit.description;
             form.elements.amount.value = transactionToEdit.amount;

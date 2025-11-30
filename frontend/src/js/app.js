@@ -1,6 +1,8 @@
 // src/js/app.js
 import { appState, addTransactionToState } from './utils/state.js';
+
 import { createCharts } from './components/charts.js';
+import { parseCSV } from './components/csvParser.js';
 import { 
     initUI,
     elements, 
@@ -129,6 +131,8 @@ const App = {
             }
         });
 
+        
+
         // --- Category Create Logic (Unchanged) ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
         const categorySelect = document.getElementById('transactionCategory');
@@ -172,22 +176,52 @@ const App = {
             });
         }
         
-        // --- Transaction Modal View Switcher (Unchanged) ---
-        const entryModeSwitcher = document.getElementById('entry-mode-switcher');
-        const manualView = document.getElementById('manual-entry-view');
-        const importView = document.getElementById('import-view');
+       // --- 3. VIEW SWITCHER & IMPORT SETUP (Merged) ---
+       const entryModeSwitcher = document.getElementById('entry-mode-switcher');
+       const manualView = document.getElementById('manual-entry-view');
+       const importView = document.getElementById('import-view');
+       const importAccountSelect = document.getElementById('importAccountSelect'); // <--- New element
 
-        if (entryModeSwitcher && manualView && importView) {
-            entryModeSwitcher.addEventListener('change', (event) => {
-                if (event.target.value === 'manual') {
-                    manualView.classList.add('active-view');
-                    importView.classList.remove('active-view');
-                } else if (event.target.value === 'import') {
-                    importView.classList.add('active-view');
-                    manualView.classList.remove('active-view');
-                }
-            });
-        }
+       if (entryModeSwitcher && manualView && importView) {
+           entryModeSwitcher.addEventListener('change', (event) => {
+               if (event.target.value === 'manual') {
+                   // 1. Switch the View
+                   manualView.classList.add('active-view');
+                   importView.classList.remove('active-view');
+               } 
+               else if (event.target.value === 'import') {
+                   // 1. Switch the View
+                   importView.classList.add('active-view');
+                   manualView.classList.remove('active-view');
+
+                   // 2. Populate the Account Dropdown (New Logic)
+                   if (importAccountSelect) {
+                       importAccountSelect.innerHTML = appState.accounts.map(acc => 
+                           `<option value="${acc.id}">${acc.name}</option>`
+                       ).join('');
+                   }
+               }
+           });
+       }
+    
+       // --- CSV IMPORT LOGIC ---
+       const btnImportCsv = document.getElementById('btnImportCsv');
+       const csvFileInput = document.getElementById('csvFileInput');
+       
+       if (btnImportCsv && csvFileInput) {
+           // 1. When user clicks the visible button, trigger the hidden file input
+           btnImportCsv.addEventListener('click', (e) => {
+               e.preventDefault(); // Prevent any default button behavior
+               csvFileInput.click();
+           });
+
+           // 2. When a file is selected, process it
+           csvFileInput.addEventListener('change', (e) => {
+               if (e.target.files.length > 0) {
+                   this.handleImportCSV(e);
+               }
+           });
+       }
         
         // --- "INSET JOURNAL" ACCORDION CLICK (Transactions) (Unchanged) ---
         elements.transactionList.addEventListener('click', (event) => {
@@ -979,6 +1013,91 @@ const App = {
         this.handleTabSwitch('transactions'); 
     },
 
+    handleImportCSV(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const accountSelect = document.getElementById('importAccountSelect');
+        const accountId = accountSelect ? parseInt(accountSelect.value) : null;
+
+        if (!accountId) {
+            alert("Please select an account to import into.");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            const parsedTransactions = parseCSV(content);
+
+            if (parsedTransactions.length === 0) {
+                alert("No valid transactions found.");
+                return;
+            }
+
+            let count = 0;
+            
+            // Helper to generate colors for new tags
+            const colors = ['#F0857D', '#5BB974', '#1D4ED8', '#A78BFA', '#FBBF24', '#FB7185'];
+            
+            parsedTransactions.forEach((t, index) => {
+                // 1. Resolve Category ID
+                let categoryId = 'cat-uncategorized';
+                if (t.rawCategory) {
+                    const match = appState.categories.find(c => 
+                        c.name.toLowerCase() === t.rawCategory.toLowerCase()
+                    );
+                    if (match) categoryId = match.id;
+                }
+
+                // 2. Resolve/Create Tag IDs
+                let tagIds = [];
+                if (t.rawTags) {
+                    // Split by '|' (pipe) to allow multiple tags
+                    const tagNames = t.rawTags.split('|').map(s => s.trim()).filter(s => s);
+                    
+                    tagNames.forEach(tagName => {
+                        // Check if tag exists
+                        let tag = appState.tags.find(tg => tg.name.toLowerCase() === tagName.toLowerCase());
+                        
+                        // If not, CREATE IT
+                        if (!tag) {
+                            tag = {
+                                id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                                name: tagName,
+                                color: colors[Math.floor(Math.random() * colors.length)]
+                            };
+                            appState.tags.push(tag);
+                        }
+                        tagIds.push(tag.id);
+                    });
+                }
+
+                const newTxn = {
+                    id: Date.now() + index,
+                    accountId: accountId,
+                    date: t.date,
+                    description: t.description,
+                    amount: t.amount,
+                    type: t.type,
+                    categoryId: categoryId,
+                    tagIds: tagIds
+                };
+                addTransactionToState(newTxn);
+                count++;
+            });
+
+            saveAppState();
+            this.render();
+            
+            alert(`Successfully imported ${count} transactions.`);
+            toggleModal('transactionModal', false);
+            event.target.value = '';
+            this.handleTabSwitch('transactions'); 
+        };
+        reader.readAsText(file);
+    },
+    
     handleAccountFormSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
