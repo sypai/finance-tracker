@@ -41,6 +41,7 @@ const PREDEFINED_CATEGORIES = [
  * 1. If Date >= Account Creation Date: Update Current Balance (Live Mode).
  * 2. If Date < Account Creation Date: Do NOT update Current Balance (History Mode).
  */
+// src/js/utils/state.js
 export function addTransactionToState(transaction) {
     // 1. Add to the main list
     appState.transactions.unshift(transaction);
@@ -48,32 +49,41 @@ export function addTransactionToState(transaction) {
     // 2. Handle Balance Impact
     const account = appState.accounts.find(acc => acc.id === transaction.accountId);
     
-    // If it's a "Cash" account (which might not have a strict ID/Created Date in some flows), 
-    // or if the account isn't found, we assume strict update or skip.
     if (!account) return; 
 
     // Parse Dates
     const txnDate = new Date(transaction.date);
-    const accountCreatedDate = new Date(account.createdAt);
+    
+    // SAFETY FIX: If createdAt is missing or invalid, default to 1970 (always update balance)
+    let accountCreatedDate = new Date(0); 
+    if (account.createdAt) {
+        const parsed = new Date(account.createdAt);
+        if (!isNaN(parsed.getTime())) {
+            accountCreatedDate = parsed;
+        }
+    }
     
     // Normalize to Midnight to avoid time-of-day bugs
     txnDate.setHours(0,0,0,0);
     accountCreatedDate.setHours(0,0,0,0);
 
     // THE ANCHOR CHECK
+    // Update balance if transaction is NEWER than account creation
     if (txnDate >= accountCreatedDate) {
-        // ZONE A: Future/Present
-        // This happened AFTER we started tracking. Real money moved.
         if (transaction.type === 'income') {
             account.balance += transaction.amount;
         } else {
             account.balance -= transaction.amount;
         }
     } else {
-        // ZONE B: The Past
-        // This happened BEFORE we started tracking. 
-        // We are just filling in the ledger. The 'Current Balance' anchor is unaffected.
-        console.log(`Back-dated transaction added. Balance for ${account.name} remains ₹${account.balance}.`);
+        console.log(`Back-dated transaction. Balance for ${account.name} remains unchanged.`);
+    }
+    
+    // 3. PERSISTENCE (Auto-save immediately)
+    try {
+        localStorage.setItem('arthaAppState', JSON.stringify(appState));
+    } catch (e) {
+        console.error("Auto-save failed:", e);
     }
 }
 

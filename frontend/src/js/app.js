@@ -45,10 +45,12 @@ function saveAppState() {
 
 const App = {
     init() {
+        console.log("App.init started..."); // <--- Check this
         initUI();
         initTagInput(); 
         initCategorySelect();
         
+        console.log("Binding events..."); // <--- Check this
         this.bindEvents();
         this.bindPortfolioModalEvents(); 
         this.bindAccountModalEvents(); 
@@ -89,6 +91,42 @@ const App = {
     },
 
     bindEvents() {
+
+        // --- FIXED GLOBAL SUBMIT LISTENER ---
+        document.body.addEventListener('submit', (event) => {
+            // 1. Transaction Form
+            if (event.target.id === 'transactionForm') {
+                console.log("submit transaction form..."); // <--- Check this
+                event.preventDefault(); // STOP RELOAD IMMEDIATELY
+                this.handleTransactionSubmit(event);
+            }
+            // 2. Portfolio Form
+            else if (event.target.id === 'addPortfolioForm') {
+                event.preventDefault();
+                this.handlePortfolioSubmit(event);
+            }
+            // 3. Fixed Income Form
+            else if (event.target.id === 'addFixedIncomeForm') {
+                event.preventDefault();
+                this.handleFixedIncomeSubmit(event);
+            }
+            // 4. Employee Benefits
+            else if (['addRetirementForm', 'addStockGrantForm'].includes(event.target.id)) {
+                event.preventDefault();
+                this.handleEmployeeBenefitSubmit(event);
+            }
+            // 5. Accounts
+            else if (['addAccountForm', 'addCreditCardForm', 'addLoanForm', 'addCashForm'].includes(event.target.id)) {
+                event.preventDefault();
+                this.handleAccountFormSubmit(event);
+            }
+            // 6. Edit Holding
+            else if (event.target.id === 'editHoldingForm') {
+                event.preventDefault();
+                this.handleEditHoldingSubmit(event);
+            }
+        });
+        
         // --- Category Create Logic (Unchanged) ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
         const categorySelect = document.getElementById('transactionCategory');
@@ -512,40 +550,6 @@ const App = {
                 fabContainer.classList.remove('active'); 
             });
         });
-
-
-        
-
-        // --- Global Form Submission Listener ---
-        document.body.addEventListener('submit', (event) => {
-            // Debugging: Check what is actually submitting
-            console.log("Form submitting:", event.target.id); 
-
-            if (event.target.id === 'transactionForm') {
-                event.preventDefault(); // Stop reload HERE to be safe
-                this.handleTransactionSubmit(event);
-            }
-            else if (event.target.id === 'addPortfolioForm') {
-                event.preventDefault();
-                this.handlePortfolioSubmit(event);
-            }
-            else if (event.target.id === 'addFixedIncomeForm') {
-                event.preventDefault();
-                this.handleFixedIncomeSubmit(event);
-            }
-            else if (event.target.id === 'addRetirementForm' || event.target.id === 'addStockGrantForm') {
-                event.preventDefault();
-                this.handleEmployeeBenefitSubmit(event);
-            }
-            else if (['addAccountForm', 'addCreditCardForm', 'addLoanForm', 'addCashForm'].includes(event.target.id)) {
-                event.preventDefault();
-                this.handleAccountFormSubmit(event);
-            }
-            else if (event.target.id === 'editHoldingForm') {
-                event.preventDefault();
-                this.handleEditHoldingSubmit(event);
-            }
-        });
     },
 
     handleTabSwitch(tabName) {
@@ -909,9 +913,10 @@ const App = {
         const tagIds = formData.get('tagIds') ? formData.get('tagIds').split(',').filter(id => id.length > 0) : [];
         const transactionId = formData.get('id') ? parseInt(formData.get('id')) : null;
 
-        // 3. Parse Date (Default to NOW if empty)
-        const rawDate = formData.get('date');
-        const dateISO = rawDate ? new Date(rawDate).toISOString() : new Date().toISOString();
+        // 3. Parse Date (Force Local Time)
+        const rawDate = formData.get('date'); // "2025-11-02"
+        // Append T00:00:00 to force local time interpretation instead of UTC
+        const dateISO = rawDate ? new Date(rawDate + 'T00:00:00').toISOString() : new Date().toISOString();
 
         if (transactionId) {
             // --- EDIT MODE ---
@@ -941,7 +946,7 @@ const App = {
                 }
             }
         } else {
-            // --- ADD MODE (Use Anchor Logic) ---
+            // --- ADD MODE ---
             const newTxn = {
                 id: Date.now(),
                 accountId: transactionAccountId,
@@ -953,7 +958,7 @@ const App = {
                 tagIds: tagIds, 
             };
             
-            // Call our new smart function
+            // Call the fixed function
             addTransactionToState(newTxn);
         }
         
