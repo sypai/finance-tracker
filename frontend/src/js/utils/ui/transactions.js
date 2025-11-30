@@ -176,7 +176,7 @@ export function showTransactionModal(appState, transactionToEdit = null) {
 
         if(form) {
             form.reset();
-            form.elements.id.value = '';
+            form.elements.txnId.value = '';
             form.elements.categoryId.value = 'cat-uncategorized';
             const expenseRadio = form.querySelector('input[name="type"][value="expense"]');
             if (expenseRadio) expenseRadio.checked = true;

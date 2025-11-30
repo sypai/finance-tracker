@@ -27,20 +27,18 @@ import {
     updateBrokerageFormHeaders 
 } from './utils/ui/index.js';
 
-// --- NEW: PERSISTENCE UTILITY (Must be defined before App starts) ---
+// --- PERSISTENCE UTILITY ---
 const STORAGE_KEY = 'arthaAppState';
 
 function saveAppState() {
     try {
-        // NOTE: appState contains Date objects inside accounts.history and transactions.date.
-        // JSON.stringify handles Date objects by converting them to ISO strings, which is fine.
         const stateToSave = JSON.stringify(appState);
         localStorage.setItem(STORAGE_KEY, stateToSave);
-        // console.log("State saved."); 
     } catch (e) {
-        console.error("Failed to save state to Local Storage:", e);
+        console.error("Failed to save state:", e);
     }
 }
+
 // --- END PERSISTENCE UTILITY ---
 
 const App = {
@@ -91,42 +89,46 @@ const App = {
     },
 
     bindEvents() {
+        console.log("App.bindEvents is running...");
 
-        // --- FIXED GLOBAL SUBMIT LISTENER ---
+        // --- 1. CRITICAL: Global Form Submission Listener (MOVED TO TOP) ---
+        // We attach this first to ensure forms always work, even if UI bells & whistles fail later.
         document.body.addEventListener('submit', (event) => {
-            // 1. Transaction Form
+            console.log("Global submit caught for:", event.target.id); 
+
+            // Transaction Form
             if (event.target.id === 'transactionForm') {
-                console.log("submit transaction form..."); // <--- Check this
                 event.preventDefault(); // STOP RELOAD IMMEDIATELY
+                console.log("Processing transaction submit...");
                 this.handleTransactionSubmit(event);
             }
-            // 2. Portfolio Form
+            // Portfolio Form
             else if (event.target.id === 'addPortfolioForm') {
                 event.preventDefault();
                 this.handlePortfolioSubmit(event);
             }
-            // 3. Fixed Income Form
+            // Fixed Income Form
             else if (event.target.id === 'addFixedIncomeForm') {
                 event.preventDefault();
                 this.handleFixedIncomeSubmit(event);
             }
-            // 4. Employee Benefits
+            // Employee Benefits
             else if (['addRetirementForm', 'addStockGrantForm'].includes(event.target.id)) {
                 event.preventDefault();
                 this.handleEmployeeBenefitSubmit(event);
             }
-            // 5. Accounts
+            // Accounts
             else if (['addAccountForm', 'addCreditCardForm', 'addLoanForm', 'addCashForm'].includes(event.target.id)) {
                 event.preventDefault();
                 this.handleAccountFormSubmit(event);
             }
-            // 6. Edit Holding
+            // Edit Holding
             else if (event.target.id === 'editHoldingForm') {
                 event.preventDefault();
                 this.handleEditHoldingSubmit(event);
             }
         });
-        
+
         // --- Category Create Logic (Unchanged) ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
         const categorySelect = document.getElementById('transactionCategory');
