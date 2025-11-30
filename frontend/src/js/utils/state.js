@@ -43,48 +43,57 @@ const PREDEFINED_CATEGORIES = [
  */
 // src/js/utils/state.js
 export function addTransactionToState(transaction) {
-    // 1. Add to the main list
     appState.transactions.unshift(transaction);
 
-    // 2. Handle Balance Impact
+    // 1. Handle Source Account (Deduction)
     const account = appState.accounts.find(acc => acc.id === transaction.accountId);
-    
-    if (!account) return; 
+    if (account) {
+        const txnDate = new Date(transaction.date);
+        let accountCreatedDate = new Date(0); 
+        if (account.createdAt && !isNaN(new Date(account.createdAt).getTime())) {
+            accountCreatedDate = new Date(account.createdAt);
+        }
+        
+        // Normalize
+        txnDate.setHours(0,0,0,0);
+        accountCreatedDate.setHours(0,0,0,0);
 
-    // Parse Dates
-    const txnDate = new Date(transaction.date);
-    
-    // SAFETY FIX: If createdAt is missing or invalid, default to 1970 (always update balance)
-    let accountCreatedDate = new Date(0); 
-    if (account.createdAt) {
-        const parsed = new Date(account.createdAt);
-        if (!isNaN(parsed.getTime())) {
-            accountCreatedDate = parsed;
+        if (txnDate >= accountCreatedDate) {
+            if (transaction.type === 'income') {
+                account.balance += transaction.amount;
+            } else {
+                // Expenses AND Transfers deduct from source
+                account.balance -= transaction.amount; 
+            }
         }
     }
-    
-    // Normalize to Midnight to avoid time-of-day bugs
-    txnDate.setHours(0,0,0,0);
-    accountCreatedDate.setHours(0,0,0,0);
 
-    // THE ANCHOR CHECK
-    // Update balance if transaction is NEWER than account creation
-    if (txnDate >= accountCreatedDate) {
-        if (transaction.type === 'income') {
-            account.balance += transaction.amount;
-        } else {
-            account.balance -= transaction.amount;
+    // 2. Handle Destination Account (Addition) - ONLY for Transfers
+    if (transaction.type === 'transfer' && transaction.toAccountId) {
+        const toAccount = appState.accounts.find(acc => acc.id === transaction.toAccountId);
+        
+        if (toAccount) {
+            const txnDate = new Date(transaction.date);
+            let toAccountCreatedDate = new Date(0);
+            if (toAccount.createdAt && !isNaN(new Date(toAccount.createdAt).getTime())) {
+                toAccountCreatedDate = new Date(toAccount.createdAt);
+            }
+
+            txnDate.setHours(0,0,0,0);
+            toAccountCreatedDate.setHours(0,0,0,0);
+
+            // Anchor check for destination
+            if (txnDate >= toAccountCreatedDate) {
+                toAccount.balance += transaction.amount; // Transfers ADD to destination
+                console.log(`Transfer received in ${toAccount.name}. New Balance: ${toAccount.balance}`);
+            }
         }
-    } else {
-        console.log(`Back-dated transaction. Balance for ${account.name} remains unchanged.`);
     }
-    
-    // 3. PERSISTENCE (Auto-save immediately)
+
+    // Save
     try {
         localStorage.setItem('arthaAppState', JSON.stringify(appState));
-    } catch (e) {
-        console.error("Auto-save failed:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 // --- 2. TRANSACTION DATA GENERATOR ---

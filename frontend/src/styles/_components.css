@@ -484,3 +484,7 @@ input[type=number] { -moz-appearance: textfield; }
      visibility: visible;
 }
 
+.segmented-control input#typeTransfer:checked + label { 
+    color: #E3E3E3 !important; /* White text */
+    background-color: var(--primary-accent); /* Blue background */
+}

@@ -523,14 +523,24 @@
                                             <div class="segmented-control type-switcher flex items-center gap-1 p-1 rounded-lg bg-background">
                                                 <input type="radio" id="typeExpense" name="type" value="expense" class="sr-only peer/expense" checked>
                                                 <label for="typeExpense" class="flex-1 text-center cursor-pointer rounded-md px-3 py-1.5 text-xs font-semibold text-text-secondary transition-colors">Expense</label>
+                                                
                                                 <input type="radio" id="typeIncome" name="type" value="income" class="sr-only peer/income">
                                                 <label for="typeIncome" class="flex-1 text-center cursor-pointer rounded-md px-3 py-1.5 text-xs font-semibold text-text-secondary transition-colors">Income</label>
+                                                
+                                                <input type="radio" id="typeTransfer" name="type" value="transfer" class="sr-only peer/transfer">
+                                                <label for="typeTransfer" class="flex-1 text-center cursor-pointer rounded-md px-3 py-1.5 text-xs font-semibold text-text-secondary transition-colors">Transfer</label>
                                             </div>
                                         </div>
-                                
+
                                         <div>
-                                            <label for="transactionAccount" class="form-label">Account / Source</label>
+                                            <label for="transactionAccount" class="form-label">From Account</label> 
                                             <select id="transactionAccount" name="accountId" class="form-input" required></select>
+                                        </div>
+                                        
+                                        <div id="transferTargetField" class="hidden">
+                                            <label for="transferToAccount" class="form-label">To Account</label>
+                                            <select id="transferToAccount" name="toAccountId" class="form-input">
+                                                </select>
                                         </div>
                                 
                                         <div>

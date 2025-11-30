@@ -131,7 +131,33 @@ const App = {
             }
         });
 
-        
+        // --- TRANSFER TYPE TOGGLER ---
+        const transactionForm = document.getElementById('transactionForm');
+        if (transactionForm) {
+            const typeInputs = transactionForm.querySelectorAll('input[name="type"]');
+            const targetField = document.getElementById('transferTargetField');
+            const categoryField = document.getElementById('category-select-container').parentElement; // Get the parent div of category
+
+            typeInputs.forEach(input => {
+                input.addEventListener('change', (e) => {
+                    if (e.target.value === 'transfer') {
+                        targetField.classList.remove('hidden');
+                        categoryField.classList.add('hidden'); // Hide category for transfers
+                        
+                        // Reuse your populate function for the "To" dropdown
+                        const toSelect = document.getElementById('transferToAccount');
+                        if(toSelect) {
+                            toSelect.innerHTML = appState.accounts.map(acc => 
+                                `<option value="${acc.id}">${acc.name}</option>`
+                            ).join('');
+                        }
+                    } else {
+                        targetField.classList.add('hidden');
+                        categoryField.classList.remove('hidden');
+                    }
+                });
+            });
+        }
 
         // --- Category Create Logic (Unchanged) ---
         const newCategoryBtn = document.getElementById('newCategoryBtn');
@@ -945,9 +971,23 @@ const App = {
         const amount = parseFloat(formData.get('amount'));
         const type = formData.get('type');
         const description = formData.get('description');
-        const categoryId = formData.get('categoryId');
+        
         const tagIds = formData.get('tagIds') ? formData.get('tagIds').split(',').filter(id => id.length > 0) : [];
         const transactionId = formData.get('id') ? parseInt(formData.get('id')) : null;
+
+        // --- NEW: Handle Transfer Type ---
+        let toAccountId = null;
+        let categoryId = formData.get('categoryId'); // Default
+
+        if (type === 'transfer') {
+            toAccountId = parseInt(formData.get('toAccountId'));
+            categoryId = 'cat-transfer'; // Optional: You can create a specific category ID for internal logic
+            
+            if (transactionAccountId === toAccountId) {
+                alert("Source and Destination accounts cannot be the same.");
+                return;
+            }
+        }
 
         // 3. Parse Date (Force Local Time)
         const rawDate = formData.get('date'); // "2025-11-02"
@@ -986,6 +1026,7 @@ const App = {
             const newTxn = {
                 id: Date.now(),
                 accountId: transactionAccountId,
+                toAccountId: toAccountId, // <--- Add this
                 date: dateISO, 
                 description: description,
                 amount: amount,

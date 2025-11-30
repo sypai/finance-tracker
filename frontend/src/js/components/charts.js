@@ -419,8 +419,12 @@ function renderCashFlowChart(ctx, appState) {
         if (!acc[monthYearKey]) {
             acc[monthYearKey] = { monthName: date.toLocaleDateString('en-US', { month: 'short' }), income: 0, expense: 0 };
         }
-        if (t.type === 'income') acc[monthYearKey].income += t.amount;
-        else acc[monthYearKey].expense += t.amount;
+        // --- FIX: Strictly check for 'income' and 'expense'. Ignore 'transfer'. ---
+        if (t.type === 'income') {
+            acc[monthYearKey].income += t.amount;
+        } else if (t.type === 'expense') {
+            acc[monthYearKey].expense += t.amount;
+        }
         return acc;
     }, {});
     

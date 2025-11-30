@@ -20,9 +20,13 @@ export function renderTransactionInsights(appState) {
         const d = new Date(t.date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
+
+    // FIX: Exclude 'transfer' from expenses so it doesn't skew "Total Spent"
     const thisMonthExpenses = thisMonthTransactions.filter(t => t.type === 'expense');
+    const thisMonthIncome = thisMonthTransactions.filter(t => t.type === 'income');
+    
     const totalSpent = thisMonthExpenses.reduce((sum, t) => sum + t.amount, 0);
-    const totalEarned = thisMonthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const totalEarned = thisMonthIncome.reduce((sum, t) => sum + t.amount, 0);
 
     const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
     const lastMonthYear = lastMonthDate.getFullYear();
@@ -31,6 +35,8 @@ export function renderTransactionInsights(appState) {
         const d = new Date(t.date);
         return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
     });
+    
+    // FIX: Exclude transfers from historical comparison too
     const lastMonthSpent = lastMonthTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
@@ -132,8 +138,6 @@ export function showTransactionModal(appState, transactionToEdit = null) {
     const modalTitle = document.getElementById('transactionModalTitle');
     const form = document.getElementById('transactionForm');
     const submitBtn = document.getElementById('transactionSubmitBtn');
-    
-    // --- THIS IS THE MODIFIED PART ---
     const deleteBtn = document.getElementById('deleteTransactionBtn');
     
     // --- 5. Handle Edit vs. Add Mode ---
@@ -142,14 +146,12 @@ export function showTransactionModal(appState, transactionToEdit = null) {
         if(modalTitle) modalTitle.textContent = 'Edit Transaction';
         if(submitBtn) submitBtn.textContent = 'Save Changes';
         if(deleteBtn) {
-            deleteBtn.classList.remove('hidden'); // Show delete button
-            deleteBtn.dataset.transactionId = transactionToEdit.id; // Store ID for the click handler
+            deleteBtn.classList.remove('hidden'); 
+            deleteBtn.dataset.transactionId = transactionToEdit.id; 
         }
 
-        // NEW: Populate Date
         if (form.elements.date) {
             const dateObj = new Date(transactionToEdit.date);
-            // Format to YYYY-MM-DD for input[type="date"]
             const dateStr = dateObj.toISOString().split('T')[0];
             form.elements.date.value = dateStr;
         }
@@ -159,8 +161,23 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             form.elements.accountId.value = transactionToEdit.accountId;
             form.elements.description.value = transactionToEdit.description;
             form.elements.amount.value = transactionToEdit.amount;
+            
+            // Handle Type
             const typeRadio = form.querySelector(`input[name="type"][value="${transactionToEdit.type}"]`);
-            if (typeRadio) typeRadio.checked = true;
+            if (typeRadio) {
+                typeRadio.checked = true;
+                // Manually trigger change event to toggle transfer fields if needed
+                typeRadio.dispatchEvent(new Event('change')); 
+            }
+
+            // Handle Transfer Target (if applicable)
+            if (transactionToEdit.type === 'transfer' && transactionToEdit.toAccountId) {
+                // Use timeout to allow the dropdown to populate (if your event listener logic takes a tick)
+                setTimeout(() => {
+                     const toAccountSelect = document.getElementById('transferToAccount');
+                     if(toAccountSelect) toAccountSelect.value = transactionToEdit.toAccountId;
+                }, 0);
+            }
 
             setSelectedTags(transactionToEdit.tagIds || []);
             setSelectedCategory(transactionToEdit.categoryId || 'cat-uncategorized');
@@ -170,7 +187,7 @@ export function showTransactionModal(appState, transactionToEdit = null) {
         if(modalTitle) modalTitle.textContent = 'Add Transaction';
         if(submitBtn) submitBtn.textContent = 'Add Transaction';
         if(deleteBtn) {
-            deleteBtn.classList.add('hidden'); // Hide delete button
+            deleteBtn.classList.add('hidden'); 
             deleteBtn.dataset.transactionId = '';
         }
 
@@ -178,19 +195,21 @@ export function showTransactionModal(appState, transactionToEdit = null) {
             form.reset();
             form.elements.txnId.value = '';
             form.elements.categoryId.value = 'cat-uncategorized';
+            
             const expenseRadio = form.querySelector('input[name="type"][value="expense"]');
-            if (expenseRadio) expenseRadio.checked = true;
+            if (expenseRadio) {
+                expenseRadio.checked = true;
+                expenseRadio.dispatchEvent(new Event('change')); // Reset UI state
+            }
+
             setSelectedTags([]);
             setSelectedCategory('cat-uncategorized'); 
-            // NEW: Default to Today
             if (form.elements.date) {
                 form.elements.date.valueAsDate = new Date();
             }
         }
     }
-    // --- END OF MODIFIED PART ---
 
-    // --- (rest of function is unchanged) ---
     const manualViewEl = document.getElementById('manual-entry-view');
     const importViewEl = document.getElementById('import-view');
     const manualRadio = document.getElementById('modeManual');
@@ -235,7 +254,10 @@ export function renderTransactionStructure(transactions) {
         if (!acc[monthYearKey]) {
             acc[monthYearKey] = { monthName: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }), netTotal: 0 };
         }
-        acc[monthYearKey].netTotal += (t.type === 'income' ? t.amount : -t.amount);
+        // Only count Income/Expense in the Month Net Total (transfers are neutral)
+        if (t.type === 'income') acc[monthYearKey].netTotal += t.amount;
+        else if (t.type === 'expense') acc[monthYearKey].netTotal -= t.amount;
+        
         return acc;
     }, {});
 
@@ -271,7 +293,6 @@ export function renderTransactionStructure(transactions) {
 }
 
 // --- Populates the transaction data asynchronously ---
-// *** This is the function that had the first error ***
 export function loadTransactionData(transactions, accounts, categories = [], tags = []) {
     const allGroupElements = document.querySelectorAll('#transactionList .transaction-group');
     if (allGroupElements.length === 0 || transactions.length === 0) return;
@@ -290,7 +311,11 @@ export function loadTransactionData(transactions, accounts, categories = [], tag
                 transactions: []
              };
         }
-        acc[monthYearKey][dayKey].dayNetTotal += (t.type === 'income' ? t.amount : -t.amount);
+        
+        // Calculate Daily Net (Exclude transfers from daily "spend" summary)
+        if (t.type === 'income') acc[monthYearKey][dayKey].dayNetTotal += t.amount;
+        else if (t.type === 'expense') acc[monthYearKey][dayKey].dayNetTotal -= t.amount;
+        
         acc[monthYearKey][dayKey].transactions.push(t);
         return acc;
     }, {});
@@ -316,29 +341,46 @@ export function loadTransactionData(transactions, accounts, categories = [], tag
 
             // Build transaction cards HTML for this day
             const transactionCardsHtml = dayGroup.transactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sort transactions within the day
+                .sort((a, b) => new Date(b.date) - new Date(a.date)) 
                 .map(t => {
-                    // Find account (handle 'cash' properly)
                     const account = t.accountId === 'cash' ? { name: 'Cash', type: 'Cash' } : accounts.find(a => a.id === t.accountId);
-                    
-                    // Find category (use Uncategorized as fallback)
                     const category = categories.find(c => c.id === t.categoryId) || categories.find(c => c.id === 'cat-uncategorized');
                     const categoryName = category?.name || 'Uncategorized';
-                    const iconId = category?.iconId || '#icon-default'; // Use category's iconId or default
+                    
+                    // --- NEW LOGIC FOR DISPLAYING TRANSFER ---
+                    let iconId = category?.iconId || '#icon-default';
+                    let amountFormatted = '';
+                    let amountColor = '';
+                    let displayDescription = t.description;
+                    let displaySubtext = categoryName;
 
-                    const isPositive = t.type === 'income';
-                    const amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
-                    const amountColor = isPositive ? 'text-positive-value' : 'text-negative-value';
+                    if (t.type === 'transfer') {
+                        iconId = '#icon-bills'; // Or a specific transfer icon if you add one
+                        amountFormatted = `₹${t.amount.toLocaleString('en-IN')}`; // Neutral format
+                        amountColor = 'text-text-primary'; // Neutral White
+                        
+                        // Smart Description: "Transfer to [Target Name]"
+                        if (t.toAccountId) {
+                            const toAccount = accounts.find(a => a.id === t.toAccountId);
+                            const targetName = toAccount ? toAccount.name : 'Unknown Account';
+                            displayDescription = `Transfer to ${targetName}`;
+                            displaySubtext = 'Self Transfer';
+                        } else {
+                            displaySubtext = 'Transfer';
+                        }
+                    } else {
+                        const isPositive = t.type === 'income';
+                        amountFormatted = `${isPositive ? '+' : '-'}₹${t.amount.toLocaleString('en-IN')}`;
+                        amountColor = isPositive ? 'text-positive-value' : 'text-negative-value';
+                    }
 
                     // Generate tag color dots
                     const tagColorsHtml = (t.tagIds || [])
                         .map(tagId => tags.find(tag => tag.id === tagId)?.color)
-                        .filter(Boolean) // Ensure color exists
-                        // Use smaller dots for a cleaner look
+                        .filter(Boolean)
                         .map(color => `<span class="inline-block w-1.5 h-1.5 rounded-full" style="background-color: ${color}"></span>`) 
                         .join('');
 
-                    // --- NEW CARD HTML STRUCTURE ---
                     return `
                         <a href="#" class="transaction-card group" data-transaction-id="${t.id}">
                          
@@ -349,9 +391,9 @@ export function loadTransactionData(transactions, accounts, categories = [], tag
                             </div>
                             
                             <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-text-primary text-sm truncate">${t.description}</p>
+                                <p class="font-semibold text-text-primary text-sm truncate">${displayDescription}</p>
                                 <div class="flex items-center gap-1.5 mt-1 text-xs text-text-secondary">
-                                    <span>${categoryName}</span>
+                                    <span>${displaySubtext}</span>
                                    
                                     ${tagColorsHtml ? `
                                         <div class="flex gap-1 items-center ml-1">
@@ -386,7 +428,6 @@ export function loadTransactionData(transactions, accounts, categories = [], tag
                 </div>`;
         });
 
-        // Inject the generated day columns HTML into the list container
         if(listContainer) listContainer.innerHTML = dayColumnsHtml;
     });
 }
