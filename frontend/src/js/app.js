@@ -989,10 +989,20 @@ const App = {
             }
         }
 
-        // 3. Parse Date (Force Local Time)
-        const rawDate = formData.get('date'); // "2025-11-02"
-        // Append T00:00:00 to force local time interpretation instead of UTC
-        const dateISO = rawDate ? new Date(rawDate + 'T00:00:00').toISOString() : new Date().toISOString();
+        // 3. FIX: Parse Date to ensure it stays on the selected day regardless of timezone.
+        const rawDate = formData.get('date');
+        let dateISO;
+
+        if (rawDate) {
+            const parts = rawDate.split('-').map(Number);
+            // Construct the date using Date.UTC(year, monthIndex, day)
+            // Month index is 0-based, so subtract 1 from the month part.
+            const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+            dateISO = date.toISOString();
+        } else {
+            // If no date is set, use the current UTC time
+            dateISO = new Date().toISOString();
+        }
 
         if (transactionId) {
             // --- EDIT MODE ---
