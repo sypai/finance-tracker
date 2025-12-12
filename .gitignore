@@ -416,4 +416,8 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+.vscode
+
+.env
+
 # End of https://www.toptal.com/developers/gitignore/api/vs,go,macos
