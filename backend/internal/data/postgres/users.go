@@ -23,7 +23,7 @@ func (r *UserRepository) CreateMagicLink(ctx context.Context, email string) (str
 	// We use RETURNING id to get the UUID for the token table
 	var userID string
 	query := `
-		INSERT INTO users (email, created_at, updated_at) 
+		INSERT INTO artha.users (email, created_at, updated_at) 
 		VALUES ($1, NOW(), NOW()) 
 		ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
 		RETURNING id`
@@ -47,7 +47,7 @@ func (r *UserRepository) CreateMagicLink(ctx context.Context, email string) (str
 
 	// 4. Store in verification_tokens table (expires in 15 mins)
 	tokenQuery := `
-		INSERT INTO verification_tokens (token_hash, user_id, expiry) 
+		INSERT INTO artha.verification_tokens (token_hash, user_id, expiry) 
 		VALUES ($1, $2, $3)`
 
 	_, err = r.DB.SQL.ExecContext(ctx, tokenQuery, hash[:], userID, time.Now().Add(15*time.Minute))
