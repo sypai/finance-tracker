@@ -187,7 +187,10 @@
         </script>
     </div>
     
-    <script>
+    <script type="module">
+
+        import { API_BASE_URL } from './src/js/utils/api.js';
+
         const overlay = document.getElementById('page-transition-overlay');
 
         // --- Fade OUT on Page Load ---
@@ -269,21 +272,47 @@
 
         const changeEmailLink = document.getElementById('changeEmailLink'); // Get the link
     
-        emailForm.addEventListener('submit', (e) => {
+        emailForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = emailInput.value;
+                
             if (email) {
-                userEmailDisplay.textContent = email;
-                formContent.style.transition = 'opacity 0.3s ease-out, display 0s linear 0.3s'; // Delay display none
-                formContent.style.opacity = '0';
-                formContent.style.display = 'none'; // Will apply after transition
-    
-                confirmationMessage.style.display = 'block';
-                confirmationMessage.style.opacity = '0'; // Start transparent
-                requestAnimationFrame(() => { // Ensure display block is applied before starting opacity transition
-                    confirmationMessage.style.transition = 'opacity 0.5s ease-in-out 0.3s'; // Delay fade in
-                    confirmationMessage.style.opacity = '1';
-                });
+                try {
+                    // const submitBtn = emailForm.querySelector('button[type="submit"]');
+                    // submitBtn.disabled = true;
+                    // submitBtn.textContent = 'Sending...';
+                    // --- NEW: Backend Network Call ---
+                    const response = await fetch(`${API_BASE_URL}/api/v1/auth/magic-link`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: email })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to send magic link');
+                    }
+
+                    // --- Existing Visual Transition Logic ---
+                    userEmailDisplay.textContent = email;
+                    formContent.style.transition = 'opacity 0.3s ease-out';
+                    formContent.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        formContent.style.display = 'none';
+                        confirmationMessage.style.display = 'block';
+                        requestAnimationFrame(() => {
+                            confirmationMessage.style.transition = 'opacity 0.5s ease-in-out';
+                            confirmationMessage.style.opacity = '1';
+                        });
+                    }, 300);
+
+                } catch (error) {
+                    console.error("Signup error:", error);
+                    alert(error.message || "An error occurred. Please try again.");
+                }
             }
         });
     

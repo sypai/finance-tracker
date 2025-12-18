@@ -36,10 +36,13 @@ func main() {
 	}
 	defer db.Close()
 
+	// In main.go after db is initialized:
+	userRepo := postgres.NewUserRepository(db)
+
 	log.Println("Database connection established")
 
 	// 3. Initialize and Start Server
-	srv := server.NewServer(db, cfg)
+	srv := server.NewServer(db, cfg, userRepo)
 
 	log.Printf("Starting server on port %d...", cfg.Port)
 

@@ -15,7 +15,7 @@ import (
 )
 
 // NewServer sets up the router and returns the configured http.Server.
-func NewServer(db *postgres.DB, cfg *config.Config) *http.Server {
+func NewServer(db *postgres.ArthaDB, cfg *config.Config, userRepo *postgres.UserRepository) *http.Server {
 
 	// --- 1. Initialize Handlers ---
 	syncHandler := handlers.NewSyncHandler(db)
@@ -27,6 +27,12 @@ func NewServer(db *postgres.DB, cfg *config.Config) *http.Server {
 
 	// Health Check Route (Public)
 	mux.HandleFunc("GET /health", middleware.HealthCheck)
+
+	// Inside NewServer func
+	authHandler := handlers.AuthHandler{UserRepo: userRepo}
+
+	// Register the route
+	mux.HandleFunc("POST /api/v1/auth/magic-link", authHandler.HandleMagicLinkRequest)
 
 	// Example Protected Route
 	authenticatedSyncHandler := middleware.Authenticate(syncHandler)

@@ -10,11 +10,11 @@ import (
 )
 
 // DB wraps a *sql.DB and provides methods for data access
-type DB struct {
+type ArthaDB struct {
 	SQL *sql.DB
 }
 
-func NewDB(dsn string) (*DB, error) {
+func NewDB(dsn string) (*ArthaDB, error) {
 	sqlDB, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database connection: %w", err)
@@ -31,9 +31,9 @@ func NewDB(dsn string) (*DB, error) {
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetMaxIdleConns(25)
 
-	return &DB{SQL: sqlDB}, nil
+	return &ArthaDB{SQL: sqlDB}, nil
 }
 
-func (db *DB) Close() error {
+func (db *ArthaDB) Close() error {
 	return db.SQL.Close()
 }

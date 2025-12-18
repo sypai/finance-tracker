@@ -9,11 +9,11 @@ import (
 
 // SyncHandler holds the DB connection pool.
 type SyncHandler struct {
-	DB *postgres.DB
+	DB *postgres.ArthaDB
 }
 
 // NewSyncHandler creates a new handler instance.
-func NewSyncHandler(db *postgres.DB) *SyncHandler {
+func NewSyncHandler(db *postgres.ArthaDB) *SyncHandler {
 	return &SyncHandler{DB: db}
 }
 
