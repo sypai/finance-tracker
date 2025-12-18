@@ -46,31 +46,68 @@ function saveAppState() {
 
 const App = {
     async init() {
-        console.log("App.init started..."); // <--- Check this
+        console.log("App.init started...");
+        
+        // 1. --- MAGIC LINK HANDSHAKE ---
+        // Check if the URL has a token (e.g., dashboard.html?token=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlToken = urlParams.get('token');
+    
+        if (urlToken) {
+            // Save the new session token
+            localStorage.setItem('artha_jwt', urlToken);
+            // Clean the URL so the token doesn't stay in the address bar
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    
+        // 2. --- SESSION CHECK ---
+        const jwt = localStorage.getItem('artha_jwt');
+        if (!jwt) {
+            // If no token exists, redirect to sign-in page
+            window.location.href = 'signin.html';
+            return;
+        }
+    
+        // 3. --- ONBOARDING BRIDGE ---
+        try {
+            // We call the backend to get the current user details
+            const user = await api.getMe(); 
+    
+            // If first_name is missing, the user hasn't finished onboarding
+            if (!user.first_name || user.first_name.trim() === "") {
+                window.location.href = 'welcome.html';
+                return;
+            }
+        } catch (err) {
+            console.error("Auth verification failed:", err);
+            // If the token is invalid or expired, clear it and go to signin
+            localStorage.removeItem('artha_jwt');
+            window.location.href = 'signin.html';
+            return;
+        }
+    
+        // 4. --- APP INITIALIZATION (Existing Logic) ---
         initUI();
-
-        // --- NEW: Backend Connection Check ---
+    
         const isBackendLive = await checkBackendHealth();
         this.updateConnectionStatus(isBackendLive);
-        // -------------------------------------
-
+    
         initTagInput(); 
         initCategorySelect();
         
-        console.log("Binding events..."); // <--- Check this
+        console.log("Binding events...");
         this.bindEvents();
         this.bindPortfolioModalEvents(); 
         this.bindAccountModalEvents(); 
         this.bindSettingsModalEvents();
-
-        // Set initial active tabs
+    
         this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
         this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
         this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
-
+    
         this.render(); 
         this.handleTabSwitch('dashboard'); 
-
+    
         const initialActiveItem = document.querySelector('.sidebar-item.active');
         this.moveSidebarIndicator(initialActiveItem);
         

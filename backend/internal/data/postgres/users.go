@@ -56,3 +56,24 @@ func (r *UserRepository) CreateMagicLink(ctx context.Context, email string) (str
 
 	return plainToken, err
 }
+
+func (r *UserRepository) GetByToken(ctx context.Context, plainToken string) (string, error) {
+	// 1. Hash the provided plain token to match what's in the DB
+	hash := sha256.Sum256([]byte(plainToken))
+
+	var userID string
+	// 2. Find the token and ensure it hasn't expired
+	query := `
+		SELECT user_id FROM artha.verification_tokens 
+		WHERE token_hash = $1 AND expiry > NOW()`
+
+	err := r.DB.SQL.QueryRowContext(ctx, query, hash[:]).Scan(&userID)
+	if err != nil {
+		return "", err // Token not found or expired
+	}
+
+	// 3. Delete the token so it can't be used again (Single Use)
+	_, _ = r.DB.SQL.ExecContext(ctx, "DELETE FROM artha.verification_tokens WHERE token_hash = $1", hash[:])
+
+	return userID, nil
+}

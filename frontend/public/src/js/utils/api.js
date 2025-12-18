@@ -20,3 +20,25 @@ export async function checkBackendHealth() {
         return false;
     }
 }
+
+export async function getMe() {
+    const token = localStorage.getItem('artha_jwt');
+    if (!token) throw new Error("No session found");
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            localStorage.removeItem('artha_jwt');
+        }
+        throw new Error("Failed to fetch user profile");
+    }
+
+    return await response.json();
+}

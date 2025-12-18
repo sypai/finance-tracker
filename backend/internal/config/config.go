@@ -27,10 +27,10 @@ func Load() (*Config, error) {
 	if cfg.DSN == "" {
 		return nil, errors.New("DATABASE_URL environment variable is not set")
 	}
-	// // ENABLE JWT_SECRET CHECK
-	// if cfg.JWTSecret == "" {
-	// 	return nil, errors.New("JWT_SECRET environment variable is not set")
-	// }
+	// ENABLE JWT_SECRET CHECK
+	if cfg.JWTSecret == "" {
+		return nil, errors.New("JWT_SECRET environment variable is not set")
+	}
 
 	// 2. Robust PORT parsing for hosting services (like Render)
 	if p := os.Getenv("PORT"); p != "" {

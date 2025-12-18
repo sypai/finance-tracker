@@ -1,15 +1,20 @@
 package handlers
 
 import (
+	"artha_backend/internal/config"
 	"artha_backend/internal/data"
 	"artha_backend/internal/data/postgres"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
 	UserRepo *postgres.UserRepository
+	Cfg      *config.Config
 }
 
 func (h *AuthHandler) HandleMagicLinkRequest(w http.ResponseWriter, r *http.Request) {
@@ -33,4 +38,72 @@ func (h *AuthHandler) HandleMagicLinkRequest(w http.ResponseWriter, r *http.Requ
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(map[string]string{"message": "If you have an account, a link has been sent."})
+}
+
+func (h *AuthHandler) HandleVerify(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Token is required", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Check token in DB via the Repo
+	userID, err := h.UserRepo.GetByToken(r.Context(), token)
+	if err != nil {
+		log.Printf("Verification failed: %v", err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+
+	// 2. Generate a long-lived JWT session
+	sessionToken, err := h.GenerateToken(userID)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Redirect back to your Frontend with the token
+	// This allows the frontend to grab the token from the URL and save it
+	frontendURL := "https://finance-tracker-one-umber.vercel.app/dashboard.html?token=" + sessionToken
+
+	// For local testing, you'd use:
+	// frontendURL := "http://localhost:3000/verify-success.html?token=" + sessionToken
+
+	http.Redirect(w, r, frontendURL, http.StatusSeeOther)
+}
+
+func (h *AuthHandler) HandleGetMe(w http.ResponseWriter, r *http.Request) {
+	// Get userID from the context (set by your Auth Middleware)
+	userID := r.Context().Value("userID").(string)
+
+	var user struct {
+		ID        string `json:"id"`
+		Email     string `json:"email"`
+		FirstName string `json:"first_name"`
+	}
+
+	// Query your users table
+	err := h.UserRepo.DB.SQL.QueryRowContext(r.Context(),
+		"SELECT id, email, first_name FROM artha.users WHERE id = $1", userID).Scan(&user.ID, &user.Email, &user.FirstName)
+
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+}
+
+func (h *AuthHandler) GenerateToken(userID string) (string, error) {
+	// Create the claims
+	claims := jwt.MapClaims{
+		"sub": userID,                                    // Subject (User ID)
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(), // Expires in 7 days
+		"iat": time.Now().Unix(),                         // Issued at
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Use the secret from your config
+	return token.SignedString([]byte(h.Cfg.JWTSecret))
 }

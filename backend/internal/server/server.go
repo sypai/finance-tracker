@@ -18,7 +18,7 @@ import (
 func NewServer(db *postgres.ArthaDB, cfg *config.Config, userRepo *postgres.UserRepository) *http.Server {
 
 	// --- 1. Initialize Handlers ---
-	syncHandler := handlers.NewSyncHandler(db)
+	// syncHandler := handlers.NewSyncHandler(db)
 
 	// --- 2. Create the Router using http.NewServeMux() ---
 	mux := http.NewServeMux()
@@ -34,9 +34,15 @@ func NewServer(db *postgres.ArthaDB, cfg *config.Config, userRepo *postgres.User
 	// Register the route
 	mux.HandleFunc("POST /api/v1/auth/magic-link", authHandler.HandleMagicLinkRequest)
 
-	// Example Protected Route
-	authenticatedSyncHandler := middleware.Authenticate(syncHandler)
-	mux.Handle("POST /api/v1/sync", authenticatedSyncHandler)
+	// Add this next to your signup route
+	mux.HandleFunc("GET /api/v1/auth/verify", authHandler.HandleVerify)
+
+	// // Example Protected Route
+	// authenticatedSyncHandler := middleware.Authenticate(syncHandler)
+
+	// Register the route with middleware
+	mux.Handle("GET /api/v1/users/me", middleware.Authenticate(http.HandlerFunc(authHandler.HandleGetMe), cfg))
+	// mux.Handle("POST /api/v1/sync", authenticatedSyncHandler)
 
 	// --- 4. Chain the Middlewares ---
 	// The order matters: from outermost (first called) to innermost (last called before handler)

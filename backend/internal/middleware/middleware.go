@@ -3,9 +3,15 @@
 package middleware
 
 import (
+	"artha_backend/internal/config"
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // Logger logs the request method, URL, and duration.
@@ -35,11 +41,41 @@ func EnableCORS(next http.Handler) http.Handler {
 	})
 }
 
-// Authenticate is a placeholder for the future JWT verification middleware.
-func Authenticate(next http.Handler) http.Handler {
+// Authenticate validates the JWT and injects the userID into the context
+func Authenticate(next http.Handler, cfg *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// For now, allow all requests to pass.
-		next.ServeHTTP(w, r)
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			http.Error(w, "Unauthorized: Missing token", http.StatusUnauthorized)
+			return
+		}
+
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+		// Parse and validate the token
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(cfg.JWTSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "Unauthorized: Invalid claims", http.StatusUnauthorized)
+			return
+		}
+
+		// Inject userID into the request context
+		userID := claims["sub"].(string)
+		ctx := context.WithValue(r.Context(), "userID", userID)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
