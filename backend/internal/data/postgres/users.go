@@ -23,7 +23,7 @@ func (r *UserRepository) CreateMagicLink(ctx context.Context, email string) (str
 	// We use RETURNING id to get the UUID for the token table
 	var userID string
 	query := `
-		INSERT INTO users (email, created_at, updated_at) 
+		INSERT INTO artha.users (email, created_at, updated_at) 
 		VALUES ($1, NOW(), NOW()) 
 		ON CONFLICT (email) DO UPDATE SET 
             last_login_at = NOW(),
