@@ -574,9 +574,9 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* --- Modal View Switching Animation (ULTRA-SIMPLIFIED) --- */
 #modal-view-container {
-    position: relative; /* Establishes positioning context */
-    min-height: 450px;
-    overflow: visible; /* Allow content to be visible */
+    position: relative;
+    min-height: 520px; /* Increased from 450px to accommodate Date field */
+    overflow: visible; /* (This is overridden by the HTML class, but good fallback) */
 }
 
 /* --- ADD THIS NEW RULE --- */
@@ -726,6 +726,10 @@ input[type=number] { -moz-appearance: textfield; }
      visibility: visible;
 }
 
+.segmented-control input#typeTransfer:checked + label { 
+    color: #E3E3E3 !important; /* White text */
+    background-color: var(--primary-accent); /* Blue background */
+}
 /* src/styles/_animations.css */
 
 /* --- Keyframes --- */
@@ -810,7 +814,16 @@ input[type=number] { -moz-appearance: textfield; }
         padding-bottom: 5rem;
     }
     .sidebar {
-        transform: translateX(-100%);
+        /* FIX 1: Override base anchor and attach to the right edge */
+        left: auto; /* Remove explicit left anchor */
+        right: 0;
+        
+        /* FIX 2: Push sidebar off-screen to the right (was -100%) */
+        transform: translateX(100%);
+    }
+    .sidebar.active {
+        /* FIX 3: Bring sidebar back to screen (slides left into view) */
+        transform: translateX(0);
     }
     .content {
         margin-left: 0;
@@ -1458,6 +1471,7 @@ input[type=number] { -moz-appearance: textfield; }
 #new-category-icon-picker button.selected svg {
     color: #FFFFFF;
 }
+
 /* --- Holdings View --- */
 .accent-primary { border-left-color: var(--primary-accent); }
 .accent-secondary { border-left-color: var(--secondary-accent); }
@@ -1984,12 +1998,6 @@ fieldset legend {
     background-color: var(--card-hover-bg);
 }
 
-.portfolio-accordion-header .chevron-icon {
-    position: absolute; right: 0.75rem; top: 50%;
-    transform: translateY(-50%) rotate(0deg);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    color: var(--text-secondary);
-}
 
 /* 3. The Inset Stream Container (Clones .transaction-group-list) */
 .portfolio-holdings-list {
@@ -2188,6 +2196,15 @@ fieldset legend {
 .kpi-card:hover {
     transform: none; /* Disable the lift */
     box-shadow: none; /* Disable the shadow */
+}
+
+/* REPLACE the old .chevron-icon rule with this one: */
+
+.portfolio-accordion-header .chevron-icon {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-secondary);
 }
 
 /* src/styles/_accounts.css */
@@ -2429,6 +2446,208 @@ fieldset legend {
     letter-spacing: 0.025em; /* Add a slight letter-spacing for clarity */
 }
 
+/* src/styles/_settings.css */
+
+/* 1. Modal Sizing */
+#settingsModal .modal-content {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    max-width: 56rem; /* max-w-5xl */
+    width: 90vw;
+    min-height: 70vh;
+    max-height: 90vh; /* Add a max-height */
+    transform: none !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Layout (Mobile-First) */
+.settings-layout {
+    display: flex;
+    flex-direction: column; /* Stack nav on top of content */
+    flex-grow: 1; /* Allow layout to fill modal height */
+    min-height: 0; /* Fix flexbox overflow */
+}
+
+/* 3. Navigation (Mobile: Horizontal Scroll) */
+.settings-nav {
+    position: relative;
+    display: flex;
+    flex-direction: row; /* Horizontal */
+    gap: 0.25rem; /* gap-1 */
+    padding: 0.75rem; /* p-3 */
+    border-bottom: 1px solid var(--card-border);
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+/* Hide scrollbar */
+.settings-nav {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+.settings-nav::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
 
 
+.settings-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* gap-3 */
+    padding: 0.75rem 1rem; /* p-3 p-4 */
+    border-radius: var(--radius-md);
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+.settings-nav-btn:hover {
+    color: var(--text-primary);
+}
+.settings-nav-btn.active {
+    color: var(--text-primary);
+    font-weight: 600;
+    background-color: var(--card-hover-bg); /* Use pill for mobile */
+}
+.settings-nav-btn.active svg {
+    color: var(--primary-accent);
+}
+.settings-nav-btn svg {
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+.settings-nav-btn:hover svg {
+    color: var(--text-primary);
+}
+
+/* Hide vertical pill indicator on mobile */
+.settings-nav-indicator {
+    display: none; 
+}
+
+
+/* 4. Content Area (Mobile-First) */
+.settings-content-wrapper {
+    padding: 1.5rem; /* p-6 */
+    position: relative;
+    overflow-y: auto; /* Allow content to scroll */
+    flex-grow: 1;
+}
+
+.settings-content {
+    display: none;
+    animation: fadeIn 0.5s ease-out;
+}
+.settings-content.active {
+    display: block;
+}
+
+/* 5. New Component Styles (Profile & Security) */
+.settings-component-row {
+    display: flex;
+    flex-direction: column; /* Stack on mobile */
+    gap: 0.75rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--card-border);
+}
+.settings-component-row:last-of-type {
+    border-bottom: none;
+}
+
+/* "Elite" Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: not-allowed; /* We set to disabled */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--background); /* Off color */
+    border: 1px solid var(--card-border);
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--text-secondary);
+    transition: .4s;
+    border-radius: 50%;
+}
+.toggle-switch input:checked + .slider {
+    background-color: var(--primary-accent);
+}
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(22px);
+    background-color: white;
+}
+
+
+/* 6. Desktop Layout (lg: 1024px) */
+@media (min-width: 1024px) {
+    .settings-layout {
+        display: grid;
+        flex-direction: row; /* Reset */
+        grid-template-columns: 1fr 3fr; /* 25% / 75% split */
+    }
+
+    .settings-nav {
+        flex-direction: column; /* Vertical */
+        border-bottom: none;
+        border-right: 1px solid var(--card-border);
+        padding: 1.5rem 1rem; /* p-6 py-4 */
+        overflow-x: hidden; /* Hide horizontal scroll */
+    }
+
+    .settings-nav-btn {
+        flex-shrink: 1; /* Allow buttons to fill width */
+    }
+    
+    .settings-nav-btn.active {
+        background-color: transparent; /* No pill on desktop */
+    }
+    
+    /* Show vertical pill indicator on desktop */
+    .settings-nav-indicator {
+        display: block; 
+        position: absolute;
+        left: 1rem;
+        width: calc(100% - 2rem);
+        height: 44px; /* Height of one button */
+        background-color: var(--card-hover-bg);
+        border-radius: var(--radius-md);
+        transition: transform var(--transition-medium);
+        z-index: 0;
+    }
+
+    .settings-content-wrapper {
+        padding: 2rem; /* p-8 */
+    }
+
+    .settings-component-row {
+        flex-direction: row; /* Side-by-side */
+        justify-content: space-between;
+        align-items: center;
+    }
+}
 
