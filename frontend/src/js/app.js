@@ -1,5 +1,6 @@
 // src/js/app.js
 import { appState, addTransactionToState } from './utils/state.js';
+import { checkBackendHealth } from './utils/api.js';
 
 import { createCharts } from './components/charts.js';
 import { parseCSV } from './components/csvParser.js';
@@ -44,9 +45,15 @@ function saveAppState() {
 // --- END PERSISTENCE UTILITY ---
 
 const App = {
-    init() {
+    async init() {
         console.log("App.init started..."); // <--- Check this
         initUI();
+
+        // --- NEW: Backend Connection Check ---
+        const isBackendLive = await checkBackendHealth();
+        this.updateConnectionStatus(isBackendLive);
+        // -------------------------------------
+
         initTagInput(); 
         initCategorySelect();
         
@@ -69,6 +76,16 @@ const App = {
         
         updateDateTime(); 
         setInterval(updateDateTime, 1000 * 60);
+    },
+
+    updateConnectionStatus(isLive) {
+        // You can add a small dot or text in your header to show status
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+            statusEl.textContent = isLive ? '● Connected' : '○ Offline';
+            statusEl.style.color = isLive ? '#10b981' : '#ef4444'; // Green vs Red
+        }
+        console.log(isLive ? "Backend is reachable" : "Backend is unreachable");
     },
 
     render() {
