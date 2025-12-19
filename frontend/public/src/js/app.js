@@ -67,9 +67,9 @@ const App = {
         try {
             const user = await getMe();
 
-            // A. NEW USER: Redirect immediately
-            // The curtain is still DOWN, so they see nothing but the spinner.
+                // A. NEW USER (Fallback safety)
             if (!user.first_name) {
+                // DO NOT LIFT CURTAIN. Just go.
                 window.location.href = 'welcome.html';
                 return; 
             }
@@ -106,19 +106,18 @@ const App = {
             updateDateTime(); 
             setInterval(updateDateTime, 1000 * 60);
 
+            // --- ONLY LIFT CURTAIN HERE (SUCCESS ONLY) ---
+            const curtain = document.getElementById('auth-loading-curtain');
+            if (curtain) {
+                curtain.style.opacity = '0'; // Fade out
+                setTimeout(() => curtain.remove(), 500); // Remove
+            }
+
         } catch (error) {
             console.error("Auth failed:", error);
             localStorage.removeItem('artha_jwt');
             window.location.href = 'signin.html';
-        } finally {
-            // --- THIS RUNS NO MATTER WHAT ---
-            // Even if 'render()' crashes, we lift the curtain so you can debug.
-            const curtain = document.getElementById('auth-loading-curtain');
-            if (curtain) {
-                curtain.style.opacity = '0';
-                setTimeout(() => curtain.remove(), 500);
-            }
-        }
+        } 
     },
 
     updateConnectionStatus(isLive) {
