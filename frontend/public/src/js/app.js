@@ -1,6 +1,6 @@
 // src/js/app.js
 import { appState, addTransactionToState } from './utils/state.js';
-import { checkBackendHealth } from './utils/api.js';
+import { checkBackendHealth, getMe } from './utils/api.js';
 
 import { createCharts } from './components/charts.js';
 import { parseCSV } from './components/csvParser.js';
