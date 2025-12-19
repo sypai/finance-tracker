@@ -78,13 +78,33 @@ const App = {
             console.log("User verified:", user.email);
             
             // Initialize your UI components
+            // 4. --- APP INITIALIZATION (Existing Logic) ---
             initUI();
+        
+            const isBackendLive = await checkBackendHealth();
+            this.updateConnectionStatus(isBackendLive);
+        
             initTagInput(); 
             initCategorySelect();
-            this.bindEvents();
-            // ... binding other events ...
             
-            this.render(); // Load the charts
+            console.log("Binding events...");
+            this.bindEvents();
+            this.bindPortfolioModalEvents(); 
+            this.bindAccountModalEvents(); 
+            this.bindSettingsModalEvents();
+        
+            this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
+            this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
+            this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
+        
+            this.render(); 
+            this.handleTabSwitch('dashboard'); 
+        
+            const initialActiveItem = document.querySelector('.sidebar-item.active');
+            this.moveSidebarIndicator(initialActiveItem);
+            
+            updateDateTime(); 
+            setInterval(updateDateTime, 1000 * 60);
 
             // --- LIFT THE CURTAIN ---
             const curtain = document.getElementById('auth-loading-curtain');
@@ -100,34 +120,6 @@ const App = {
             localStorage.removeItem('artha_jwt');
             window.location.href = 'signin.html';
         }
-    
-        // 4. --- APP INITIALIZATION (Existing Logic) ---
-        initUI();
-    
-        const isBackendLive = await checkBackendHealth();
-        this.updateConnectionStatus(isBackendLive);
-    
-        initTagInput(); 
-        initCategorySelect();
-        
-        console.log("Binding events...");
-        this.bindEvents();
-        this.bindPortfolioModalEvents(); 
-        this.bindAccountModalEvents(); 
-        this.bindSettingsModalEvents();
-    
-        this.updateTimelineUI('expenseTimelineTabs', appState.activeExpensePeriod);
-        this.updateTimelineUI('investment-timeline-tabs', appState.activeInvestmentPeriod);
-        this.updateTimelineUI('balanceHistoryTabs', appState.activeBalancePeriod);
-    
-        this.render(); 
-        this.handleTabSwitch('dashboard'); 
-    
-        const initialActiveItem = document.querySelector('.sidebar-item.active');
-        this.moveSidebarIndicator(initialActiveItem);
-        
-        updateDateTime(); 
-        setInterval(updateDateTime, 1000 * 60);
     },
 
     updateConnectionStatus(isLive) {
