@@ -42,6 +42,8 @@ func NewServer(db *postgres.ArthaDB, cfg *config.Config, userRepo *postgres.User
 
 	// Register the route with middleware
 	mux.Handle("GET /api/v1/users/me", middleware.Authenticate(http.HandlerFunc(authHandler.HandleGetMe), cfg))
+	// Add this alongside your GetMe route
+	mux.Handle("PUT /api/v1/users/profile", middleware.Authenticate(http.HandlerFunc(authHandler.HandleUpdateProfile), cfg))
 	// mux.Handle("POST /api/v1/sync", authenticatedSyncHandler)
 
 	// --- 4. Chain the Middlewares ---

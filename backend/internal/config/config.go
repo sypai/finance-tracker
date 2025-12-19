@@ -10,9 +10,10 @@ import (
 
 // Config holds all application configuration settings.
 type Config struct {
-	Port      int    // Server port (e.g., 4000)
-	DSN       string // Database Source Name (DSN)
-	JWTSecret string // JWT signing key
+	Port       int    // Server port (e.g., 4000)
+	DSN        string // Database Source Name (DSN)
+	JWTSecret  string // JWT signing key
+	BackendURL string
 }
 
 // Load loads configuration from environment variables.
@@ -22,6 +23,13 @@ func Load() (*Config, error) {
 		JWTSecret: os.Getenv("JWT_SECRET"),
 		Port:      4000, // Default port for local/dev
 	}
+
+	// Default to localhost if not set (for local dev)
+	backendURL := os.Getenv("BACKEND_URL")
+	if backendURL == "" {
+		backendURL = "http://localhost:4000"
+	}
+	cfg.BackendURL = backendURL
 
 	// 1. Check for REQUIRED variables
 	if cfg.DSN == "" {

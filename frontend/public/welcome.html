@@ -157,11 +157,13 @@
         </div>
     </div>
 
-    <script>
-        // Starfield Script
+    <script type="module">
+        import { API_BASE_URL } from './src/js/utils/api.js';
+    
+        // --- Starfield Script (Preserved) ---
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         if (cosmicCanvas) {
-             cosmicCanvas.innerHTML = '';
+                cosmicCanvas.innerHTML = '';
             for (let i = 0; i < 300; i++) { 
                 const star = document.createElement('div');
                 star.className = 'absolute rounded-full bg-text-secondary';
@@ -173,8 +175,8 @@
                 cosmicCanvas.appendChild(star);
             }
         }
-
-        // --- Particle Burst Function ---
+    
+        // --- Particle Burst Function (Preserved) ---
         function burstParticles(x, y) {
             for (let i = 0; i < 8; i++) {
                 const p = document.createElement('div');
@@ -187,25 +189,25 @@
                 p.style.transform = 'translate(-50%, -50%)';
                 p.style.opacity = '0.9';
                 document.body.appendChild(p);
-
+    
                 const angle = Math.random() * Math.PI * 2;
                 const distance = Math.random() * 60 + 40;
                 const dx = Math.cos(angle) * distance;
                 const dy = Math.sin(angle) * distance;
-
+    
                 p.animate([
-                  { transform: `translate(-50%, -50%) scale(1)`, opacity: 1 },
-                  { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+                    { transform: `translate(-50%, -50%) scale(1)`, opacity: 1 },
+                    { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
                 ], {
-                  duration: 600 + Math.random() * 200,
-                  easing: 'ease-out'
+                    duration: 600 + Math.random() * 200,
+                    easing: 'ease-out'
                 });
-
+    
                 setTimeout(() => p.remove(), 800);
             }
         }
-
-        // --- Get Elements ---
+    
+        // --- Logic Implementation ---
         const mainLogo = document.getElementById('main-logo');
         const initialContentContainer = document.getElementById('initial-content-container');
         const finalConfirmationContainer = document.getElementById('final-confirmation-container');
@@ -218,66 +220,111 @@
         const buttonIcon = submitButton.querySelector('.button-icon');
         
         let isSubmitting = false;
-
-        // --- Add Pulse After Fade-In ---
+    
+        // Pulse animation trigger
         setTimeout(() => {
             if(mainLogo) mainLogo.classList.add('logo-pulse');
-        }, 1300); // 1s duration + 0.3s delay
-
-        // --- Handle Input ---
+        }, 1300);
+    
+        // Input visibility handler
         nameInput.addEventListener('input', () => {
             const name = nameInput.value.trim();
             continueButtonWrapper.style.opacity = name ? '1' : '0';
         });
-
-        // --- Handle Form Submission ---
-        nameForm.addEventListener('submit', (e) => {
+    
+        // --- MAIN SUBMIT HANDLER ---
+        nameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (isSubmitting) return;
-            const userName = nameInput.value.trim();
-
-            if (userName) {
+    
+            const fullName = nameInput.value.trim();
+            const token = localStorage.getItem('artha_jwt');
+    
+            // Security Check: No token? Go to login.
+            if (!token) {
+                window.location.href = 'signin.html';
+                return;
+            }
+    
+            if (fullName) {
                 isSubmitting = true;
                 nameInput.disabled = true;
                 submitButton.disabled = true;
-
-                const rect = submitButton.getBoundingClientRect();
-                burstParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
-
-                initialContentContainer.style.opacity = '0';
-                initialContentContainer.style.pointerEvents = 'none';
-
-                buttonText.style.opacity = '0';
-                submitButton.classList.remove('bg-primary-accent', 'hover:bg-transparent', 'hover:text-primary-accent');
-                submitButton.classList.add('bg-positive-color', 'border-positive-color');
-
-                setTimeout(() => {
-                    buttonIcon.style.opacity = '1';
+                
+                // Visual feedback: Change text to loading
+                const originalText = buttonText.innerText;
+                buttonText.innerText = "Saving...";
+    
+                try {
+                    // 1. Split Name logic (First " " Last)
+                    const nameParts = fullName.split(' ');
+                    const firstName = nameParts[0];
+                    const lastName = nameParts.slice(1).join(' ') || ""; // Handle "Cher" (single name)
+    
+                    // 2. Call the API
+                    const response = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            first_name: firstName, 
+                            last_name: lastName 
+                        })
+                    });
+    
+                    if (!response.ok) throw new Error('Failed to update profile');
+    
+                    // --- 3. SUCCESS ANIMATION SEQUENCE (Existing Visuals) ---
                     
-                    // --- REFINED TEXT ---
-                    finalConfirmationTextLine1.textContent = `Welcome, ${userName}.`; 
-                    
-                    finalConfirmationContainer.style.opacity = '1';
-                    finalConfirmationContainer.style.pointerEvents = 'auto';
-
+                    // Burst particles on the button
+                    const rect = submitButton.getBoundingClientRect();
+                    burstParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    
+                    initialContentContainer.style.opacity = '0';
+                    initialContentContainer.style.pointerEvents = 'none';
+    
+                    buttonText.style.opacity = '0';
+                    submitButton.classList.remove('bg-primary-accent', 'hover:bg-transparent', 'hover:text-primary-accent');
+                    submitButton.classList.add('bg-positive-color', 'border-positive-color');
+    
                     setTimeout(() => {
-                         submitButton.style.transition = 'opacity 0.4s ease-out';
-                         submitButton.style.opacity = '0';
-                         submitButton.style.pointerEvents = 'none';
-                    }, 800);
-
-                }, 300);
-
-                // --- ADJUSTED TIMING ---
-                setTimeout(() => {
-                    document.body.style.transition = 'opacity 0.5s ease-out';
-                    document.body.style.opacity = '0';
-                }, 3000); // Wait 2.7s after checkmark/text appears (300ms + 2700ms)
-
-                setTimeout(() => {
-                   window.location.href = 'dashboard.html';
-                }, 3500); // 3000ms + 500ms fade
-
+                        buttonIcon.style.opacity = '1';
+                        
+                        finalConfirmationTextLine1.textContent = `Welcome, ${firstName}.`; 
+                        
+                        finalConfirmationContainer.style.opacity = '1';
+                        finalConfirmationContainer.style.pointerEvents = 'auto';
+    
+                        setTimeout(() => {
+                                submitButton.style.transition = 'opacity 0.4s ease-out';
+                                submitButton.style.opacity = '0';
+                                submitButton.style.pointerEvents = 'none';
+                        }, 800);
+    
+                    }, 300);
+    
+                    // Redirect to Dashboard
+                    setTimeout(() => {
+                        document.body.style.transition = 'opacity 0.5s ease-out';
+                        document.body.style.opacity = '0';
+                    }, 3000); 
+    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 3500);
+    
+                } catch (error) {
+                    console.error("Profile update failed:", error);
+                    alert("Something went wrong saving your profile. Please try again.");
+                    
+                    // Reset UI on error
+                    isSubmitting = false;
+                    nameInput.disabled = false;
+                    submitButton.disabled = false;
+                    buttonText.innerText = originalText;
+                }
             } else {
                 nameInput.focus();
             }

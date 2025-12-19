@@ -57,6 +57,16 @@ func (r *UserRepository) CreateMagicLink(ctx context.Context, email string) (str
 	return plainToken, err
 }
 
+func (r *UserRepository) UpdateName(ctx context.Context, userID, firstName, lastName string) error {
+	query := `
+		UPDATE artha.users 
+		SET first_name = $1, last_name = $2, updated_at = NOW() 
+		WHERE id = $3`
+
+	_, err := r.DB.SQL.ExecContext(ctx, query, firstName, lastName, userID)
+	return err
+}
+
 func (r *UserRepository) GetByToken(ctx context.Context, plainToken string) (string, error) {
 	// 1. Hash the provided plain token to match what's in the DB
 	hash := sha256.Sum256([]byte(plainToken))
