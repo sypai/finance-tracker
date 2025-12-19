@@ -179,8 +179,10 @@
         </div>
     </div>
     
-    <script>
-        // Starfield Script
+    <script type="module">
+        import { API_BASE_URL } from './src/js/utils/api.js';
+    
+        // --- 1. VISUAL EFFECTS (Starfield) ---
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         if (cosmicCanvas) {
             cosmicCanvas.innerHTML = ''; 
@@ -194,14 +196,15 @@
                 cosmicCanvas.appendChild(star);
             }
         }
-
-        // Page Transition Script
+    
+        // --- 2. PAGE TRANSITIONS ---
         const overlay = document.getElementById('page-transition-overlay');
         document.addEventListener('DOMContentLoaded', () => { 
             overlay.classList.remove('fade-out'); overlay.classList.remove('fade-in'); 
             overlay.style.pointerEvents = 'none'; 
             setTimeout(() => { if (overlay) { overlay.classList.add('fade-out'); } }, 50); 
         });
+        
         const transitionLinks = document.querySelectorAll('a[href="signup.html"], a[href="signin.html"], a[href="index.html"]'); 
         transitionLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -213,55 +216,102 @@
                 }
             });
         });
-         window.addEventListener('pageshow', function(event) {
+        
+        window.addEventListener('pageshow', function(event) {
             if (event.persisted && overlay) {
-                 overlay.classList.add('fade-out'); 
-                 overlay.style.pointerEvents = 'none'; 
+                    overlay.classList.add('fade-out'); 
+                    overlay.style.pointerEvents = 'none'; 
             }
         });
-
-        // Sign In Form Logic
+    
+        // --- 3. SIGN IN LOGIC (The Fix) ---
         const signInEmailForm = document.getElementById('signInEmailForm');
         const signInFormContent = document.getElementById('signInFormContent');
         const signInConfirmationMessage = document.getElementById('signInConfirmationMessage');
         const signInUserEmailDisplay = document.getElementById('signInUserEmailDisplay');
         const signInEmailInput = document.getElementById('signInEmail');
         const tryDifferentEmailLink = document.getElementById('tryDifferentEmailLink');
-
-        signInEmailForm.addEventListener('submit', (e) => {
+        const submitBtn = signInEmailForm.querySelector('button[type="submit"]');
+    
+        signInEmailForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = signInEmailInput.value;
+    
             if (email) {
-                signInUserEmailDisplay.textContent = email;
-                signInFormContent.style.transition = 'opacity 0.3s ease-out, display 0s linear 0.3s';
-                signInFormContent.style.opacity = '0';
-                signInFormContent.style.display = 'none'; 
-
-                signInConfirmationMessage.style.display = 'block';
-                signInConfirmationMessage.style.opacity = '0'; 
-                requestAnimationFrame(() => {
-                    signInConfirmationMessage.style.transition = 'opacity 0.5s ease-in-out 0.3s';
-                    signInConfirmationMessage.style.opacity = '1';
-                });
-                // Backend: Send magic link here
+                // 1. Loading State
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+    
+                try {
+                    // 2. API Call to Backend
+                    // We use the SAME endpoint as signup because the logic is identical:
+                    // "If user exists, send link. If not, create user and send link."
+                    const response = await fetch(`${API_BASE_URL}/api/v1/auth/magic-link`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: email })
+                    });
+    
+                    if (!response.ok) throw new Error('Failed to send link');
+    
+                    // 3. Success UI Transition
+                    signInUserEmailDisplay.textContent = email;
+                    
+                    // Fade out form
+                    signInFormContent.style.transition = 'opacity 0.3s ease-out';
+                    signInFormContent.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        signInFormContent.style.display = 'none';
+                        signInConfirmationMessage.style.display = 'block';
+                        
+                        // Fade in confirmation
+                        requestAnimationFrame(() => {
+                            signInConfirmationMessage.style.transition = 'opacity 0.5s ease-in-out';
+                            signInConfirmationMessage.style.opacity = '1';
+                        });
+                    }, 300);
+    
+                } catch (error) {
+                    console.error("Signin error:", error);
+                    alert("Could not send login link. Please try again.");
+                    
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                }
             }
         });
-
+    
+        // Handle "Use a different email" click
         tryDifferentEmailLink.addEventListener('click', (e) => {
             e.preventDefault();
-            signInConfirmationMessage.style.transition = 'opacity 0.3s ease-out, display 0s linear 0.3s';
+            
+            // Fade out confirmation
+            signInConfirmationMessage.style.transition = 'opacity 0.3s ease-out';
             signInConfirmationMessage.style.opacity = '0';
-            signInConfirmationMessage.style.display = 'none';
-
-            signInFormContent.style.display = 'block';
-            signInFormContent.style.opacity = '0'; 
-            requestAnimationFrame(() => {
-                 signInFormContent.style.transition = 'opacity 0.5s ease-in-out 0.3s';
-                 signInFormContent.style.opacity = '1';
-            });
-            signInEmailInput.focus(); 
-            signInEmailInput.value = ''; // Clear the input
+            
+            setTimeout(() => {
+                signInConfirmationMessage.style.display = 'none';
+                signInFormContent.style.display = 'block';
+                
+                // Fade in form
+                requestAnimationFrame(() => {
+                    signInFormContent.style.transition = 'opacity 0.5s ease-in-out';
+                    signInFormContent.style.opacity = '1';
+                });
+                
+                // Reset Input
+                signInEmailInput.value = ''; 
+                signInEmailInput.focus(); 
+                
+                // Reset Button (just in case)
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `Send Sign-In Link <span class="ml-2 transition-transform duration-300 group-hover:translate-x-1">→</span>`;
+            }, 300);
         });
     </script>
+
 </body>
 </html>
