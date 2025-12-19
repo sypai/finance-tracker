@@ -67,6 +67,8 @@ func (r *UserRepository) UpdateName(ctx context.Context, userID, firstName, last
 	return err
 }
 
+// backend/internal/data/postgres/users.go
+
 func (r *UserRepository) GetByToken(ctx context.Context, plainToken string) (string, error) {
 	// 1. Hash the provided plain token to match what's in the DB
 	hash := sha256.Sum256([]byte(plainToken))
@@ -74,8 +76,8 @@ func (r *UserRepository) GetByToken(ctx context.Context, plainToken string) (str
 	var userID string
 	// 2. Find the token and ensure it hasn't expired
 	query := `
-		SELECT user_id FROM artha.verification_tokens 
-		WHERE token_hash = $1 AND expiry > NOW()`
+        SELECT user_id FROM artha.verification_tokens 
+        WHERE token_hash = $1 AND expiry > NOW()`
 
 	err := r.DB.SQL.QueryRowContext(ctx, query, hash[:]).Scan(&userID)
 	if err != nil {
@@ -84,6 +86,17 @@ func (r *UserRepository) GetByToken(ctx context.Context, plainToken string) (str
 
 	// 3. Delete the token so it can't be used again (Single Use)
 	_, _ = r.DB.SQL.ExecContext(ctx, "DELETE FROM artha.verification_tokens WHERE token_hash = $1", hash[:])
+
+	// --- 4. NEW: ACTIVATE THE USER ---
+	// Since they verified their email, we change status to 'active'
+	activateQuery := `UPDATE artha.users SET status = 'active' WHERE id = $1`
+	_, err = r.DB.SQL.ExecContext(ctx, activateQuery, userID)
+	if err != nil {
+		// Log it, but don't fail the login (it's non-critical for the session)
+		// You might want to import "log" if you haven't already
+		// log.Printf("Failed to activate user status: %v", err)
+	}
+	// --------------------------------
 
 	return userID, nil
 }
