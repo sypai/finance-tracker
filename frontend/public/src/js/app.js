@@ -65,7 +65,7 @@ const App = {
 
         // 3. Verification & Reveal
         try {
-            const user = await api.getMe();
+            const user = await getMe();
 
             // A. NEW USER: Redirect immediately
             // The curtain is still DOWN, so they see nothing but the spinner.
