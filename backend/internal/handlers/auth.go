@@ -74,7 +74,7 @@ func (h *AuthHandler) HandleVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) HandleGetMe(w http.ResponseWriter, r *http.Request) {
-	// Get userID from the context (set by your Auth Middleware)
+	// Get userID from the context
 	userID := r.Context().Value("userID").(string)
 
 	var user struct {
@@ -83,11 +83,15 @@ func (h *AuthHandler) HandleGetMe(w http.ResponseWriter, r *http.Request) {
 		FirstName string `json:"first_name"`
 	}
 
-	// Query your users table
-	err := h.UserRepo.DB.SQL.QueryRowContext(r.Context(),
-		"SELECT id, email, first_name FROM artha.users WHERE id = $1", userID).Scan(&user.ID, &user.Email, &user.FirstName)
+	// --- FIX IS HERE: use COALESCE(first_name, '') ---
+	// This converts NULL to "" so Go doesn't crash
+	query := "SELECT id, email, COALESCE(first_name, '') FROM artha.users WHERE id = $1"
+
+	err := h.UserRepo.DB.SQL.QueryRowContext(r.Context(), query, userID).Scan(&user.ID, &user.Email, &user.FirstName)
 
 	if err != nil {
+		// Log the actual error for debugging
+		log.Printf("Error fetching user: %v", err)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
