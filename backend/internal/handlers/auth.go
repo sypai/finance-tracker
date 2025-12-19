@@ -4,6 +4,7 @@ import (
 	"artha_backend/internal/config"
 	"artha_backend/internal/data"
 	"artha_backend/internal/data/postgres"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -48,29 +49,40 @@ func (h *AuthHandler) HandleVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Check token in DB via the Repo
+	// 1. Check token in DB
 	userID, err := h.UserRepo.GetByToken(r.Context(), token)
 	if err != nil {
 		log.Printf("Verification failed: %v", err)
-		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		http.Redirect(w, r, "https://finance-tracker-one-umber.vercel.app/signin.html?error=invalid_token", http.StatusSeeOther)
 		return
 	}
 
-	// 2. Generate a long-lived JWT session
+	// 2. Generate Session JWT
 	sessionToken, err := h.GenerateToken(userID)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	// 3. Redirect back to your Frontend with the token
-	// This allows the frontend to grab the token from the URL and save it
-	frontendURL := "https://finance-tracker-one-umber.vercel.app/dashboard.html?token=" + sessionToken
+	// --- NEW INTELLIGENCE START ---
+	// 3. Check if user profile is complete (Do they have a first name?)
+	// We query the DB quickly to see who they are.
+	var firstName sql.NullString // Use NullString to safely handle NULLs
+	err = h.UserRepo.DB.SQL.QueryRowContext(r.Context(), "SELECT first_name FROM artha.users WHERE id = $1", userID).Scan(&firstName)
 
-	// For local testing, you'd use:
-	// frontendURL := "http://localhost:3000/verify-success.html?token=" + sessionToken
+	// Default destination
+	baseURL := "https://finance-tracker-one-umber.vercel.app" // Or your localhost for testing
+	redirectURL := baseURL + "/dashboard.html"
 
-	http.Redirect(w, r, frontendURL, http.StatusSeeOther)
+	// If name is invalid or empty, send them to Welcome (Onboarding)
+	if err == nil && (!firstName.Valid || firstName.String == "") {
+		redirectURL = baseURL + "/welcome.html"
+	}
+	// --- NEW INTELLIGENCE END ---
+
+	// 4. Redirect with token
+	finalURL := fmt.Sprintf("%s?token=%s", redirectURL, sessionToken)
+	http.Redirect(w, r, finalURL, http.StatusSeeOther)
 }
 
 func (h *AuthHandler) HandleGetMe(w http.ResponseWriter, r *http.Request) {
