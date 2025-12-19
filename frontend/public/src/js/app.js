@@ -71,7 +71,7 @@ const App = {
         // 3. --- ONBOARDING BRIDGE ---
         try {
             // We call the backend to get the current user details
-            const user = await api.getMe(); 
+            const user = await getMe(); 
     
             // If first_name is missing, the user hasn't finished onboarding
             if (!user.first_name || user.first_name.trim() === "") {
