@@ -160,6 +160,20 @@
     <script type="module">
         import { API_BASE_URL } from './src/js/utils/api.js';
     
+        // --- 1. CRITICAL FIX: HANDSHAKE LOGIC ---
+        // Check if the backend sent us here with a fresh token
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+    
+        if (tokenFromUrl) {
+            // We have a new user session! Overwrite any old data.
+            console.log("New session token detected. Updating storage.");
+            localStorage.setItem('artha_jwt', tokenFromUrl);
+            // Clean the URL so the token isn't sitting there visible
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        // ----------------------------------------
+    
         // --- Starfield Script (Preserved) ---
         const cosmicCanvas = document.getElementById('cosmic-canvas');
         if (cosmicCanvas) {
@@ -238,6 +252,8 @@
             if (isSubmitting) return;
     
             const fullName = nameInput.value.trim();
+            
+            // Use the token we just ensured is correct
             const token = localStorage.getItem('artha_jwt');
     
             // Security Check: No token? Go to login.
@@ -251,15 +267,15 @@
                 nameInput.disabled = true;
                 submitButton.disabled = true;
                 
-                // Visual feedback: Change text to loading
+                // Visual feedback
                 const originalText = buttonText.innerText;
                 buttonText.innerText = "Saving...";
     
                 try {
-                    // 1. Split Name logic (First " " Last)
+                    // 1. Split Name logic
                     const nameParts = fullName.split(' ');
                     const firstName = nameParts[0];
-                    const lastName = nameParts.slice(1).join(' ') || ""; // Handle "Cher" (single name)
+                    const lastName = nameParts.slice(1).join(' ') || ""; 
     
                     // 2. Call the API
                     const response = await fetch(`${API_BASE_URL}/api/v1/users/profile`, {
@@ -276,9 +292,8 @@
     
                     if (!response.ok) throw new Error('Failed to update profile');
     
-                    // --- 3. SUCCESS ANIMATION SEQUENCE (Existing Visuals) ---
+                    // --- 3. SUCCESS ANIMATION SEQUENCE ---
                     
-                    // Burst particles on the button
                     const rect = submitButton.getBoundingClientRect();
                     burstParticles(rect.left + rect.width / 2, rect.top + rect.height / 2);
     
@@ -319,7 +334,6 @@
                     console.error("Profile update failed:", error);
                     alert("Something went wrong saving your profile. Please try again.");
                     
-                    // Reset UI on error
                     isSubmitting = false;
                     nameInput.disabled = false;
                     submitButton.disabled = false;
