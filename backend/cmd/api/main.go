@@ -9,7 +9,9 @@ import (
 
 	"artha_backend/internal/config"
 	"artha_backend/internal/data/postgres"
+	"artha_backend/internal/middleware"
 	"artha_backend/internal/server" // ADD
+
 	"github.com/joho/godotenv"
 )
 
@@ -43,8 +45,13 @@ func main() {
 
 	// 3. Initialize and Start Server
 	srv := server.NewServer(db, cfg, userRepo)
-
 	log.Printf("Starting server on port %d...", cfg.Port)
+
+	// You must WRAP the existing handler with the CORS middleware
+	handlerWithCORS := middleware.EnableCORS(srv.Handler)
+
+	// Update the server to use this wrapped handler
+	srv.Handler = handlerWithCORS
 
 	// ListenAndServe blocks until the server shuts down
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
