@@ -47,43 +47,58 @@ function saveAppState() {
 const App = {
     async init() {
         console.log("App.init started...");
-        
-        // 1. --- MAGIC LINK HANDSHAKE ---
-        // Check if the URL has a token (e.g., dashboard.html?token=...)
+
+        // 1. Handshake (URL Token)
         const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get('token');
-    
-        if (urlToken) {
-            // Save the new session token
-            localStorage.setItem('artha_jwt', urlToken);
-            // Clean the URL so the token doesn't stay in the address bar
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            localStorage.setItem('artha_jwt', tokenFromUrl);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
-    
-        // 2. --- SESSION CHECK ---
+
+        // 2. Session Check
         const jwt = localStorage.getItem('artha_jwt');
         if (!jwt) {
-            // If no token exists, redirect to sign-in page
             window.location.href = 'signin.html';
             return;
         }
-    
-        // 3. --- ONBOARDING BRIDGE ---
+
+        // 3. Verification & Reveal
         try {
-            // We call the backend to get the current user details
-            const user = await getMe(); 
-    
-            // If first_name is missing, the user hasn't finished onboarding
-            if (!user.first_name || user.first_name.trim() === "") {
+            const user = await api.getMe();
+
+            // A. NEW USER: Redirect immediately
+            // The curtain is still DOWN, so they see nothing but the spinner.
+            if (!user.first_name) {
                 window.location.href = 'welcome.html';
-                return;
+                return; 
             }
-        } catch (err) {
-            console.error("Auth verification failed:", err);
-            // If the token is invalid or expired, clear it and go to signin
+
+            // B. RETURNING USER: Render App & Lift Curtain
+            console.log("User verified:", user.email);
+            
+            // Initialize your UI components
+            initUI();
+            initTagInput(); 
+            initCategorySelect();
+            this.bindEvents();
+            // ... binding other events ...
+            
+            this.render(); // Load the charts
+
+            // --- LIFT THE CURTAIN ---
+            const curtain = document.getElementById('auth-loading-curtain');
+            if (curtain) {
+                // Fade out
+                curtain.style.opacity = '0';
+                // Remove from DOM after fade completes
+                setTimeout(() => curtain.remove(), 500);
+            }
+
+        } catch (error) {
+            console.error("Auth failed:", error);
             localStorage.removeItem('artha_jwt');
             window.location.href = 'signin.html';
-            return;
         }
     
         // 4. --- APP INITIALIZATION (Existing Logic) ---
