@@ -106,19 +106,18 @@ const App = {
             updateDateTime(); 
             setInterval(updateDateTime, 1000 * 60);
 
-            // --- LIFT THE CURTAIN ---
-            const curtain = document.getElementById('auth-loading-curtain');
-            if (curtain) {
-                // Fade out
-                curtain.style.opacity = '0';
-                // Remove from DOM after fade completes
-                setTimeout(() => curtain.remove(), 500);
-            }
-
         } catch (error) {
             console.error("Auth failed:", error);
             localStorage.removeItem('artha_jwt');
             window.location.href = 'signin.html';
+        } finally {
+            // --- THIS RUNS NO MATTER WHAT ---
+            // Even if 'render()' crashes, we lift the curtain so you can debug.
+            const curtain = document.getElementById('auth-loading-curtain');
+            if (curtain) {
+                curtain.style.opacity = '0';
+                setTimeout(() => curtain.remove(), 500);
+            }
         }
     },
 
