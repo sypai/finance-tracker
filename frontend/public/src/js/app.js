@@ -1370,12 +1370,24 @@ const App = {
             });
         }
         
-        // 4. Handle "Log Out" (Placeholder)
-        const logoutBtn = modal.querySelector('#logoutBtn');
+        // --- LOGOUT LOGIC ---
+        const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                console.log("Log Out Clicked");
-                // In a real app, this would redirect to signin.html
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // 1. Visual Feedback (Optional but nice)
+                logoutBtn.innerHTML = 'Logging out...';
+                logoutBtn.disabled = true;
+
+                // 2. Short delay to make it feel deliberate (300ms)
+                setTimeout(() => {
+                    // 3. The "Logout" Action: Delete the Token
+                    localStorage.removeItem('artha_jwt');
+
+                    // 4. Redirect to Sign In
+                    window.location.href = 'signin.html';
+                }, 300);
             });
         }
     },
